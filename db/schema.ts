@@ -119,6 +119,32 @@ export const items = pgTable(
   ]
 );
 
+export const clientShares = pgTable(
+  "client_shares",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    companyId: text("company_id")
+      .notNull()
+      .references(() => companies.id, { onDelete: "cascade" }),
+    token: text("token").notNull().unique(),
+    label: varchar("label", { length: 255 }),
+    clientEmail: varchar("client_email", { length: 255 }),
+    createdBy: text("created_by")
+      .notNull()
+      .references(() => users.id),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    expiresAt: timestamp("expires_at"),
+    revokedAt: timestamp("revoked_at"),
+    lastAccessedAt: timestamp("last_accessed_at"),
+  },
+  (t) => [
+    index("client_shares_token_idx").on(t.token),
+    index("client_shares_company_idx").on(t.companyId),
+  ]
+);
+
 export const itemHistory = pgTable("item_history", {
   id: text("id")
     .primaryKey()
@@ -173,9 +199,21 @@ export const itemHistoryRelations = relations(itemHistory, ({ one }) => ({
   createdBy: one(users, { fields: [itemHistory.createdBy], references: [users.id] }),
 }));
 
+export const clientSharesRelations = relations(clientShares, ({ one }) => ({
+  company: one(companies, {
+    fields: [clientShares.companyId],
+    references: [companies.id],
+  }),
+  createdBy: one(users, {
+    fields: [clientShares.createdBy],
+    references: [users.id],
+  }),
+}));
+
 export type User = typeof users.$inferSelect;
 export type Company = typeof companies.$inferSelect;
 export type CompanyMember = typeof companyMembers.$inferSelect;
 export type Folder = typeof folders.$inferSelect;
 export type Item = typeof items.$inferSelect;
 export type ItemHistory = typeof itemHistory.$inferSelect;
+export type ClientShare = typeof clientShares.$inferSelect;

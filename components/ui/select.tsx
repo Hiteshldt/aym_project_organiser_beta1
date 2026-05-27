@@ -16,7 +16,7 @@ const SelectTrigger = React.forwardRef<
   <SelectPrimitive.Trigger
     ref={ref}
     className={cn(
-      "flex h-9 w-full items-center justify-between rounded-lg border border-[#e5e5e5] bg-white px-3 py-2 text-sm text-[#111] placeholder:text-[#999] focus:outline-none focus:ring-2 focus:ring-indigo-200 disabled:opacity-50 transition-all duration-150",
+      "flex h-9 w-full items-center justify-between rounded-lg border border-[#e5e5e5] bg-white px-3 py-2 text-sm text-[#111] placeholder:text-[#999] focus:outline-none focus:ring-2 focus:ring-accent-soft-hover disabled:opacity-50 transition-all duration-150",
       className
     )}
     {...props}
@@ -65,7 +65,7 @@ const SelectItem = React.forwardRef<
   >
     <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
       <SelectPrimitive.ItemIndicator>
-        <Check className="h-4 w-4 text-indigo-600" />
+        <Check className="h-4 w-4 text-accent" />
       </SelectPrimitive.ItemIndicator>
     </span>
     <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>

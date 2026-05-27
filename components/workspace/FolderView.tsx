@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { Loader2, Plus, FolderOpen } from "lucide-react";
+import { Plus, FolderOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ItemCard from "./ItemCard";
 
@@ -16,6 +16,7 @@ type Item = {
   fileName: string | null;
   fileSize: number | null;
   folderId: string;
+  folderName: string;
   tags: string[];
   notes: string | null;
   itemDate: string;
@@ -25,33 +26,53 @@ type Item = {
   historyCount: number;
 };
 
+function ItemSkeleton() {
+  return (
+    <div className="border border-[#ebebeb] rounded-xl bg-white px-4 py-3.5 flex items-start gap-3">
+      <div className="shrink-0 w-7 h-7 rounded-lg bg-[#f0f0f0] animate-pulse mt-0.5" />
+      <div className="flex-1 space-y-2">
+        <div className="flex items-start justify-between gap-4">
+          <div className="h-4 bg-[#f0f0f0] rounded animate-pulse w-52" />
+          <div className="h-4 bg-[#f0f0f0] rounded animate-pulse w-16 shrink-0" />
+        </div>
+        <div className="h-3 bg-[#f0f0f0] rounded animate-pulse w-72" />
+        <div className="flex items-center gap-2 mt-1">
+          <div className="h-4 bg-[#f0f0f0] rounded-full animate-pulse w-12" />
+          <div className="h-4 bg-[#f0f0f0] rounded-full animate-pulse w-16" />
+          <div className="h-3 bg-[#f0f0f0] rounded animate-pulse w-28 ml-auto" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function FolderView({
   slug,
   folder,
   isManager,
   onAddItem,
   onRefresh,
+  refreshKey,
 }: {
   slug: string;
   folder: Folder;
   isManager: boolean;
   onAddItem: () => void;
   onRefresh: () => void;
+  refreshKey: number;
 }) {
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(false);
 
   const load = useCallback(async () => {
+    if (!folder) return;
     setLoading(true);
-    const url = folder
-      ? `/api/workspace/items?slug=${slug}&folderId=${folder.id}`
-      : `/api/workspace/items?slug=${slug}&recent=true`;
-    const res = await fetch(url);
+    const res = await fetch(`/api/workspace/items?slug=${slug}&folderId=${folder.id}`);
     if (res.ok) setItems(await res.json());
     setLoading(false);
   }, [slug, folder]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => { load(); }, [load, refreshKey]);
 
   async function handleDelete(id: string) {
     if (!confirm("Delete this item?")) return;
@@ -70,31 +91,23 @@ export default function FolderView({
 
   if (loading) {
     return (
-      <div className="flex justify-center py-16">
-        <Loader2 className="h-5 w-5 animate-spin text-[#ccc]" />
+      <div className="px-6 py-4">
+        <div className="grid gap-2">
+          {Array.from({ length: 5 }).map((_, i) => <ItemSkeleton key={i} />)}
+        </div>
       </div>
     );
   }
 
-  if (!folder && items.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center h-full py-20 text-center px-6">
-        <FolderOpen className="h-12 w-12 text-[#e5e5e5] mb-3" />
-        <p className="text-sm text-[#bbb]">Nothing added yet.</p>
-        {isManager && (
-          <p className="text-xs text-[#ccc] mt-1">Select a folder and add your first item.</p>
-        )}
-      </div>
-    );
-  }
+  if (!folder) return null;
 
-  if (folder && items.length === 0) {
+  if (items.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center px-6">
         <FolderOpen className="h-12 w-12 text-[#e5e5e5] mb-3" />
         <p className="text-sm text-[#bbb]">This folder is empty.</p>
         {isManager && (
-          <Button size="sm" variant="indigo" className="mt-4" onClick={onAddItem}>
+          <Button size="sm" variant="accent" className="mt-4" onClick={onAddItem}>
             <Plus className="h-3.5 w-3.5" /> Add first item
           </Button>
         )}
@@ -104,9 +117,6 @@ export default function FolderView({
 
   return (
     <div className="px-6 py-4">
-      {!folder && (
-        <p className="text-xs text-[#bbb] mb-4 font-medium uppercase tracking-wide">Recent</p>
-      )}
       <div className="grid gap-2">
         {items.map((item) => (
           <ItemCard

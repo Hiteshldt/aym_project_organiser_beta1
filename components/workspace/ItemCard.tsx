@@ -84,17 +84,17 @@ export default function ItemCard({
     <div
       className={cn(
         "group border rounded-xl bg-white transition-all hover:border-[#d8d8d8] hover:shadow-sm",
-        item.isPinned ? "border-indigo-100" : "border-[#ebebeb]"
+        item.isPinned ? "border-accent-soft" : "border-[#ebebeb]"
       )}
     >
       <div className="px-4 py-3.5 flex items-start gap-3">
         {/* Type icon */}
         <div className={cn(
           "shrink-0 w-7 h-7 rounded-lg flex items-center justify-center mt-0.5",
-          item.type === "link" ? "bg-indigo-50" : "bg-amber-50"
+          item.type === "link" ? "bg-accent-soft" : "bg-amber-50"
         )}>
           {item.type === "link" ? (
-            <Link2 className="h-3.5 w-3.5 text-indigo-500" />
+            <Link2 className="h-3.5 w-3.5 text-accent" />
           ) : (
             <FileText className="h-3.5 w-3.5 text-amber-500" />
           )}
@@ -109,7 +109,7 @@ export default function ItemCard({
                   href={item.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-sm font-medium text-[#111] hover:text-indigo-600 transition-colors flex items-center gap-1 group/link"
+                  className="text-sm font-medium text-[#111] hover:text-accent transition-colors flex items-center gap-1 group/link"
                 >
                   <span className="truncate">{item.title}</span>
                   <ExternalLink className="h-3 w-3 shrink-0 opacity-0 group-hover/link:opacity-100 transition-opacity" />
@@ -151,7 +151,7 @@ export default function ItemCard({
                     title={item.isPinned ? "Unpin" : "Pin"}
                   >
                     {item.isPinned ? (
-                      <PinOff className="h-3.5 w-3.5 text-indigo-400" />
+                      <PinOff className="h-3.5 w-3.5 text-accent" />
                     ) : (
                       <Pin className="h-3.5 w-3.5" />
                     )}
@@ -190,7 +190,7 @@ export default function ItemCard({
           {item.historyCount > 0 && (
             <button
               onClick={loadHistory}
-              className="mt-2 flex items-center gap-1 text-[11px] text-indigo-400 hover:text-indigo-600 transition-colors"
+              className="mt-2 flex items-center gap-1 text-[11px] text-accent hover:text-accent transition-colors"
             >
               <Clock className="h-3 w-3" />
               {item.historyCount} update{item.historyCount !== 1 ? "s" : ""}
@@ -206,7 +206,7 @@ export default function ItemCard({
 
           {/* History entries */}
           {historyOpen && history.length > 0 && (
-            <div className="mt-2 border-l-2 border-indigo-100 pl-3 space-y-2">
+            <div className="mt-2 border-l-2 border-accent-soft pl-3 space-y-2">
               {history.map((h) => (
                 <div key={h.id}>
                   <p className="text-xs text-[#555]">{h.updateNote}</p>

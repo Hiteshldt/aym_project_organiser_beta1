@@ -261,7 +261,7 @@ export default function AddItemModal({
               <Label>File (max 20MB)</Label>
               <div
                 onClick={() => fileRef.current?.click()}
-                className="border border-dashed border-[#e5e5e5] rounded-lg p-6 text-center cursor-pointer hover:border-indigo-300 hover:bg-indigo-50/30 transition-all"
+                className="border border-dashed border-[#e5e5e5] rounded-lg p-6 text-center cursor-pointer hover:border-accent hover:bg-accent-soft/30 transition-all"
               >
                 {file ? (
                   <div className="flex items-center justify-center gap-2 text-sm text-[#555]">
@@ -376,7 +376,7 @@ export default function AddItemModal({
             </Button>
             <Button
               type="submit"
-              variant="indigo"
+              variant="accent"
               className="flex-1"
               disabled={saving || uploading || (!folderId)}
             >

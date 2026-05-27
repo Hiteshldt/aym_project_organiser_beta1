@@ -22,6 +22,11 @@ export default async function WorkspacePage() {
     .where(eq(companyMembers.userId, session.user.id))
     .orderBy(companies.name);
 
+  // No workspaces yet → send through onboarding
+  if (myCompanies.length === 0) {
+    redirect("/onboard");
+  }
+
   if (myCompanies.length === 1) {
     redirect(`/workspace/${myCompanies[0].slug}`);
   }

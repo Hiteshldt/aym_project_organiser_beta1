@@ -1,46 +1,179 @@
 @import "tailwindcss";
 
+/* ────────────────────────────────────────────────────────────────
+   Ayuvam brand tokens — see BRAND_PLAN.md §3
+   ──────────────────────────────────────────────────────────────── */
+
 :root {
-  --background: #fafafa;
-  --foreground: #111111;
+  /* Surface */
+  --ink: #0f0f0f;
+  --paper: #fbfaf7;
+  --paper-elevated: #ffffff;
+  --line: #ecead9;
+  --line-strong: #e0ddcd;
+  --mute: #7a7773;
+  --mute-soft: #b8b5af;
+
+  /* Accent — terracotta */
+  --accent: #c84b31;
+  --accent-hover: #b03d27;
+  --accent-soft: #f4e4dc;
+  --accent-soft-hover: #ebd5c9;
+
+  /* Functional */
+  --success: #2a6e4f;
+  --danger: #a03c2c;
+  --warning: #c2783a;
+
+  /* Legacy mapping (kept so existing app still compiles while we migrate) */
+  --background: var(--paper);
+  --foreground: var(--ink);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+
+  --color-ink: var(--ink);
+  --color-paper: var(--paper);
+  --color-paper-elevated: var(--paper-elevated);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-mute: var(--mute);
+  --color-mute-soft: var(--mute-soft);
+
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-soft-hover: var(--accent-soft-hover);
+
+  --color-success: var(--success);
+  --color-danger: var(--danger);
+  --color-warning: var(--warning);
+
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-serif: var(--font-instrument-serif);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--paper);
+  color: var(--ink);
   font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
-::-webkit-scrollbar {
-  width: 4px;
-  height: 4px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
+/* ────────────────────────────────────────────────────────────────
+   Scrollbar
+   ──────────────────────────────────────────────────────────────── */
+
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
-  background: #d1d5db;
+  background: var(--line-strong);
   border-radius: 2px;
 }
+::-webkit-scrollbar-thumb:hover { background: var(--mute-soft); }
+
+/* ────────────────────────────────────────────────────────────────
+   Selection
+   ──────────────────────────────────────────────────────────────── */
+
+::selection {
+  background: var(--accent-soft);
+  color: var(--ink);
+}
+
+/* ────────────────────────────────────────────────────────────────
+   Search glow — kept from v1, retuned for accent
+   ──────────────────────────────────────────────────────────────── */
 
 @keyframes search-glow {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
-  50% { box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.08); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(200, 75, 49, 0); }
+  50%      { box-shadow: 0 0 0 4px rgba(200, 75, 49, 0.07); }
 }
-
-.search-glow {
-  animation: search-glow 3s ease-in-out infinite;
-}
-
+.search-glow { animation: search-glow 3s ease-in-out infinite; }
 .search-glow:focus-within {
   animation: none;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+  box-shadow: 0 0 0 3px rgba(200, 75, 49, 0.15);
+}
+
+/* ────────────────────────────────────────────────────────────────
+   Marketing-only utility classes
+   ──────────────────────────────────────────────────────────────── */
+
+.font-display {
+  font-family: var(--font-instrument-serif), Georgia, "Times New Roman", serif;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+
+.font-display-italic {
+  font-family: var(--font-instrument-serif), Georgia, "Times New Roman", serif;
+  font-weight: 400;
+  font-style: italic;
+  letter-spacing: -0.015em;
+}
+
+.font-mono-ui {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-feature-settings: "ss01", "cv01";
+}
+
+/* Soft grain background — gives "paper" feel without an image */
+.bg-grain {
+  background-color: var(--paper);
+  background-image:
+    radial-gradient(rgba(15, 15, 15, 0.018) 1px, transparent 1px),
+    radial-gradient(rgba(15, 15, 15, 0.012) 1px, transparent 1px);
+  background-size: 24px 24px, 12px 12px;
+  background-position: 0 0, 6px 6px;
+}
+
+/* Frosted nav backdrop */
+.nav-blur {
+  background: rgba(251, 250, 247, 0.72);
+  backdrop-filter: saturate(1.4) blur(12px);
+  -webkit-backdrop-filter: saturate(1.4) blur(12px);
+}
+
+/* Soft "hairline" border — almost imperceptible */
+.hairline { box-shadow: inset 0 -1px 0 var(--line); }
+
+/* Reveal-on-scroll: section starts slightly down + faded */
+@keyframes rise {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.reveal {
+  animation: rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.reveal-delay-1 { animation-delay: 0.08s; }
+.reveal-delay-2 { animation-delay: 0.16s; }
+.reveal-delay-3 { animation-delay: 0.24s; }
+
+/* CTA — terracotta button */
+.btn-accent {
+  background: var(--accent);
+  color: #ffffff;
+  border: 1px solid var(--accent);
+  transition: transform 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+}
+.btn-accent:hover {
+  background: var(--accent-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px -8px rgba(200, 75, 49, 0.55);
+}
+.btn-accent:active { transform: translateY(0); }
+
+.btn-ghost {
+  background: transparent;
+  color: var(--ink);
+  border: 1px solid var(--line-strong);
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.btn-ghost:hover {
+  background: var(--paper-elevated);
+  border-color: var(--ink);
 }

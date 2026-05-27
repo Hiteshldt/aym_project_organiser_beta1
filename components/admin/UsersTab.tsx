@@ -66,7 +66,7 @@ export default function UsersTab() {
         <p className="text-xs text-[#888]">{users.length} user{users.length !== 1 ? "s" : ""}</p>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button size="sm" variant="indigo">
+            <Button size="sm" variant="accent">
               <Plus className="h-3.5 w-3.5" /> New user
             </Button>
           </DialogTrigger>
@@ -116,7 +116,7 @@ export default function UsersTab() {
                 </Select>
               </div>
               {error && <p className="text-xs text-rose-500">{error}</p>}
-              <Button type="submit" className="w-full" variant="indigo" disabled={saving}>
+              <Button type="submit" className="w-full" variant="accent" disabled={saving}>
                 {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Create user"}
               </Button>
             </form>
@@ -146,7 +146,7 @@ export default function UsersTab() {
                   <td className="px-4 py-3 font-medium text-[#111]">{u.name}</td>
                   <td className="px-4 py-3 text-[#666]">{u.email}</td>
                   <td className="px-4 py-3">
-                    <Badge variant={u.role === "admin" ? "indigo" : u.role === "manager" ? "amber" : "default"}>
+                    <Badge variant={u.role === "admin" ? "accent" : u.role === "manager" ? "amber" : "default"}>
                       {u.role}
                     </Badge>
                   </td>

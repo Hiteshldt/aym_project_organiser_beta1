@@ -40,7 +40,7 @@ This creates: `admin@ayuvam.app` / `admin123456`
 
 To use custom credentials:
 ```bash
-SEED_ADMIN_EMAIL=you@company.com SEED_ADMIN_PASSWORD=yourpassword SEED_ADMIN_NAME="Your Name" npm run db:seed
+SEED_ADMIN_EMAIL=admin@ayuvam.com SEED_ADMIN_PASSWORD=ayuvam@123 SEED_ADMIN_NAME="Ayuvam Admin" npm run db:seed
 ```
 
 ## 5. Run locally

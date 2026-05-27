@@ -5,19 +5,26 @@ import { eq, and, desc, sql } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 
 async function getCompanyAccess(userId: string, slug: string) {
-  const company = await db
-    .select({ id: companies.id, name: companies.name, slug: companies.slug })
+  const result = await db
+    .select({
+      id: companies.id,
+      name: companies.name,
+      slug: companies.slug,
+      role: companyMembers.role,
+    })
     .from(companies)
+    .innerJoin(
+      companyMembers,
+      and(eq(companyMembers.companyId, companies.id), eq(companyMembers.userId, userId))
+    )
     .where(eq(companies.slug, slug))
     .limit(1);
-  if (!company[0]) return null;
-  const member = await db
-    .select({ role: companyMembers.role })
-    .from(companyMembers)
-    .where(and(eq(companyMembers.companyId, company[0].id), eq(companyMembers.userId, userId)))
-    .limit(1);
-  if (!member[0]) return null;
-  return { company: company[0], role: member[0].role };
+
+  if (!result[0]) return null;
+  return {
+    company: { id: result[0].id, name: result[0].name, slug: result[0].slug },
+    role: result[0].role,
+  };
 }
 
 export async function GET(req: NextRequest) {
@@ -34,7 +41,9 @@ export async function GET(req: NextRequest) {
   const access = await getCompanyAccess(session.user.id, slug);
   if (!access) return NextResponse.json({ error: "Not a member" }, { status: 403 });
 
-  let query = db
+  const baseWhere = eq(items.companyId, access.company.id);
+
+  const results = await db
     .select({
       id: items.id,
       title: items.title,
@@ -44,6 +53,7 @@ export async function GET(req: NextRequest) {
       fileName: items.fileName,
       fileSize: items.fileSize,
       folderId: items.folderId,
+      folderName: folders.name,
       tags: items.tags,
       notes: items.notes,
       itemDate: items.itemDate,
@@ -55,14 +65,11 @@ export async function GET(req: NextRequest) {
     })
     .from(items)
     .innerJoin(users, eq(items.createdBy, users.id))
-    .where(eq(items.companyId, access.company.id))
-    .$dynamic();
+    .innerJoin(folders, eq(items.folderId, folders.id))
+    .where(folderId ? and(baseWhere, eq(items.folderId, folderId)) : baseWhere)
+    .orderBy(desc(items.isPinned), desc(items.createdAt))
+    .limit(recent ? 10 : 500);
 
-  if (folderId) {
-    query = query.where(and(eq(items.companyId, access.company.id), eq(items.folderId, folderId)));
-  }
-
-  const results = await query.orderBy(desc(items.isPinned), desc(items.createdAt)).limit(recent ? 10 : 500);
   return NextResponse.json(results);
 }
 
@@ -77,7 +84,6 @@ export async function POST(req: NextRequest) {
   if (!access) return NextResponse.json({ error: "Not a member" }, { status: 403 });
   if (access.role !== "manager") return NextResponse.json({ error: "Managers only" }, { status: 403 });
 
-  // Check duplicate URL
   if (url && type === "link") {
     const dup = await db
       .select({ id: items.id, title: items.title, folderId: items.folderId, createdAt: items.createdAt })

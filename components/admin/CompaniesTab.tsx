@@ -94,7 +94,7 @@ export default function CompaniesTab() {
         <p className="text-xs text-[#888]">{companies.length} compan{companies.length !== 1 ? "ies" : "y"}</p>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button size="sm" variant="indigo">
+            <Button size="sm" variant="accent">
               <Plus className="h-3.5 w-3.5" /> New company
             </Button>
           </DialogTrigger>
@@ -112,7 +112,7 @@ export default function CompaniesTab() {
                   required
                 />
               </div>
-              <Button type="submit" variant="indigo" className="w-full" disabled={saving}>
+              <Button type="submit" variant="accent" className="w-full" disabled={saving}>
                 {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Create company"}
               </Button>
             </form>

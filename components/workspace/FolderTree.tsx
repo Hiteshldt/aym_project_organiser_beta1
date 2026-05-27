@@ -55,7 +55,7 @@ function FolderNode({
       <div
         className={cn(
           "group flex items-center gap-1 px-2 py-1.5 rounded-lg mx-1 cursor-pointer transition-colors relative",
-          isSelected ? "bg-indigo-50 text-indigo-700" : "hover:bg-[#f5f5f5] text-[#555]"
+          isSelected ? "bg-accent-soft text-accent-hover" : "hover:bg-[#f5f5f5] text-[#555]"
         )}
         style={{ paddingLeft: `${8 + depth * 14}px` }}
       >
@@ -75,7 +75,7 @@ function FolderNode({
           className="flex items-center gap-2 flex-1 min-w-0 text-left"
         >
           <span className={cn("w-2 h-2 rounded-full shrink-0", colors.dot)} />
-          <span className={cn("text-xs truncate", isSelected ? "font-medium text-indigo-700" : "text-[#444]")}>
+          <span className={cn("text-xs truncate", isSelected ? "font-medium text-accent-hover" : "text-[#444]")}>
             {folder.name}
           </span>
         </button>

@@ -112,7 +112,7 @@ export default function CreateFolderModal({
             <Button type="button" variant="outline" onClick={handleClose} className="flex-1">
               Cancel
             </Button>
-            <Button type="submit" variant="indigo" className="flex-1" disabled={saving}>
+            <Button type="submit" variant="accent" className="flex-1" disabled={saving}>
               {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Create"}
             </Button>
           </div>

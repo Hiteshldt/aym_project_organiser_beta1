@@ -5,25 +5,26 @@ import { eq, and, isNull } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 
 async function getCompanyAccess(userId: string, slug: string) {
-  const company = await db
-    .select({ id: companies.id, name: companies.name, slug: companies.slug })
+  const result = await db
+    .select({
+      id: companies.id,
+      name: companies.name,
+      slug: companies.slug,
+      role: companyMembers.role,
+    })
     .from(companies)
+    .innerJoin(
+      companyMembers,
+      and(eq(companyMembers.companyId, companies.id), eq(companyMembers.userId, userId))
+    )
     .where(eq(companies.slug, slug))
     .limit(1);
-  if (!company[0]) return null;
 
-  const member = await db
-    .select({ role: companyMembers.role })
-    .from(companyMembers)
-    .where(
-      and(
-        eq(companyMembers.companyId, company[0].id),
-        eq(companyMembers.userId, userId)
-      )
-    )
-    .limit(1);
-  if (!member[0]) return null;
-  return { company: company[0], role: member[0].role };
+  if (!result[0]) return null;
+  return {
+    company: { id: result[0].id, name: result[0].name, slug: result[0].slug },
+    role: result[0].role,
+  };
 }
 
 export async function GET(req: NextRequest) {

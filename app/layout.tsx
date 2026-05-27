@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -12,9 +12,47 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const instrumentSerif = Instrument_Serif({
+  variable: "--font-instrument-serif",
+  subsets: ["latin"],
+  weight: ["400"],
+  style: ["normal", "italic"],
+});
+
 export const metadata: Metadata = {
-  title: "Ayuvam",
-  description: "One place for everything your team works on.",
+  metadataBase: new URL("https://ayuvam.app"),
+  title: {
+    default: "Ayuvam — Make the work look as good as it is.",
+    template: "%s · Ayuvam",
+  },
+  description:
+    "A clean, organized space to share client work — proposals, decks, files, and links. Every client gets their own workspace. Without the Drive folder chaos.",
+  keywords: [
+    "client portal",
+    "agency client portal",
+    "freelance client portal",
+    "file sharing for agencies",
+    "client deliverables",
+    "design studio tools",
+  ],
+  openGraph: {
+    title: "Ayuvam — Make the work look as good as it is.",
+    description:
+      "A clean, organized space to share client work — proposals, decks, files, and links.",
+    url: "/",
+    siteName: "Ayuvam",
+    type: "website",
+    locale: "en_US",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Ayuvam — Make the work look as good as it is.",
+    description:
+      "A clean, organized space to share client work — proposals, decks, files, and links.",
+  },
+  icons: {
+    icon: "/favicon.ico",
+  },
 };
 
 export default function RootLayout({
@@ -25,9 +63,9 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full`}
+      className={`${geistSans.variable} ${geistMono.variable} ${instrumentSerif.variable} h-full`}
     >
-      <body className="min-h-full bg-[#fafafa] text-[#111] antialiased">
+      <body className="min-h-full bg-paper text-ink antialiased">
         {children}
       </body>
     </html>
