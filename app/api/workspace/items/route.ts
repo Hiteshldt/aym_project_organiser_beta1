@@ -125,7 +125,7 @@ export async function PATCH(req: NextRequest) {
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await req.json();
-  const { id, slug, title, tags, notes, itemDate, isPinned, updateNote } = body;
+  const { id, slug, title, url, tags, notes, itemDate, isPinned, updateNote } = body;
 
   const access = await getCompanyAccess(session.user.id, slug);
   if (!access || access.role !== "manager") {
@@ -136,6 +136,7 @@ export async function PATCH(req: NextRequest) {
     .update(items)
     .set({
       ...(title !== undefined && { title }),
+      ...(url !== undefined && { url }),
       ...(tags !== undefined && { tags }),
       ...(notes !== undefined && { notes }),
       ...(itemDate !== undefined && { itemDate: new Date(itemDate) }),

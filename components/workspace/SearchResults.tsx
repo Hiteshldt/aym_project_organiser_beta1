@@ -4,6 +4,8 @@ import { useEffect, useState, useCallback } from "react";
 import { Loader2, SearchX, Folder } from "lucide-react";
 import ItemCard from "./ItemCard";
 import { useDebounce } from "@/lib/useDebounce";
+import { useConfirm } from "@/components/ui/confirm";
+import { toast } from "sonner";
 
 type Item = {
   id: string;
@@ -37,6 +39,7 @@ export default function SearchResults({
   onClearSearch: () => void;
   onRefresh: () => void;
 }) {
+  const confirm = useConfirm();
   const [results, setResults] = useState<Item[]>([]);
   const [loading, setLoading] = useState(false);
   const debouncedQuery = useDebounce(query, 300);
@@ -92,16 +95,29 @@ export default function SearchResults({
                 slug={slug}
                 isManager={isManager}
                 onDelete={async (id) => {
-                  if (!confirm("Delete this item?")) return;
-                  await fetch(`/api/workspace/items?id=${id}&slug=${slug}`, { method: "DELETE" });
+                  const target = results.find((r) => r.id === id);
+                  const ok = await confirm({
+                    title: "Delete this item?",
+                    body: target ? `"${target.title}" will be removed.` : undefined,
+                    confirmLabel: "Delete",
+                    danger: true,
+                  });
+                  if (!ok) return;
+                  const res = await fetch(`/api/workspace/items?id=${id}&slug=${slug}`, { method: "DELETE" });
+                  if (res.ok) {
+                    toast.success("Item deleted.");
+                  } else {
+                    toast.error("Could not delete item.");
+                  }
                   search();
                 }}
                 onPin={async (id, isPinned) => {
-                  await fetch("/api/workspace/items", {
+                  const res = await fetch("/api/workspace/items", {
                     method: "PATCH",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ id, slug, isPinned: !isPinned }),
                   });
+                  if (res.ok) toast.success(isPinned ? "Unpinned." : "Pinned to top.");
                   search();
                 }}
                 onRefresh={search}

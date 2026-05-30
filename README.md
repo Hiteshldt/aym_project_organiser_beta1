@@ -1,36 +1,47 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Ayuvam
 
-## Getting Started
+> Make the work look as good as it is.
 
-First, run the development server:
+A clean client deliverables portal for studios, agencies, and freelancers.
+Every client gets their own workspace. You organize. They open one link.
+No Drive folder chaos.
+
+**Live at:** https://ayuvam.com
+
+---
+
+## Documentation
+
+All docs live in [`docs/`](docs/). Start here:
+
+| Doc | What it is |
+|---|---|
+| **[PRODUCT.md](docs/PRODUCT.md)** | What Ayuvam is, who it's for, features, how it's used |
+| **[TECHNICAL.md](docs/TECHNICAL.md)** | Stack, architecture, data model, key flows |
+| **[ROADMAP.md](docs/ROADMAP.md)** | Current status, what's next, future plans |
+| **[BRAND.md](docs/BRAND.md)** | Colors, typography, voice — the visual identity |
+| **[LAUNCH.md](docs/LAUNCH.md)** | Operational setup — Google OAuth, Resend, Vercel, Paddle |
+| **[DEV-SETUP.md](docs/DEV-SETUP.md)** | Run Ayuvam locally in 5 minutes |
+
+---
+
+## Quick start (local dev)
 
 ```bash
+npm install
+# Fill in .env.local with DATABASE_URL, AUTH_SECRET, and optional Google/Resend keys
+npm run db:push
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Then open http://localhost:3000.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Full setup: [docs/DEV-SETUP.md](docs/DEV-SETUP.md).
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+## Tech in a nutshell
 
-To learn more about Next.js, take a look at the following resources:
+Next.js 16 · Neon Postgres · Drizzle ORM · NextAuth v5 · Resend · Vercel Blob · Paddle (payments) · Tailwind CSS v4 · Instrument Serif + Geist
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+One repo. One deploy. No microservices.

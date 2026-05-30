@@ -9,12 +9,15 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Badge } from "@/components/ui/badge";
 import { Plus, Trash2, Loader2, Users, ChevronDown, ChevronUp } from "lucide-react";
 import { formatDate } from "@/lib/utils";
+import { useConfirm } from "@/components/ui/confirm";
+import { toast } from "sonner";
 
 type Company = { id: string; name: string; slug: string; createdAt: string };
 type Member = { id: string; userId: string; userName: string; userEmail: string; role: string };
 type User = { id: string; name: string; email: string; role: string };
 
 export default function CompaniesTab() {
+  const confirm = useConfirm();
   const [companies, setCompanies] = useState<Company[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -58,9 +61,23 @@ export default function CompaniesTab() {
   }
 
   async function handleDeleteCompany(id: string) {
-    if (!confirm("Delete this company and all its data? Cannot be undone.")) return;
-    await fetch(`/api/admin/companies?id=${id}`, { method: "DELETE" });
-    load();
+    const target = companies.find((c) => c.id === id);
+    const ok = await confirm({
+      title: "Delete this company?",
+      body: target
+        ? `${target.name} and all its folders, items, and members will be permanently deleted.`
+        : "All folders, items, and members will be permanently deleted.",
+      confirmLabel: "Delete company",
+      danger: true,
+    });
+    if (!ok) return;
+    const res = await fetch(`/api/admin/companies?id=${id}`, { method: "DELETE" });
+    if (res.ok) {
+      toast.success("Company deleted.");
+      load();
+    } else {
+      toast.error("Could not delete company.");
+    }
   }
 
   async function handleAddMember(companyId: string) {
@@ -106,7 +123,7 @@ export default function CompaniesTab() {
               <div className="space-y-1.5">
                 <Label>Company name</Label>
                 <Input
-                  placeholder="Carbelim Technologies"
+                  placeholder="Acme Studio"
                   value={companyName}
                   onChange={(e) => setCompanyName(e.target.value)}
                   required

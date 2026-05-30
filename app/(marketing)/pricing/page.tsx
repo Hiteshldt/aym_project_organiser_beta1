@@ -7,7 +7,7 @@ import FAQ from "@/components/marketing/FAQ";
 export const metadata: Metadata = {
   title: "Pricing",
   description:
-    "Simple, honest pricing for Ayuvam. Free for one client. $12 for freelancers. $29 for studios. $79 for agencies.",
+    "Simple, honest pricing for Ayuvam. Free for one client. $9 for freelancers. $19 for studios. $49 for agencies.",
 };
 
 const COMPARISON = [
@@ -89,7 +89,7 @@ export default function PricingPage() {
         </header>
 
         <div className="rounded-2xl border border-line bg-paper-elevated overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full min-w-[680px] text-sm">
             <thead>
               <tr className="border-b border-line bg-paper">
                 <th className="text-left py-4 px-5 font-mono-ui text-[11px] uppercase tracking-wider text-mute font-medium">

@@ -9,6 +9,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Badge } from "@/components/ui/badge";
 import { Plus, Trash2, Loader2 } from "lucide-react";
 import { formatDate } from "@/lib/utils";
+import { useConfirm } from "@/components/ui/confirm";
+import { toast } from "sonner";
 
 type User = {
   id: string;
@@ -19,6 +21,7 @@ type User = {
 };
 
 export default function UsersTab() {
+  const confirm = useConfirm();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
@@ -55,9 +58,23 @@ export default function UsersTab() {
   }
 
   async function handleDelete(id: string) {
-    if (!confirm("Remove this user? This cannot be undone.")) return;
-    await fetch(`/api/admin/users?id=${id}`, { method: "DELETE" });
-    load();
+    const target = users.find((u) => u.id === id);
+    const ok = await confirm({
+      title: "Remove this user?",
+      body: target
+        ? `${target.email} will lose access to all workspaces. This cannot be undone.`
+        : "This cannot be undone.",
+      confirmLabel: "Remove",
+      danger: true,
+    });
+    if (!ok) return;
+    const res = await fetch(`/api/admin/users?id=${id}`, { method: "DELETE" });
+    if (res.ok) {
+      toast.success("User removed.");
+      load();
+    } else {
+      toast.error("Could not remove user.");
+    }
   }
 
   return (
@@ -88,7 +105,7 @@ export default function UsersTab() {
                 <Label>Email</Label>
                 <Input
                   type="email"
-                  placeholder="hitesh@carbelim.com"
+                  placeholder="name@studio.com"
                   value={form.email}
                   onChange={(e) => setForm({ ...form, email: e.target.value })}
                   required

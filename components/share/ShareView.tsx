@@ -82,34 +82,36 @@ export default function ShareView({
     <div className="min-h-screen flex flex-col bg-paper">
       {/* Top bar */}
       <header className="flex-none nav-blur border-b border-line">
-        <div className="mx-auto max-w-7xl px-6 h-16 flex items-center justify-between">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between gap-3">
           {/* Left — Ayuvam logo */}
           <Link
             href="/"
-            className="font-display-italic text-xl text-ink leading-none"
+            className="font-display-italic text-lg sm:text-xl text-ink leading-none shrink-0"
           >
             Ayuvam
           </Link>
 
-          {/* Center — workspace identity */}
-          <div className="hidden sm:flex items-center gap-3 text-center">
-            <span className="font-mono-ui text-[11px] uppercase tracking-wider text-mute-soft">
+          {/* Center — workspace identity (hidden on small screens, the page header carries the name) */}
+          <div className="hidden md:flex items-center gap-3 text-center min-w-0">
+            <span className="font-mono-ui text-[11px] uppercase tracking-wider text-mute-soft shrink-0">
               Shared workspace
             </span>
             <span className="text-mute-soft">·</span>
-            <span className="text-sm font-medium text-ink">
+            <span className="text-sm font-medium text-ink truncate">
               {company.name}
             </span>
             {label && (
               <>
-                <span className="text-mute-soft">·</span>
-                <span className="text-sm text-mute italic">{label}</span>
+                <span className="text-mute-soft hidden lg:inline">·</span>
+                <span className="text-sm text-mute italic truncate hidden lg:inline">
+                  {label}
+                </span>
               </>
             )}
           </div>
 
           {/* Right — view-only badge */}
-          <div className="inline-flex items-center gap-1.5 rounded-full bg-accent-soft px-3 py-1 text-xs font-mono-ui text-accent">
+          <div className="inline-flex items-center gap-1.5 rounded-full bg-accent-soft px-2.5 sm:px-3 py-1 text-[11px] sm:text-xs font-mono-ui text-accent shrink-0">
             <Eye className="h-3 w-3" />
             View only
           </div>
@@ -163,14 +165,14 @@ export default function ShareView({
         </aside>
 
         {/* Content */}
-        <main className="flex-1 px-6 py-8 min-w-0">
+        <main className="flex-1 px-4 sm:px-6 py-6 sm:py-8 min-w-0">
           {/* Header + search */}
-          <div className="flex items-start justify-between gap-4 mb-6">
-            <div>
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-5 sm:mb-6">
+            <div className="min-w-0">
               <p className="font-mono-ui text-[11px] uppercase tracking-wider text-mute-soft">
                 {selectedFolder ? "Folder" : "Overview"}
               </p>
-              <h1 className="mt-1 font-display text-3xl md:text-4xl text-ink leading-[1.1] tracking-[-0.02em]">
+              <h1 className="mt-1 font-display text-[28px] sm:text-3xl md:text-4xl text-ink leading-[1.1] tracking-[-0.02em] break-words">
                 {selectedFolder ? selectedFolder.name : company.name}
               </h1>
               <p className="mt-1 text-sm text-mute">
@@ -180,7 +182,7 @@ export default function ShareView({
             </div>
 
             {/* Search */}
-            <div className="relative w-full max-w-xs">
+            <div className="relative w-full sm:max-w-xs shrink-0">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-mute-soft" />
               <input
                 type="text"
@@ -200,6 +202,36 @@ export default function ShareView({
             </div>
           </div>
 
+          {/* Mobile folder filter — horizontal scroll chips */}
+          {folders.length > 0 && (
+            <div className="md:hidden -mx-4 px-4 mb-5 overflow-x-auto">
+              <div className="flex items-center gap-1.5 min-w-max">
+                <FolderChip
+                  active={!selectedFolderId}
+                  onClick={() => setSelectedFolderId(null)}
+                  label="All items"
+                  count={items.length}
+                />
+                {folders.map((f) => {
+                  const colors =
+                    FOLDER_COLORS[f.color as keyof typeof FOLDER_COLORS] ??
+                    FOLDER_COLORS.slate;
+                  const count = items.filter((i) => i.folderId === f.id).length;
+                  return (
+                    <FolderChip
+                      key={f.id}
+                      active={selectedFolderId === f.id}
+                      onClick={() => setSelectedFolderId(f.id)}
+                      label={f.name}
+                      count={count}
+                      dotClass={colors.dot}
+                    />
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {/* Items */}
           {filteredItems.length === 0 ? (
             <EmptyState query={query} />
@@ -215,11 +247,11 @@ export default function ShareView({
 
       {/* Footer */}
       <footer className="flex-none border-t border-line">
-        <div className="mx-auto max-w-7xl px-6 py-5 flex items-center justify-between text-xs text-mute-soft">
-          <span>Read-only view shared by {company.name}.</span>
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-4 sm:py-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs text-mute-soft">
+          <span className="truncate">Read-only view shared by {company.name}.</span>
           <Link
             href="/"
-            className="inline-flex items-center gap-1 hover:text-ink transition-colors"
+            className="inline-flex items-center gap-1 hover:text-ink transition-colors shrink-0"
           >
             Powered by{" "}
             <span className="font-display-italic text-ink ml-0.5">Ayuvam</span>
@@ -227,6 +259,36 @@ export default function ShareView({
         </div>
       </footer>
     </div>
+  );
+}
+
+function FolderChip({
+  active,
+  onClick,
+  label,
+  count,
+  dotClass,
+}: {
+  active: boolean;
+  onClick: () => void;
+  label: string;
+  count: number;
+  dotClass?: string;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs whitespace-nowrap transition-colors border",
+        active
+          ? "bg-accent-soft text-accent border-accent-soft font-medium"
+          : "bg-paper-elevated text-mute border-line hover:border-line-strong hover:text-ink"
+      )}
+    >
+      {dotClass && <span className={cn("h-1.5 w-1.5 rounded-full", dotClass)} />}
+      <span>{label}</span>
+      <span className="font-mono-ui text-[10px] text-mute-soft">{count}</span>
+    </button>
   );
 }
 

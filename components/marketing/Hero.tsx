@@ -98,27 +98,28 @@ function MockWindow() {
         }}
       >
         {/* Browser top bar */}
-        <div className="h-9 flex items-center gap-2 px-4 border-b border-line bg-paper">
+        <div className="h-9 flex items-center gap-2 px-3 sm:px-4 border-b border-line bg-paper">
           <div className="flex items-center gap-1.5">
             <span className="h-2.5 w-2.5 rounded-full bg-line-strong" />
             <span className="h-2.5 w-2.5 rounded-full bg-line-strong" />
             <span className="h-2.5 w-2.5 rounded-full bg-line-strong" />
           </div>
-          <div className="flex-1 flex justify-center">
-            <div className="font-mono-ui text-[11px] text-mute-soft tracking-wide">
-              ayuvam.app/workspace/carbelim
+          <div className="flex-1 flex justify-center min-w-0">
+            <div className="font-mono-ui text-[10px] sm:text-[11px] text-mute-soft tracking-wide truncate">
+              <span className="hidden sm:inline">ayuvam.com/workspace/acme-studio</span>
+              <span className="sm:hidden">ayuvam.com</span>
             </div>
           </div>
-          <div className="w-12" />
+          <div className="w-8 sm:w-12" />
         </div>
 
-        {/* App chrome */}
-        <div className="grid grid-cols-[180px_1fr] min-h-[420px]">
+        {/* App chrome — sidebar hidden on phones to give the content room */}
+        <div className="grid grid-cols-1 sm:grid-cols-[180px_1fr] min-h-[380px] sm:min-h-[420px]">
           {/* Sidebar */}
-          <div className="border-r border-line bg-paper-elevated p-3">
+          <div className="hidden sm:block border-r border-line bg-paper-elevated p-3">
             <div className="flex items-center justify-between mb-3 px-1">
               <span className="font-display-italic text-base text-ink">
-                Carbelim
+                Acme Studio
               </span>
             </div>
 
@@ -150,7 +151,7 @@ function MockWindow() {
           </div>
 
           {/* Content */}
-          <div className="bg-paper p-4">
+          <div className="bg-paper p-3 sm:p-4">
             {/* Content header */}
             <div className="flex items-center justify-between mb-4">
               <div>

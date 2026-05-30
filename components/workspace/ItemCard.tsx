@@ -13,6 +13,7 @@ import {
   Clock,
   Loader2,
   ExternalLink,
+  Pencil,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -28,6 +29,7 @@ type Item = {
   fileName: string | null;
   fileSize: number | null;
   folderId: string;
+  folderName: string;
   tags: string[];
   notes: string | null;
   itemDate: string;
@@ -50,6 +52,7 @@ export default function ItemCard({
   isManager,
   onDelete,
   onPin,
+  onEdit,
   onRefresh,
 }: {
   item: Item;
@@ -57,6 +60,7 @@ export default function ItemCard({
   isManager: boolean;
   onDelete: (id: string) => void;
   onPin: (id: string, isPinned: boolean) => void;
+  onEdit?: (item: Item) => void;
   onRefresh: () => void;
 }) {
   const [historyOpen, setHistoryOpen] = useState(false);
@@ -144,6 +148,16 @@ export default function ItemCard({
               )}
               {isManager && (
                 <>
+                  {onEdit && (
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      onClick={() => onEdit(item)}
+                      title="Edit"
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                    </Button>
+                  )}
                   <Button
                     variant="ghost"
                     size="icon-sm"

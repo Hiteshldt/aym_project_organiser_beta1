@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import UsersTab from "./UsersTab";
 import CompaniesTab from "./CompaniesTab";
@@ -21,7 +22,13 @@ export default function AdminShell({ user }: { user: { name: string; email: stri
           <span className="text-xs text-[#bbb]">Admin</span>
         </div>
         <div className="flex items-center gap-3">
-          <span className="text-xs text-[#888]">{user.name}</span>
+          <Link
+            href="/settings"
+            className="text-xs text-[#888] hover:text-[#111] transition-colors"
+            title="Account settings"
+          >
+            {user.name}
+          </Link>
           <Button
             variant="ghost"
             size="icon-sm"

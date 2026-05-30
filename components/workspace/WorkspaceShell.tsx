@@ -4,6 +4,8 @@ import { useState, useEffect, useCallback } from "react";
 import { signOut } from "next-auth/react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { useConfirm } from "@/components/ui/confirm";
+import { toast } from "sonner";
 import FolderTree from "./FolderTree";
 import FolderView from "./FolderView";
 import AllItemsTable from "./AllItemsTable";
@@ -20,6 +22,7 @@ import {
   X,
   ChevronDown,
   Share2,
+  Menu,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -34,6 +37,18 @@ type Folder = {
 };
 
 type MyCompany = { id: string; name: string; slug: string; role: string };
+
+type EditableItem = {
+  id: string;
+  title: string;
+  type: "link" | "file";
+  url: string | null;
+  fileName: string | null;
+  fileSize: number | null;
+  tags: string[];
+  notes: string | null;
+  itemDate: string;
+};
 
 function SidebarSkeleton() {
   return (
@@ -60,6 +75,7 @@ export default function WorkspaceShell({
   userRole: string;
   user: { id: string; name: string; email: string };
 }) {
+  const confirm = useConfirm();
   const isManager = userRole === "manager" || userRole === "admin";
   const [folders, setFolders] = useState<Folder[]>([]);
   const [foldersLoading, setFoldersLoading] = useState(true);
@@ -73,6 +89,8 @@ export default function WorkspaceShell({
   const [companySwitchOpen, setCompanySwitchOpen] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const [shareOpen, setShareOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState<EditableItem | null>(null);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   const loadFolders = useCallback(async () => {
     setFoldersLoading(true);
@@ -115,21 +133,41 @@ export default function WorkspaceShell({
 
   function handleItemAdded() {
     setAddItemOpen(false);
+    setEditingItem(null);
     setRefreshKey((k) => k + 1);
+  }
+
+  function handleEdit(item: EditableItem) {
+    setEditingItem(item);
+  }
+
+  function selectFolderAndClose(f: Folder | null) {
+    setSelectedFolder(f);
+    setMobileSidebarOpen(false);
   }
 
   return (
     <div className="h-screen flex flex-col bg-[#fafafa]">
       {/* Top bar */}
-      <div className="flex-none border-b border-[#ebebeb] bg-white px-4 py-3 flex items-center gap-4">
+      <div className="flex-none border-b border-[#ebebeb] bg-white px-3 sm:px-4 py-2.5 sm:py-3 flex items-center gap-2 sm:gap-4">
+        {/* Mobile sidebar toggle */}
+        <button
+          onClick={() => setMobileSidebarOpen(true)}
+          className="md:hidden -ml-1 p-1.5 rounded-md text-[#555] hover:bg-[#f5f5f5] transition-colors"
+          title="Folders"
+          aria-label="Open folder menu"
+        >
+          <Menu className="h-4 w-4" />
+        </button>
+
         {/* Logo + Company */}
         <div className="flex items-center gap-2 min-w-0">
-          <span className="text-sm font-semibold text-[#111] shrink-0">Ayuvam</span>
-          <span className="text-[#ddd]">/</span>
+          <span className="text-sm font-semibold text-[#111] shrink-0 hidden sm:inline">Ayuvam</span>
+          <span className="text-[#ddd] hidden sm:inline">/</span>
           <div className="relative">
             <button
               onClick={() => setCompanySwitchOpen(!companySwitchOpen)}
-              className="flex items-center gap-1 text-sm text-[#555] hover:text-[#111] transition-colors truncate max-w-[160px]"
+              className="flex items-center gap-1 text-sm text-[#555] hover:text-[#111] transition-colors truncate max-w-[140px] sm:max-w-[160px]"
             >
               <span className="truncate">{company.name}</span>
               {myCompanies.length > 1 && <ChevronDown className="h-3.5 w-3.5 shrink-0" />}
@@ -189,7 +227,16 @@ export default function WorkspaceShell({
               <span className="hidden sm:inline">Share with client</span>
             </Button>
           )}
-          <span className="text-xs text-[#bbb] hidden sm:block">{user.name}</span>
+          <Link
+            href="/settings"
+            className="hidden sm:flex items-center gap-2 px-2 py-1 rounded-md text-xs text-mute hover:text-ink hover:bg-line/50 transition-colors"
+            title="Account settings"
+          >
+            <div className="h-5 w-5 rounded-full bg-accent-soft text-accent text-[10px] font-medium flex items-center justify-center font-mono-ui">
+              {user.name?.charAt(0)?.toUpperCase() || "?"}
+            </div>
+            <span>{user.name}</span>
+          </Link>
           <Button
             variant="ghost"
             size="icon-sm"
@@ -202,26 +249,53 @@ export default function WorkspaceShell({
       </div>
 
       {/* Main area */}
-      <div className="flex-1 flex min-h-0">
-        {/* Sidebar */}
-        <div className="w-56 shrink-0 border-r border-[#ebebeb] bg-white flex flex-col">
+      <div className="flex-1 flex min-h-0 relative">
+        {/* Mobile sidebar backdrop */}
+        {mobileSidebarOpen && (
+          <div
+            onClick={() => setMobileSidebarOpen(false)}
+            className="md:hidden fixed inset-0 z-30 bg-black/40"
+            aria-hidden
+          />
+        )}
+
+        {/* Sidebar — fixed slide-out on mobile, static on md+ */}
+        <div
+          className={`
+            ${mobileSidebarOpen ? "translate-x-0" : "-translate-x-full"}
+            md:translate-x-0
+            fixed md:static inset-y-0 left-0 z-40
+            w-64 md:w-56 shrink-0 border-r border-[#ebebeb] bg-white flex flex-col
+            transition-transform duration-200 ease-out
+          `}
+        >
           <div className="flex items-center justify-between px-3 py-3 border-b border-[#f5f5f5]">
             <span className="text-xs font-medium text-[#888] uppercase tracking-wide">Folders</span>
-            {isManager && (
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                onClick={() => { setCreateSubfolderParent(null); setCreateFolderOpen(true); }}
-                title="New folder"
+            <div className="flex items-center gap-1">
+              {isManager && (
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  onClick={() => { setCreateSubfolderParent(null); setCreateFolderOpen(true); }}
+                  title="New folder"
+                >
+                  <FolderPlus className="h-3.5 w-3.5" />
+                </Button>
+              )}
+              {/* Close button — mobile only */}
+              <button
+                onClick={() => setMobileSidebarOpen(false)}
+                className="md:hidden p-1 rounded text-[#888] hover:bg-[#f5f5f5]"
+                aria-label="Close folder menu"
               >
-                <FolderPlus className="h-3.5 w-3.5" />
-              </Button>
-            )}
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
           </div>
 
           {/* "All items" link */}
           <button
-            onClick={() => setSelectedFolder(null)}
+            onClick={() => selectFolderAndClose(null)}
             className={`flex items-center gap-2 px-4 py-2.5 text-xs border-b border-[#f5f5f5] transition-colors ${
               selectedFolder === null && !isSearching
                 ? "bg-accent-soft text-accent-hover font-medium"
@@ -239,13 +313,53 @@ export default function WorkspaceShell({
                 <FolderTree
                   folders={folders}
                   selectedId={selectedFolder?.id || null}
-                  onSelect={setSelectedFolder}
+                  onSelect={selectFolderAndClose}
                   onCreateSubfolder={isManager ? handleCreateSubfolder : undefined}
                   onDelete={isManager ? async (id) => {
-                    if (!confirm("Delete this folder and all its items?")) return;
-                    await fetch(`/api/workspace/folders?id=${id}&slug=${company.slug}`, { method: "DELETE" });
-                    loadFolders();
-                    if (selectedFolder?.id === id) setSelectedFolder(null);
+                    const target = folders.find((f) => f.id === id);
+                    const ok = await confirm({
+                      title: "Delete this folder?",
+                      body: target
+                        ? `"${target.name}" and all items inside it will be permanently deleted.`
+                        : "All items inside it will be permanently deleted.",
+                      confirmLabel: "Delete folder",
+                      danger: true,
+                    });
+                    if (!ok) return;
+                    const res = await fetch(`/api/workspace/folders?id=${id}&slug=${company.slug}`, { method: "DELETE" });
+                    if (res.ok) {
+                      toast.success("Folder deleted.");
+                      loadFolders();
+                      if (selectedFolder?.id === id) setSelectedFolder(null);
+                    } else {
+                      toast.error("Could not delete folder.");
+                    }
+                  } : undefined}
+                  onRename={isManager ? async (id, name) => {
+                    const res = await fetch("/api/workspace/folders", {
+                      method: "PATCH",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ id, slug: company.slug, name }),
+                    });
+                    if (res.ok) {
+                      toast.success("Folder renamed.");
+                      loadFolders();
+                    } else {
+                      toast.error("Could not rename folder.");
+                    }
+                  } : undefined}
+                  onChangeColor={isManager ? async (id, color) => {
+                    const res = await fetch("/api/workspace/folders", {
+                      method: "PATCH",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ id, slug: company.slug, color }),
+                    });
+                    if (res.ok) {
+                      toast.success("Color updated.");
+                      loadFolders();
+                    } else {
+                      toast.error("Could not change color.");
+                    }
                   } : undefined}
                   slug={company.slug}
                   isManager={isManager}
@@ -306,6 +420,7 @@ export default function WorkspaceShell({
                 isManager={isManager}
                 onAddItem={() => setAddItemOpen(true)}
                 onRefresh={loadFolders}
+                onEdit={isManager ? handleEdit : undefined}
                 refreshKey={refreshKey}
               />
             ) : (
@@ -313,6 +428,7 @@ export default function WorkspaceShell({
                 slug={company.slug}
                 isManager={isManager}
                 refreshKey={refreshKey}
+                onEdit={isManager ? handleEdit : undefined}
               />
             )}
           </div>
@@ -328,6 +444,15 @@ export default function WorkspaceShell({
             slug={company.slug}
             folderId={selectedFolder?.id || ""}
             folderName={selectedFolder?.name || ""}
+            onSuccess={handleItemAdded}
+          />
+          <AddItemModal
+            open={!!editingItem}
+            onClose={() => setEditingItem(null)}
+            slug={company.slug}
+            folderId={editingItem ? "edit" : ""}
+            folderName=""
+            item={editingItem}
             onSuccess={handleItemAdded}
           />
           <CreateFolderModal

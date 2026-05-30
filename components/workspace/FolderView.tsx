@@ -4,6 +4,8 @@ import { useEffect, useState, useCallback } from "react";
 import { Plus, FolderOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ItemCard from "./ItemCard";
+import { useConfirm } from "@/components/ui/confirm";
+import { toast } from "sonner";
 
 type Folder = { id: string; name: string } | null;
 
@@ -52,6 +54,7 @@ export default function FolderView({
   isManager,
   onAddItem,
   onRefresh,
+  onEdit,
   refreshKey,
 }: {
   slug: string;
@@ -59,8 +62,10 @@ export default function FolderView({
   isManager: boolean;
   onAddItem: () => void;
   onRefresh: () => void;
+  onEdit?: (item: Item) => void;
   refreshKey: number;
 }) {
+  const confirm = useConfirm();
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -75,17 +80,30 @@ export default function FolderView({
   useEffect(() => { load(); }, [load, refreshKey]);
 
   async function handleDelete(id: string) {
-    if (!confirm("Delete this item?")) return;
-    await fetch(`/api/workspace/items?id=${id}&slug=${slug}`, { method: "DELETE" });
+    const item = items.find((i) => i.id === id);
+    const ok = await confirm({
+      title: "Delete this item?",
+      body: item ? `"${item.title}" will be removed.` : "This cannot be undone.",
+      confirmLabel: "Delete",
+      danger: true,
+    });
+    if (!ok) return;
+    const res = await fetch(`/api/workspace/items?id=${id}&slug=${slug}`, { method: "DELETE" });
+    if (!res.ok) {
+      toast.error("Could not delete item.");
+      return;
+    }
+    toast.success("Item deleted.");
     load();
   }
 
   async function handlePin(id: string, isPinned: boolean) {
-    await fetch("/api/workspace/items", {
+    const res = await fetch("/api/workspace/items", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id, slug, isPinned: !isPinned }),
     });
+    if (res.ok) toast.success(isPinned ? "Unpinned." : "Pinned to top.");
     load();
   }
 
@@ -126,6 +144,7 @@ export default function FolderView({
             isManager={isManager}
             onDelete={handleDelete}
             onPin={handlePin}
+            onEdit={onEdit}
             onRefresh={load}
           />
         ))}

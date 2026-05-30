@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
 import { FOLDER_COLORS } from "@/lib/utils";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 type Folder = { id: string; name: string } | null;
 
@@ -62,6 +63,7 @@ export default function CreateFolderModal({
       setError("Failed to create folder.");
       return;
     }
+    toast.success(parentFolder ? "Subfolder created." : "Folder created.");
     setName("");
     setColor("slate");
     onSuccess();

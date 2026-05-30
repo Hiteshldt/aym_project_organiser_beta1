@@ -23,6 +23,8 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { formatDate } from "@/lib/utils";
+import { useConfirm } from "@/components/ui/confirm";
+import { toast } from "sonner";
 
 type Share = {
   id: string;
@@ -46,6 +48,7 @@ export default function ShareWithClientModal({
   slug: string;
   companyName: string;
 }) {
+  const confirm = useConfirm();
   const [shares, setShares] = useState<Share[]>([]);
   const [loading, setLoading] = useState(false);
   const [creating, setCreating] = useState(false);
@@ -111,16 +114,28 @@ export default function ShareWithClientModal({
   }
 
   async function handleRevoke(id: string) {
-    if (!confirm("Revoke this link? Anyone who has it will lose access.")) return;
-    await fetch(`/api/workspace/shares?id=${id}&slug=${slug}`, {
+    const ok = await confirm({
+      title: "Revoke this share link?",
+      body: "Anyone who has the link will lose access immediately.",
+      confirmLabel: "Revoke link",
+      danger: true,
+    });
+    if (!ok) return;
+    const res = await fetch(`/api/workspace/shares?id=${id}&slug=${slug}`, {
       method: "DELETE",
     });
-    load();
+    if (res.ok) {
+      toast.success("Link revoked.");
+      load();
+    } else {
+      toast.error("Could not revoke link.");
+    }
   }
 
   async function copyLink(token: string, id: string) {
     await navigator.clipboard.writeText(getShareUrl(token));
     setCopiedId(id);
+    toast.success("Share link copied.");
     setTimeout(() => setCopiedId(null), 2000);
   }
 

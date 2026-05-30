@@ -26,23 +26,35 @@ const PLANS: Plan[] = [
       "25 items",
       "1 team member",
       "100MB storage",
-      "Magic link client access",
     ],
     cta: "Start free",
+  },
+  {
+    name: "Solo",
+    blurb: "For independent freelancers.",
+    monthly: 9,
+    annual: 90,
+    features: [
+      "5 client workspaces",
+      "Unlimited items",
+      "3 team members",
+      "2GB storage",
+      "Magic link client access",
+    ],
+    cta: "Start Solo trial",
   },
   {
     name: "Studio",
     tag: "Most popular",
     blurb: "For studios with a handful of clients.",
-    monthly: 29,
-    annual: 290,
+    monthly: 19,
+    annual: 190,
     accent: true,
     features: [
-      "Unlimited client workspaces",
+      "Unlimited workspaces",
       "Unlimited items",
       "10 team members",
       "10GB storage",
-      "Duplicate link detection",
       "Tags, search, history",
       "Priority email support",
     ],
@@ -51,15 +63,14 @@ const PLANS: Plan[] = [
   {
     name: "Agency",
     blurb: "For growing agencies.",
-    monthly: 79,
-    annual: 790,
+    monthly: 49,
+    annual: 490,
     features: [
       "Everything in Studio",
       "Unlimited team members",
       "50GB storage",
       "Custom subdomain",
-      "White label (remove Ayuvam brand)",
-      "Priority support",
+      "White label (remove brand)",
     ],
     cta: "Talk to us",
   },
@@ -114,7 +125,7 @@ export default function Pricing() {
         </div>
       </header>
 
-      <div className="mt-14 grid md:grid-cols-3 gap-4">
+      <div className="mt-14 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {PLANS.map((p) => (
           <PlanCard key={p.name} plan={p} annual={annual} />
         ))}
