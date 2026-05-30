@@ -47,6 +47,7 @@ export async function GET(req: NextRequest) {
     .select({
       id: items.id,
       title: items.title,
+      description: items.description,
       type: items.type,
       url: items.url,
       fileKey: items.fileKey,
@@ -78,7 +79,7 @@ export async function POST(req: NextRequest) {
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await req.json();
-  const { slug, folderId, title, type, url, fileKey, fileName, fileSize, tags, notes, itemDate } = body;
+  const { slug, folderId, title, description, type, url, fileKey, fileName, fileSize, tags, notes, itemDate } = body;
 
   const access = await getCompanyAccess(session.user.id, slug);
   if (!access) return NextResponse.json({ error: "Not a member" }, { status: 403 });
@@ -103,6 +104,7 @@ export async function POST(req: NextRequest) {
     .insert(items)
     .values({
       title,
+      description: description || null,
       type,
       url: url || null,
       fileKey: fileKey || null,
@@ -125,7 +127,7 @@ export async function PATCH(req: NextRequest) {
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await req.json();
-  const { id, slug, title, url, tags, notes, itemDate, isPinned, updateNote } = body;
+  const { id, slug, title, description, url, tags, notes, itemDate, isPinned, updateNote } = body;
 
   const access = await getCompanyAccess(session.user.id, slug);
   if (!access || access.role !== "manager") {
@@ -136,6 +138,7 @@ export async function PATCH(req: NextRequest) {
     .update(items)
     .set({
       ...(title !== undefined && { title }),
+      ...(description !== undefined && { description }),
       ...(url !== undefined && { url }),
       ...(tags !== undefined && { tags }),
       ...(notes !== undefined && { notes }),

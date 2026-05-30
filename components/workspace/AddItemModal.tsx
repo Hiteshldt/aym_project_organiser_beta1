@@ -32,6 +32,7 @@ type DuplicateInfo = {
 type EditableItem = {
   id: string;
   title: string;
+  description?: string | null;
   type: "link" | "file";
   url: string | null;
   fileName: string | null;
@@ -63,6 +64,7 @@ export default function AddItemModal({
 
   const [type, setType] = useState<"link" | "file">("link");
   const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
   const [url, setUrl] = useState("");
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
@@ -85,6 +87,7 @@ export default function AddItemModal({
     if (item) {
       setType(item.type);
       setTitle(item.title);
+      setDescription(item.description ?? "");
       setUrl(item.url ?? "");
       setTags(item.tags ?? []);
       setTagInput("");
@@ -104,6 +107,7 @@ export default function AddItemModal({
   function reset() {
     setType("link");
     setTitle("");
+    setDescription("");
     setUrl("");
     setTags([]);
     setTagInput("");
@@ -193,6 +197,7 @@ export default function AddItemModal({
             id: item.id,
             slug,
             title: title || (type === "file" ? item.fileName : url) || "Untitled",
+            description: description.trim() || null,
             ...(type === "link" && { url: url || null }),
             tags,
             notes,
@@ -279,6 +284,7 @@ export default function AddItemModal({
             title ||
             (type === "file" ? file?.name : url) ||
             "Untitled",
+          description: description.trim() || null,
           type,
           url: uploadedUrl,
           fileKey,
@@ -481,6 +487,20 @@ export default function AddItemModal({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
             />
+          </div>
+
+          {/* Description — short one-liner */}
+          <div className="space-y-1.5">
+            <Label>Description</Label>
+            <Input
+              placeholder="A short line — what this is"
+              value={description}
+              maxLength={200}
+              onChange={(e) => setDescription(e.target.value)}
+            />
+            <p className="text-[11px] text-mute-soft">
+              Optional. A quick subtitle shown next to the title and in registers.
+            </p>
           </div>
 
           {/* Date */}

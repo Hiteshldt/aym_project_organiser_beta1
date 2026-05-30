@@ -142,14 +142,22 @@ export async function GET(req: NextRequest) {
       conditions.push(sql`EXTRACT(DAY FROM ${items.itemDate}) = ${dateMatch.day}`);
     }
 
-    // Text tokens: each must match in title, notes, url, or a tag (Google-style AND)
+    // Text tokens: each must match somewhere (Google-style AND across fields).
+    // We also match a space-stripped variant so "pure air" finds tag "pureair"
+    // and "pureair" finds a title "Pure Air".
     for (const token of textTokens) {
       const pattern = `%${token}%`;
+      const squashed = `%${token.replace(/[^a-z0-9]/g, "")}%`;
       const tokenCond = or(
         ilike(items.title, pattern),
+        ilike(items.description, pattern),
         ilike(items.notes, pattern),
         ilike(items.url, pattern),
-        sql`EXISTS (SELECT 1 FROM unnest(${items.tags}) AS tag WHERE tag ILIKE ${pattern})`
+        ilike(items.fileName, pattern),
+        // tag match (exact-ish, partial)
+        sql`EXISTS (SELECT 1 FROM unnest(${items.tags}) AS tag WHERE tag ILIKE ${pattern})`,
+        // space-stripped tag match — handles "pure air" ↔ "pureair"
+        sql`EXISTS (SELECT 1 FROM unnest(${items.tags}) AS tag WHERE replace(tag, ' ', '') ILIKE ${squashed})`
       );
       if (tokenCond) conditions.push(tokenCond);
     }
@@ -167,6 +175,7 @@ export async function GET(req: NextRequest) {
     .select({
       id: items.id,
       title: items.title,
+      description: items.description,
       type: items.type,
       url: items.url,
       fileKey: items.fileKey,

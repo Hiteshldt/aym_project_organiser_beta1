@@ -69,6 +69,7 @@ export default async function SharePage({
       .select({
         id: items.id,
         title: items.title,
+        description: items.description,
         type: items.type,
         url: items.url,
         fileName: items.fileName,

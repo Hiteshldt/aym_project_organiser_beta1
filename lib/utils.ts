@@ -20,6 +20,21 @@ export function formatBytes(bytes: number) {
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
 }
 
+/**
+ * Turn a long URL into a clean, scannable label.
+ * "https://docs.google.com/spreadsheets/d/1qW3.../edit?usp=sharing"
+ *   → "docs.google.com"
+ * Falls back to the raw string if it isn't a parseable URL.
+ */
+export function prettyUrl(url: string) {
+  try {
+    const u = new URL(url);
+    return u.hostname.replace(/^www\./, "");
+  } catch {
+    return url.replace(/^https?:\/\//, "").split("/")[0];
+  }
+}
+
 export function formatDate(date: Date | string) {
   return new Date(date).toLocaleDateString("en-IN", {
     day: "numeric",

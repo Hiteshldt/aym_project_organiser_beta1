@@ -8,6 +8,7 @@ import { useConfirm } from "@/components/ui/confirm";
 import { toast } from "sonner";
 import FolderTree from "./FolderTree";
 import FolderView from "./FolderView";
+import RegisterView from "./RegisterView";
 import AllItemsTable from "./AllItemsTable";
 import SearchResults from "./SearchResults";
 import AddItemModal from "./AddItemModal";
@@ -23,6 +24,7 @@ import {
   ChevronDown,
   Share2,
   Menu,
+  Table2,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -32,6 +34,7 @@ type Folder = {
   name: string;
   parentId: string | null;
   color: string;
+  viewType?: "cards" | "register";
   companyId: string;
   createdAt: string;
 };
@@ -387,17 +390,25 @@ export default function WorkspaceShell({
           {/* Content header */}
           {!isSearching && (
             <div className="flex items-center justify-between px-6 py-4 border-b border-[#f0f0f0]">
-              <div>
-                <h2 className="text-sm font-semibold text-[#111]">
-                  {selectedFolder ? selectedFolder.name : "All items"}
-                </h2>
-                {!selectedFolder && (
-                  <p className="text-xs text-[#bbb] mt-0.5">Everything across all folders</p>
+              <div className="flex items-center gap-2 min-w-0">
+                {selectedFolder?.viewType === "register" && (
+                  <Table2 className="h-4 w-4 text-accent shrink-0" />
                 )}
+                <div className="min-w-0">
+                  <h2 className="text-sm font-semibold text-[#111] truncate">
+                    {selectedFolder ? selectedFolder.name : "All items"}
+                  </h2>
+                  {!selectedFolder ? (
+                    <p className="text-xs text-[#bbb] mt-0.5">Everything across all folders</p>
+                  ) : selectedFolder.viewType === "register" ? (
+                    <p className="text-xs text-[#bbb] mt-0.5">Register · a row per deliverable</p>
+                  ) : null}
+                </div>
               </div>
               {isManager && selectedFolder && (
                 <Button size="sm" variant="accent" onClick={() => setAddItemOpen(true)}>
-                  <Plus className="h-3.5 w-3.5" /> Add item
+                  <Plus className="h-3.5 w-3.5" />
+                  {selectedFolder.viewType === "register" ? "Add row" : "Add item"}
                 </Button>
               )}
             </div>
@@ -414,15 +425,26 @@ export default function WorkspaceShell({
                 onRefresh={() => {}}
               />
             ) : selectedFolder ? (
-              <FolderView
-                slug={company.slug}
-                folder={selectedFolder}
-                isManager={isManager}
-                onAddItem={() => setAddItemOpen(true)}
-                onRefresh={loadFolders}
-                onEdit={isManager ? handleEdit : undefined}
-                refreshKey={refreshKey}
-              />
+              selectedFolder.viewType === "register" ? (
+                <RegisterView
+                  slug={company.slug}
+                  folder={selectedFolder}
+                  isManager={isManager}
+                  onAddItem={() => setAddItemOpen(true)}
+                  onEdit={isManager ? handleEdit : undefined}
+                  refreshKey={refreshKey}
+                />
+              ) : (
+                <FolderView
+                  slug={company.slug}
+                  folder={selectedFolder}
+                  isManager={isManager}
+                  onAddItem={() => setAddItemOpen(true)}
+                  onRefresh={loadFolders}
+                  onEdit={isManager ? handleEdit : undefined}
+                  refreshKey={refreshKey}
+                />
+              )
             ) : (
               <AllItemsTable
                 slug={company.slug}

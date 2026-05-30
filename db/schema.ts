@@ -14,6 +14,13 @@ export const userRoleEnum = pgEnum("user_role", ["admin", "manager", "reader"]);
 export const itemTypeEnum = pgEnum("item_type", ["link", "file"]);
 export const memberRoleEnum = pgEnum("member_role", ["manager", "reader"]);
 
+// How a folder presents its items: "cards" (loose links/files) or
+// "register" (structured deliverables table — see PRODUCT.md).
+export const folderViewTypeEnum = pgEnum("folder_view_type", [
+  "cards",
+  "register",
+]);
+
 // Folder colors
 export const folderColorEnum = pgEnum("folder_color", [
   "slate",
@@ -76,6 +83,7 @@ export const folders = pgTable(
       .references(() => companies.id, { onDelete: "cascade" }),
     parentId: text("parent_id"),
     color: folderColorEnum("color").notNull().default("slate"),
+    viewType: folderViewTypeEnum("view_type").notNull().default("cards"),
     createdBy: text("created_by")
       .notNull()
       .references(() => users.id),
@@ -91,6 +99,7 @@ export const items = pgTable(
       .primaryKey()
       .$defaultFn(() => crypto.randomUUID()),
     title: varchar("title", { length: 500 }).notNull(),
+    description: varchar("description", { length: 500 }),
     type: itemTypeEnum("type").notNull(),
     url: text("url"),
     fileKey: text("file_key"),

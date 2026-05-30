@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await req.json();
-  const { slug, name, parentId, color } = body;
+  const { slug, name, parentId, color, viewType } = body;
 
   const access = await getCompanyAccess(session.user.id, slug);
   if (!access) return NextResponse.json({ error: "Not a member" }, { status: 403 });
@@ -67,6 +67,7 @@ export async function POST(req: NextRequest) {
       companyId: access.company.id,
       parentId: parentId || null,
       color: color || "slate",
+      viewType: viewType === "register" ? "register" : "cards",
       createdBy: session.user.id,
     })
     .returning();

@@ -171,6 +171,7 @@ Nested folders inside a workspace.
 | companyId | text → companies.id | |
 | parentId | text | nullable, self-reference for nesting |
 | color | enum(slate/indigo/violet/rose/amber/emerald) | |
+| viewType | enum(cards/register) | "cards" = Collection, "register" = deliverables table. Default cards. |
 | createdBy, createdAt | | |
 | Index | (companyId) | |
 
@@ -181,6 +182,7 @@ Links or files inside folders.
 |---|---|---|
 | id | text PK | |
 | title | varchar(500) | |
+| description | varchar(500) | short subtitle; shown on cards + as Register "Description" column |
 | type | enum(link/file) | |
 | url | text | for links |
 | fileKey, fileName, fileSize | | for files (Vercel Blob) |

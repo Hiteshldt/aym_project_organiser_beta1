@@ -44,6 +44,10 @@ Last updated: **May 28, 2026**
 - **Promise-based confirm dialogs** — all 7 browser `confirm()` calls replaced with branded UI
 - **Folder color editor** — change any folder's color via the menu, swatches in a popover
 - Custom **404 page** — brand-aligned, with home + workspace CTAs
+- **Registers** — folders can be created as a "Register": a structured deliverables table (Name · Description · Link · Remark · Updated). Picked via template chooser at folder creation. Renders in workspace and in the client share view.
+- **Item description** field — short subtitle, shown on compact cards and as the Register Description column
+- **Compact item cards** — denser two-line rows, domain instead of full URL, inline tags
+- **Stronger search** — now also matches description, fileName, and space-stripped tags ("pure air" ↔ "pureair")
 
 ### Sharing — the core product promise
 - Generate magic-link share URLs per workspace

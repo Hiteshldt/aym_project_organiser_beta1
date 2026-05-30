@@ -21,8 +21,17 @@ Three pillars. Only three.
 | | What it means |
 |---|---|
 | **One workspace per client** | Isolated. Acme sees Acme's work, not Northwind's. |
-| **Organized content** | Folders (infinite nesting). Items are links or files. Tagged, dated, searchable, deduplicated. |
+| **Organized content** | Collections (card folders) and Registers (deliverable tables). Items are links or files. Tagged, dated, searchable, deduplicated. |
 | **Beautiful client access** | A magic link. No signup. Read-only. Revocable. |
+
+### Collections vs Registers
+
+When you create a top-level folder, you pick its type:
+
+- **Collection** — a folder of cards. Best for loose links and files (quick references, scattered assets). This is the default.
+- **Register** — a structured table, one row per deliverable, with columns: **Name · Description · Link · Remark · Updated**. Best for managing a project's assets like a clean spreadsheet (e.g. a product's spec sheet, drawings, manuals). Inspired by how studios track project deliverables in Google Sheets — but native, searchable, and shareable.
+
+Both hold the same underlying items, share the same magic-link client view, and surface in search. A Register is just a denser, table-shaped presentation. Subfolders are always Collections.
 
 ---
 

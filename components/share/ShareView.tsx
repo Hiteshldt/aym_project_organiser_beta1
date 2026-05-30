@@ -12,13 +12,14 @@ import {
   Eye,
   X,
 } from "lucide-react";
-import { FOLDER_COLORS, formatDate, formatBytes, cn } from "@/lib/utils";
+import { FOLDER_COLORS, formatDate, formatBytes, prettyUrl, cn } from "@/lib/utils";
 
 type Folder = {
   id: string;
   name: string;
   parentId: string | null;
   color: string;
+  viewType?: "cards" | "register";
   companyId: string;
   createdAt: string;
 };
@@ -26,6 +27,7 @@ type Folder = {
 type Item = {
   id: string;
   title: string;
+  description?: string | null;
   type: "link" | "file";
   url: string | null;
   fileName: string | null;
@@ -232,9 +234,11 @@ export default function ShareView({
             </div>
           )}
 
-          {/* Items */}
+          {/* Items — register table when the selected folder is a register, else cards */}
           {filteredItems.length === 0 ? (
             <EmptyState query={query} />
+          ) : selectedFolder?.viewType === "register" ? (
+            <RegisterTable items={filteredItems} />
           ) : (
             <div className="grid gap-2">
               {filteredItems.map((item) => (
@@ -258,6 +262,71 @@ export default function ShareView({
           </Link>
         </div>
       </footer>
+    </div>
+  );
+}
+
+function RegisterTable({ items }: { items: Item[] }) {
+  return (
+    <div className="border border-line rounded-xl overflow-x-auto bg-paper-elevated">
+      <table className="w-full min-w-[640px] text-sm border-collapse">
+        <thead>
+          <tr className="border-b border-line bg-paper text-left">
+            <th className="py-2.5 px-3 w-10 text-[11px] font-medium text-mute uppercase tracking-wide">#</th>
+            <th className="py-2.5 px-3 text-[11px] font-medium text-mute uppercase tracking-wide">Name</th>
+            <th className="hidden md:table-cell py-2.5 px-3 text-[11px] font-medium text-mute uppercase tracking-wide">Description</th>
+            <th className="py-2.5 px-3 w-40 text-[11px] font-medium text-mute uppercase tracking-wide">Link</th>
+            <th className="hidden lg:table-cell py-2.5 px-3 text-[11px] font-medium text-mute uppercase tracking-wide">Remark</th>
+            <th className="py-2.5 px-3 w-24 text-[11px] font-medium text-mute uppercase tracking-wide">Updated</th>
+          </tr>
+        </thead>
+        <tbody>
+          {items.map((item, idx) => (
+            <tr
+              key={item.id}
+              className="border-b border-line/60 last:border-0 hover:bg-paper transition-colors align-top"
+            >
+              <td className="py-2.5 px-3 text-[11px] text-mute-soft font-mono-ui">{idx + 1}</td>
+              <td className="py-2.5 px-3">
+                <div className="flex items-start gap-1.5">
+                  <div className={cn("shrink-0 mt-0.5", item.type === "link" ? "text-accent" : "text-amber-500")}>
+                    {item.type === "link" ? <Link2 className="h-3 w-3" /> : <FileText className="h-3 w-3" />}
+                  </div>
+                  <span className="font-medium text-ink leading-snug">{item.title}</span>
+                </div>
+              </td>
+              <td className="hidden md:table-cell py-2.5 px-3 text-xs text-mute leading-snug max-w-[240px]">
+                {item.description || <span className="text-mute-soft">—</span>}
+              </td>
+              <td className="py-2.5 px-3">
+                {item.type === "link" && item.url ? (
+                  <a
+                    href={item.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-xs text-accent hover:text-accent-hover font-mono-ui truncate max-w-[150px] group/link"
+                  >
+                    <span className="truncate">{prettyUrl(item.url)}</span>
+                    <ExternalLink className="h-2.5 w-2.5 shrink-0 opacity-0 group-hover/link:opacity-100" />
+                  </a>
+                ) : item.fileName ? (
+                  <span className="text-xs text-mute font-mono-ui truncate block max-w-[150px]">
+                    {item.fileName}
+                  </span>
+                ) : (
+                  <span className="text-mute-soft">—</span>
+                )}
+              </td>
+              <td className="hidden lg:table-cell py-2.5 px-3 text-xs text-mute leading-snug max-w-[320px] whitespace-pre-wrap">
+                {item.notes || <span className="text-mute-soft">—</span>}
+              </td>
+              <td className="py-2.5 px-3 text-[11px] text-mute-soft whitespace-nowrap">
+                {formatDate(item.itemDate)}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
