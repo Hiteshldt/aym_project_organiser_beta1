@@ -24,14 +24,18 @@ Three pillars. Only three.
 | **Organized content** | Collections (card folders) and Registers (deliverable tables). Items are links or files. Tagged, dated, searchable, deduplicated. |
 | **Beautiful client access** | A magic link. No signup. Read-only. Revocable. |
 
-### Collections vs Registers
+### Two views: Cards and Register
 
-When you create a top-level folder, you pick its type:
+A folder is just a folder. Inside it, you toggle between two views from the header (managers only):
 
-- **Collection** — a folder of cards. Best for loose links and files (quick references, scattered assets). This is the default.
-- **Register** — a structured table, one row per deliverable, with columns: **Name · Description · Link · Remark · Updated**. Best for managing a project's assets like a clean spreadsheet (e.g. a product's spec sheet, drawings, manuals). Inspired by how studios track project deliverables in Google Sheets — but native, searchable, and shareable.
+- **Cards** — compact card rows. Best for loose links and files. The default.
+- **Register** — a structured table, one row per deliverable, with columns: **Name · Description · Link · Remark · Updated**. Best for managing a project's assets like a clean spreadsheet (a product's spec sheet, drawings, manuals). Inspired by how studios track deliverables in Google Sheets — but native, searchable, and shareable.
 
-Both hold the same underlying items, share the same magic-link client view, and surface in search. A Register is just a denser, table-shaped presentation. Subfolders are always Collections.
+The toggle **persists to the folder** and **drives what the client sees** in the share link — set a deliverables folder to Register and your client opens a clean table; leave a loose folder as Cards. Same underlying items either way; the view is pure presentation.
+
+### Short links
+
+Every item gets a short URL — `ayuvam.com/l/abc2xyz` — that redirects to its real link. Copy it from the card or register row (scissors icon). Hand a client a clean short link instead of a 200-character Drive URL.
 
 ---
 

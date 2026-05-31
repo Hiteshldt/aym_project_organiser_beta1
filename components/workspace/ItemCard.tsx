@@ -13,15 +13,19 @@ import {
   ExternalLink,
   Pencil,
   Check,
+  Scissors,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import { formatDate, formatDateTime, formatBytes, prettyUrl, cn } from "@/lib/utils";
+import { buildShortLinkUrl } from "@/lib/shortcode";
 
 type Item = {
   id: string;
   title: string;
   description?: string | null;
+  shortCode?: string | null;
   type: "link" | "file";
   url: string | null;
   fileKey: string | null;
@@ -82,7 +86,14 @@ export default function ItemCard({
     if (!item.url) return;
     navigator.clipboard.writeText(item.url);
     setCopied(true);
+    toast.success("Link copied.");
     setTimeout(() => setCopied(false), 2000);
+  }
+
+  function copyShortLink() {
+    if (!item.shortCode) return;
+    navigator.clipboard.writeText(buildShortLinkUrl(item.shortCode));
+    toast.success("Short link copied.");
   }
 
   const visibleTags = item.tags.slice(0, MAX_VISIBLE_TAGS);
@@ -152,6 +163,19 @@ export default function ItemCard({
                 </span>
               </>
             )}
+            {item.type === "link" && item.shortCode && (
+              <>
+                <span className="text-[#ddd] shrink-0 hidden sm:inline">·</span>
+                <button
+                  onClick={copyShortLink}
+                  title="Copy short link"
+                  className="hidden sm:inline-flex items-center gap-0.5 text-[11px] text-accent/70 hover:text-accent font-mono-ui shrink-0"
+                >
+                  <Scissors className="h-2.5 w-2.5" />
+                  /l/{item.shortCode}
+                </button>
+              </>
+            )}
           </div>
         </div>
 
@@ -199,6 +223,16 @@ export default function ItemCard({
               className={copied ? "text-emerald-500" : ""}
             >
               {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+            </Button>
+          )}
+          {item.url && item.shortCode && (
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              onClick={copyShortLink}
+              title="Copy short link"
+            >
+              <Scissors className="h-3.5 w-3.5" />
             </Button>
           )}
           {isManager && (

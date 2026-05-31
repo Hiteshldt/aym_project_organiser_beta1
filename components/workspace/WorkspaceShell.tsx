@@ -25,8 +25,19 @@ import {
   Share2,
   Menu,
   Table2,
+  LayoutGrid,
+  Check,
+  Loader2,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 
 type Company = { id: string; name: string; slug: string };
 type Folder = {
@@ -79,6 +90,7 @@ export default function WorkspaceShell({
   user: { id: string; name: string; email: string };
 }) {
   const confirm = useConfirm();
+  const router = useRouter();
   const isManager = userRole === "manager" || userRole === "admin";
   const [folders, setFolders] = useState<Folder[]>([]);
   const [foldersLoading, setFoldersLoading] = useState(true);
@@ -94,6 +106,9 @@ export default function WorkspaceShell({
   const [shareOpen, setShareOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<EditableItem | null>(null);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [newWorkspaceOpen, setNewWorkspaceOpen] = useState(false);
+  const [newWorkspaceName, setNewWorkspaceName] = useState("");
+  const [creatingWorkspace, setCreatingWorkspace] = useState(false);
 
   const loadFolders = useCallback(async () => {
     setFoldersLoading(true);
@@ -149,6 +164,47 @@ export default function WorkspaceShell({
     setMobileSidebarOpen(false);
   }
 
+  async function handleCreateWorkspace(e: React.FormEvent) {
+    e.preventDefault();
+    const name = newWorkspaceName.trim();
+    if (!name) return;
+    setCreatingWorkspace(true);
+    const res = await fetch("/api/workspace/companies", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name }),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      toast.error(data.error ?? "Could not create workspace.");
+      setCreatingWorkspace(false);
+      return;
+    }
+    const created = await res.json();
+    toast.success("Workspace created.");
+    setNewWorkspaceOpen(false);
+    setNewWorkspaceName("");
+    setCreatingWorkspace(false);
+    router.push(`/workspace/${created.slug}`);
+  }
+
+  async function handleToggleView(view: "cards" | "register") {
+    if (!selectedFolder || selectedFolder.viewType === view) return;
+    // Optimistic — flip the view immediately, then persist + sync the sidebar
+    setSelectedFolder({ ...selectedFolder, viewType: view });
+    const res = await fetch("/api/workspace/folders", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: selectedFolder.id, slug: company.slug, viewType: view }),
+    });
+    if (res.ok) {
+      loadFolders();
+    } else {
+      toast.error("Could not change the view.");
+      setSelectedFolder({ ...selectedFolder, viewType: selectedFolder.viewType });
+    }
+  }
+
   return (
     <div className="h-screen flex flex-col bg-[#fafafa]">
       {/* Top bar */}
@@ -173,24 +229,44 @@ export default function WorkspaceShell({
               className="flex items-center gap-1 text-sm text-[#555] hover:text-[#111] transition-colors truncate max-w-[140px] sm:max-w-[160px]"
             >
               <span className="truncate">{company.name}</span>
-              {myCompanies.length > 1 && <ChevronDown className="h-3.5 w-3.5 shrink-0" />}
+              <ChevronDown className="h-3.5 w-3.5 shrink-0" />
             </button>
-            {companySwitchOpen && myCompanies.length > 1 && (
-              <div className="absolute top-full left-0 mt-1 bg-white border border-[#e5e5e5] rounded-xl shadow-lg z-50 min-w-[200px] overflow-hidden">
-                {myCompanies.map((c) => (
-                  <Link
-                    key={c.id}
-                    href={`/workspace/${c.slug}`}
-                    onClick={() => setCompanySwitchOpen(false)}
-                    className={`flex items-center gap-2 px-3 py-2.5 text-sm hover:bg-[#f5f5f5] transition-colors ${
-                      c.slug === company.slug ? "text-accent font-medium" : "text-[#111]"
-                    }`}
+            {companySwitchOpen && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setCompanySwitchOpen(false)} />
+                <div className="absolute top-full left-0 mt-1 bg-white border border-[#e5e5e5] rounded-xl shadow-lg z-50 min-w-[220px] overflow-hidden py-1">
+                  <p className="px-3 pt-1.5 pb-1 text-[10px] font-medium text-[#999] uppercase tracking-wide">
+                    Workspaces
+                  </p>
+                  {myCompanies.map((c) => (
+                    <Link
+                      key={c.id}
+                      href={`/workspace/${c.slug}`}
+                      onClick={() => setCompanySwitchOpen(false)}
+                      className={`flex items-center gap-2 px-3 py-2 text-sm hover:bg-[#f5f5f5] transition-colors ${
+                        c.slug === company.slug ? "text-accent font-medium" : "text-[#111]"
+                      }`}
+                    >
+                      <Building2 className="h-3.5 w-3.5 shrink-0" />
+                      <span className="truncate">{c.name}</span>
+                      {c.slug === company.slug && (
+                        <Check className="h-3.5 w-3.5 ml-auto shrink-0" />
+                      )}
+                    </Link>
+                  ))}
+                  <div className="my-1 border-t border-[#f0f0f0]" />
+                  <button
+                    onClick={() => {
+                      setCompanySwitchOpen(false);
+                      setNewWorkspaceOpen(true);
+                    }}
+                    className="flex items-center gap-2 w-full px-3 py-2 text-sm text-[#555] hover:bg-[#f5f5f5] transition-colors"
                   >
-                    <Building2 className="h-3.5 w-3.5" />
-                    {c.name}
-                  </Link>
-                ))}
-              </div>
+                    <Plus className="h-3.5 w-3.5 shrink-0" />
+                    New workspace
+                  </button>
+                </div>
+              </>
             )}
           </div>
         </div>
@@ -405,12 +481,43 @@ export default function WorkspaceShell({
                   ) : null}
                 </div>
               </div>
-              {isManager && selectedFolder && (
-                <Button size="sm" variant="accent" onClick={() => setAddItemOpen(true)}>
-                  <Plus className="h-3.5 w-3.5" />
-                  {selectedFolder.viewType === "register" ? "Add row" : "Add item"}
-                </Button>
-              )}
+              <div className="flex items-center gap-2 shrink-0">
+                {/* View toggle — manager only, persists + drives the client view */}
+                {selectedFolder && isManager && (
+                  <div className="flex items-center rounded-lg border border-[#e5e5e5] p-0.5 bg-white">
+                    <button
+                      onClick={() => handleToggleView("cards")}
+                      title="Card view"
+                      className={`flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium transition-all ${
+                        selectedFolder.viewType !== "register"
+                          ? "bg-[#111] text-white"
+                          : "text-[#888] hover:text-[#555]"
+                      }`}
+                    >
+                      <LayoutGrid className="h-3.5 w-3.5" />
+                      <span className="hidden sm:inline">Cards</span>
+                    </button>
+                    <button
+                      onClick={() => handleToggleView("register")}
+                      title="Register (table) view"
+                      className={`flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium transition-all ${
+                        selectedFolder.viewType === "register"
+                          ? "bg-[#111] text-white"
+                          : "text-[#888] hover:text-[#555]"
+                      }`}
+                    >
+                      <Table2 className="h-3.5 w-3.5" />
+                      <span className="hidden sm:inline">Register</span>
+                    </button>
+                  </div>
+                )}
+                {isManager && selectedFolder && (
+                  <Button size="sm" variant="accent" onClick={() => setAddItemOpen(true)}>
+                    <Plus className="h-3.5 w-3.5" />
+                    {selectedFolder.viewType === "register" ? "Add row" : "Add item"}
+                  </Button>
+                )}
+              </div>
             </div>
           )}
 
@@ -492,6 +599,50 @@ export default function WorkspaceShell({
           />
         </>
       )}
+
+      {/* New workspace — available to everyone */}
+      <Dialog
+        open={newWorkspaceOpen}
+        onOpenChange={(o) => {
+          if (!o) { setNewWorkspaceOpen(false); setNewWorkspaceName(""); }
+        }}
+      >
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>New workspace</DialogTitle>
+            <DialogDescription>
+              A separate space for another client. You&apos;ll be its manager.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleCreateWorkspace} className="px-6 pb-6 space-y-4">
+            <Input
+              placeholder="e.g. Acme Inc"
+              value={newWorkspaceName}
+              onChange={(e) => setNewWorkspaceName(e.target.value)}
+              maxLength={60}
+              autoFocus
+            />
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                className="flex-1"
+                onClick={() => { setNewWorkspaceOpen(false); setNewWorkspaceName(""); }}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                variant="accent"
+                className="flex-1"
+                disabled={creatingWorkspace || !newWorkspaceName.trim()}
+              >
+                {creatingWorkspace ? <Loader2 className="h-4 w-4 animate-spin" /> : "Create"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

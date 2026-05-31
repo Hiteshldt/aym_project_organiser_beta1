@@ -100,7 +100,7 @@ export async function PATCH(req: NextRequest) {
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await req.json();
-  const { id, slug, name, color } = body;
+  const { id, slug, name, color, viewType } = body;
 
   const access = await getCompanyAccess(session.user.id, slug);
   if (!access || access.role !== "manager") {
@@ -109,7 +109,11 @@ export async function PATCH(req: NextRequest) {
 
   const [updated] = await db
     .update(folders)
-    .set({ ...(name && { name }), ...(color && { color }) })
+    .set({
+      ...(name && { name }),
+      ...(color && { color }),
+      ...((viewType === "cards" || viewType === "register") && { viewType }),
+    })
     .where(and(eq(folders.id, id), eq(folders.companyId, access.company.id)))
     .returning();
 

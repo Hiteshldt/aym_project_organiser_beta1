@@ -101,6 +101,7 @@ npm run db:push      # Sync schema → DB (no migrations)
 npm run db:generate  # Generate versioned SQL migrations
 npm run db:migrate   # Apply versioned migrations
 npm run db:seed      # Insert seed admin
+npm run db:backfill-shortcodes  # One-time: give existing items short links
 ```
 
 ---

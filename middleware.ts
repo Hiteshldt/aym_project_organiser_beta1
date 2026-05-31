@@ -24,6 +24,9 @@ export default auth((req) => {
   if (pathname.startsWith("/share/")) return NextResponse.next();
   if (pathname.startsWith("/api/share/")) return NextResponse.next();
 
+  // Public short links — resolve + redirect, no login.
+  if (pathname.startsWith("/l/")) return NextResponse.next();
+
   if (isPublic) return NextResponse.next();
 
   if (isLoggedIn && isAuthPage) {

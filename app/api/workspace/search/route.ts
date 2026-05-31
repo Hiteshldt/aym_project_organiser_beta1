@@ -176,6 +176,7 @@ export async function GET(req: NextRequest) {
       id: items.id,
       title: items.title,
       description: items.description,
+      shortCode: items.shortCode,
       type: items.type,
       url: items.url,
       fileKey: items.fileKey,

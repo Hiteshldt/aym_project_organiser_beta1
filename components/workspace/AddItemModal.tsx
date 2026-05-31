@@ -178,8 +178,8 @@ export default function AddItemModal({
     }
   }, [url, type, slug, item?.id]);
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  async function handleSubmit(e: React.FormEvent | null, forceNew = false) {
+    e?.preventDefault();
     if (!folderId && !isEditing) {
       setError("Please select a folder first.");
       return;
@@ -216,7 +216,8 @@ export default function AddItemModal({
       }
 
       // ─── ADD-NEW MODE WITH DUPLICATE: add note to existing instead ───
-      if (duplicate) {
+      // (skipped when the user explicitly chose "save as new anyway")
+      if (duplicate && !forceNew) {
         if (!updateNote.trim()) {
           setError("Add a short note about the update.");
           setSaving(false);
@@ -293,6 +294,7 @@ export default function AddItemModal({
           tags,
           notes,
           itemDate,
+          overrideDuplicate: forceNew,
         }),
       });
 
@@ -309,7 +311,7 @@ export default function AddItemModal({
         setSaving(false);
         return;
       }
-      toast.success("Item added.");
+      toast.success(forceNew ? "Saved as a new item." : "Item added.");
       onSuccess();
     } catch {
       setError("Something went wrong.");
@@ -329,14 +331,10 @@ export default function AddItemModal({
     setError("");
   }
 
-  // Submit button label depends on mode + duplicate state
-  const submitLabel = isEditing
-    ? duplicate
-      ? "Save changes anyway"
-      : "Save changes"
-    : duplicate
-      ? "Add update note"
-      : "Save item";
+  // In add-new mode with a duplicate, the warning block owns the actions —
+  // so the footer collapses to just Cancel. Everywhere else: a normal submit.
+  const duplicateInAddMode = !!duplicate && !isEditing;
+  const submitLabel = isEditing ? "Save changes" : "Save item";
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
@@ -462,19 +460,43 @@ export default function AddItemModal({
                 </div>
               </div>
               {!isEditing && (
-                <div className="space-y-1">
-                  <Label className="text-mute">Update note *</Label>
-                  <Textarea
-                    placeholder="e.g. Updated pricing section, v4 with new images…"
-                    value={updateNote}
-                    onChange={(e) => setUpdateNote(e.target.value)}
-                    className="text-xs min-h-[60px]"
-                  />
+                <>
+                  <div className="space-y-1">
+                    <Label className="text-mute">Update note (optional)</Label>
+                    <Textarea
+                      placeholder="e.g. Updated pricing section, v4 with new images…"
+                      value={updateNote}
+                      onChange={(e) => setUpdateNote(e.target.value)}
+                      className="text-xs min-h-[60px]"
+                    />
+                  </div>
+                  <div className="flex flex-col sm:flex-row gap-2 pt-1">
+                    <Button
+                      type="submit"
+                      variant="outline"
+                      size="sm"
+                      className="flex-1"
+                      disabled={saving || !updateNote.trim()}
+                      title={!updateNote.trim() ? "Write a note first" : undefined}
+                    >
+                      Add note to existing
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="accent"
+                      size="sm"
+                      className="flex-1"
+                      disabled={saving}
+                      onClick={() => handleSubmit(null, true)}
+                    >
+                      Save as a new item
+                    </Button>
+                  </div>
                   <p className="text-[11px] text-mute-soft">
-                    We&apos;ll add this note to the existing item&apos;s history
-                    instead of creating a duplicate.
+                    Add a note to keep one entry and log the change — or save this
+                    as a separate new item if it really belongs here too.
                   </p>
-                </div>
+                </>
               )}
             </div>
           )}
@@ -589,18 +611,20 @@ export default function AddItemModal({
             >
               Cancel
             </Button>
-            <Button
-              type="submit"
-              variant="accent"
-              className="flex-1"
-              disabled={saving || uploading || (!folderId && !isEditing)}
-            >
-              {saving || uploading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                submitLabel
-              )}
-            </Button>
+            {!duplicateInAddMode && (
+              <Button
+                type="submit"
+                variant="accent"
+                className="flex-1"
+                disabled={saving || uploading || (!folderId && !isEditing)}
+              >
+                {saving || uploading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  submitLabel
+                )}
+              </Button>
+            )}
           </div>
         </form>
       </DialogContent>

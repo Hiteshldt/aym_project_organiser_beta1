@@ -13,9 +13,11 @@ import {
   Trash2,
   Pin,
   PinOff,
+  Scissors,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatDate, formatBytes, prettyUrl, cn } from "@/lib/utils";
+import { buildShortLinkUrl } from "@/lib/shortcode";
 import { useConfirm } from "@/components/ui/confirm";
 import { toast } from "sonner";
 
@@ -25,6 +27,7 @@ type Item = {
   id: string;
   title: string;
   description: string | null;
+  shortCode?: string | null;
   type: "link" | "file";
   url: string | null;
   fileKey: string | null;
@@ -119,6 +122,12 @@ export default function RegisterView({
     setCopiedId(item.id);
     toast.success("Link copied.");
     setTimeout(() => setCopiedId(null), 2000);
+  }
+
+  function copyShort(item: Item) {
+    if (!item.shortCode) return;
+    navigator.clipboard.writeText(buildShortLinkUrl(item.shortCode));
+    toast.success("Short link copied.");
   }
 
   if (!loading && items.length === 0) {
@@ -244,6 +253,16 @@ export default function RegisterView({
                             className={copiedId === item.id ? "text-emerald-500" : ""}
                           >
                             {copiedId === item.id ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                          </Button>
+                        )}
+                        {item.url && item.shortCode && (
+                          <Button
+                            variant="ghost"
+                            size="icon-sm"
+                            onClick={() => copyShort(item)}
+                            title="Copy short link"
+                          >
+                            <Scissors className="h-3 w-3" />
                           </Button>
                         )}
                         {isManager && (

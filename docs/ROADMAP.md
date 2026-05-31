@@ -48,6 +48,10 @@ Last updated: **May 28, 2026**
 - **Item description** field — short subtitle, shown on compact cards and as the Register Description column
 - **Compact item cards** — denser two-line rows, domain instead of full URL, inline tags
 - **Stronger search** — now also matches description, fileName, and space-stripped tags ("pure air" ↔ "pureair")
+- **Short links** — every item gets a `/l/<code>` short URL that redirects to its real link. Copy from the card or register row. Public `/l/[code]` route, backfilled for existing items.
+- **Non-blocking duplicates** — the "link already exists" warning now offers both "Add note to existing" and "Save as a new item" (overrideDuplicate). Never a dead-end.
+- **Cards/Register view toggle** — folders are no longer locked to a type at creation; toggle the view in the folder header. Persists per folder and drives the client share view. Folder creation simplified back to name + color.
+- **Top-bar workspace switcher** — always-on dropdown to switch between workspaces, with "+ New workspace" inline create (any user can spin up a new workspace and becomes its manager).
 
 ### Sharing — the core product promise
 - Generate magic-link share URLs per workspace

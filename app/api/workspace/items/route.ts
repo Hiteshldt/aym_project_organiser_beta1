@@ -3,6 +3,7 @@ import { db } from "@/db";
 import { items, itemHistory, folders, companyMembers, companies, users } from "@/db/schema";
 import { eq, and, desc, sql } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
+import { generateShortCode } from "@/lib/shortcode";
 
 async function getCompanyAccess(userId: string, slug: string) {
   const result = await db
@@ -48,6 +49,7 @@ export async function GET(req: NextRequest) {
       id: items.id,
       title: items.title,
       description: items.description,
+      shortCode: items.shortCode,
       type: items.type,
       url: items.url,
       fileKey: items.fileKey,
@@ -79,13 +81,14 @@ export async function POST(req: NextRequest) {
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await req.json();
-  const { slug, folderId, title, description, type, url, fileKey, fileName, fileSize, tags, notes, itemDate } = body;
+  const { slug, folderId, title, description, type, url, fileKey, fileName, fileSize, tags, notes, itemDate, overrideDuplicate } = body;
 
   const access = await getCompanyAccess(session.user.id, slug);
   if (!access) return NextResponse.json({ error: "Not a member" }, { status: 403 });
   if (access.role !== "manager") return NextResponse.json({ error: "Managers only" }, { status: 403 });
 
-  if (url && type === "link") {
+  // Duplicate check — skipped when the user explicitly chose "save as new anyway"
+  if (url && type === "link" && !overrideDuplicate) {
     const dup = await db
       .select({ id: items.id, title: items.title, folderId: items.folderId, createdAt: items.createdAt })
       .from(items)
@@ -100,11 +103,24 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // Generate a unique short code, retrying on the rare collision
+  let shortCode = generateShortCode();
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const clash = await db
+      .select({ id: items.id })
+      .from(items)
+      .where(eq(items.shortCode, shortCode))
+      .limit(1);
+    if (!clash[0]) break;
+    shortCode = generateShortCode();
+  }
+
   const [item] = await db
     .insert(items)
     .values({
       title,
       description: description || null,
+      shortCode,
       type,
       url: url || null,
       fileKey: fileKey || null,

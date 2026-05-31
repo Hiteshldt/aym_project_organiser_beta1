@@ -183,6 +183,7 @@ Links or files inside folders.
 | id | text PK | |
 | title | varchar(500) | |
 | description | varchar(500) | short subtitle; shown on cards + as Register "Description" column |
+| shortCode | varchar(16) unique | powers the public `/l/<code>` short link; auto-generated on create |
 | type | enum(link/file) | |
 | url | text | for links |
 | fileKey, fileName, fileSize | | for files (Vercel Blob) |

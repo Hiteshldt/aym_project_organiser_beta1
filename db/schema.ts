@@ -100,6 +100,7 @@ export const items = pgTable(
       .$defaultFn(() => crypto.randomUUID()),
     title: varchar("title", { length: 500 }).notNull(),
     description: varchar("description", { length: 500 }),
+    shortCode: varchar("short_code", { length: 16 }).unique(),
     type: itemTypeEnum("type").notNull(),
     url: text("url"),
     fileKey: text("file_key"),
