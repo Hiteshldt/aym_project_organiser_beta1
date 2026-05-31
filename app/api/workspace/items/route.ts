@@ -103,37 +103,39 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // Generate a unique short code, retrying on the rare collision
-  let shortCode = generateShortCode();
-  for (let attempt = 0; attempt < 5; attempt++) {
-    const clash = await db
-      .select({ id: items.id })
-      .from(items)
-      .where(eq(items.shortCode, shortCode))
-      .limit(1);
-    if (!clash[0]) break;
-    shortCode = generateShortCode();
-  }
+  // Insert with a generated short code. The column is UNIQUE, so rather than
+  // pre-checking we just let the DB enforce it and retry the (astronomically
+  // rare) collision — one round-trip instead of two+ on the happy path.
+  const baseValues = {
+    title,
+    description: description || null,
+    type,
+    url: url || null,
+    fileKey: fileKey || null,
+    fileName: fileName || null,
+    fileSize: fileSize || null,
+    folderId,
+    companyId: access.company.id,
+    tags: tags || [],
+    notes: notes || null,
+    itemDate: itemDate ? new Date(itemDate) : new Date(),
+    createdBy: session.user.id,
+  };
 
-  const [item] = await db
-    .insert(items)
-    .values({
-      title,
-      description: description || null,
-      shortCode,
-      type,
-      url: url || null,
-      fileKey: fileKey || null,
-      fileName: fileName || null,
-      fileSize: fileSize || null,
-      folderId,
-      companyId: access.company.id,
-      tags: tags || [],
-      notes: notes || null,
-      itemDate: itemDate ? new Date(itemDate) : new Date(),
-      createdBy: session.user.id,
-    })
-    .returning();
+  let item: typeof items.$inferSelect | undefined;
+  for (let attempt = 0; attempt < 5; attempt++) {
+    try {
+      [item] = await db
+        .insert(items)
+        .values({ ...baseValues, shortCode: generateShortCode() })
+        .returning();
+      break;
+    } catch (e) {
+      // 23505 = unique_violation; only retry the short-code clash.
+      if ((e as { code?: string }).code === "23505" && attempt < 4) continue;
+      throw e;
+    }
+  }
 
   return NextResponse.json(item, { status: 201 });
 }

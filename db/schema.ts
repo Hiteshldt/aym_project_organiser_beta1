@@ -126,6 +126,13 @@ export const items = pgTable(
     index("items_company_idx").on(t.companyId),
     index("items_folder_idx").on(t.folderId),
     index("items_url_company_idx").on(t.url, t.companyId),
+    // Backs the workspace list query: filter by company, ordered pinned-first
+    // then newest-first.
+    index("items_company_pinned_created_idx").on(
+      t.companyId,
+      t.isPinned,
+      t.createdAt
+    ),
   ]
 );
 
@@ -155,19 +162,25 @@ export const clientShares = pgTable(
   ]
 );
 
-export const itemHistory = pgTable("item_history", {
-  id: text("id")
-    .primaryKey()
-    .$defaultFn(() => crypto.randomUUID()),
-  itemId: text("item_id")
-    .notNull()
-    .references(() => items.id, { onDelete: "cascade" }),
-  updateNote: text("update_note").notNull(),
-  createdBy: text("created_by")
-    .notNull()
-    .references(() => users.id),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+export const itemHistory = pgTable(
+  "item_history",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    itemId: text("item_id")
+      .notNull()
+      .references(() => items.id, { onDelete: "cascade" }),
+    updateNote: text("update_note").notNull(),
+    createdBy: text("created_by")
+      .notNull()
+      .references(() => users.id),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  // The historyCount subquery on every item list filters by item_id — without
+  // this it's a full scan of item_history per item row.
+  (t) => [index("item_history_item_idx").on(t.itemId)]
+);
 
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({

@@ -11,7 +11,8 @@
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
     "db:seed": "npx tsx db/seed.ts",
-    "db:backfill-shortcodes": "npx tsx db/backfill-shortcodes.ts"
+    "db:backfill-shortcodes": "npx tsx db/backfill-shortcodes.ts",
+    "db:add-indexes": "npx tsx db/add-indexes.ts"
   },
   "dependencies": {
     "@auth/drizzle-adapter": "^1.11.2",

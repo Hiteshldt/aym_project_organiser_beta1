@@ -18,11 +18,16 @@ export function generateShortCode(length = 7): string {
   return out;
 }
 
-/** Build the public short URL for a given code. */
+/**
+ * Build the public short URL for a given code.
+ * In the browser we use the live origin (so it's always the real domain the
+ * user is on); on the server we fall back to env, then localhost in dev.
+ */
 export function buildShortLinkUrl(code: string): string {
   const base =
-    process.env.NEXTAUTH_URL ??
-    process.env.NEXT_PUBLIC_APP_URL ??
+    (typeof window !== "undefined" && window.location.origin) ||
+    process.env.NEXT_PUBLIC_APP_URL ||
+    process.env.NEXTAUTH_URL ||
     "http://localhost:3000";
   return `${base.replace(/\/$/, "")}/l/${code}`;
 }

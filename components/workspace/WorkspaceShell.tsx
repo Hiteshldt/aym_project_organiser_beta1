@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { signOut } from "next-auth/react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -52,6 +52,25 @@ type Folder = {
 
 type MyCompany = { id: string; name: string; slug: string; role: string };
 
+// Shape the server seeds into AllItemsTable on first paint (a superset is fine).
+type SeededItem = {
+  id: string;
+  title: string;
+  type: "link" | "file";
+  url: string | null;
+  fileName: string | null;
+  fileSize: number | null;
+  folderId: string;
+  folderName: string;
+  tags: string[];
+  notes: string | null;
+  itemDate: string;
+  isPinned: boolean;
+  createdAt: string;
+  createdByName: string;
+  historyCount: number;
+};
+
 type EditableItem = {
   id: string;
   title: string;
@@ -84,23 +103,29 @@ export default function WorkspaceShell({
   company,
   userRole,
   user,
+  initialFolders,
+  initialItems,
+  initialCompanies,
 }: {
   company: Company;
   userRole: string;
   user: { id: string; name: string; email: string };
+  initialFolders?: Folder[];
+  initialItems?: SeededItem[];
+  initialCompanies?: MyCompany[];
 }) {
   const confirm = useConfirm();
   const router = useRouter();
   const isManager = userRole === "manager" || userRole === "admin";
-  const [folders, setFolders] = useState<Folder[]>([]);
-  const [foldersLoading, setFoldersLoading] = useState(true);
+  const [folders, setFolders] = useState<Folder[]>(initialFolders ?? []);
+  const [foldersLoading, setFoldersLoading] = useState(!initialFolders);
   const [selectedFolder, setSelectedFolder] = useState<Folder | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [addItemOpen, setAddItemOpen] = useState(false);
   const [createFolderOpen, setCreateFolderOpen] = useState(false);
   const [createSubfolderParent, setCreateSubfolderParent] = useState<Folder | null>(null);
-  const [myCompanies, setMyCompanies] = useState<MyCompany[]>([]);
+  const [myCompanies, setMyCompanies] = useState<MyCompany[]>(initialCompanies ?? []);
   const [companySwitchOpen, setCompanySwitchOpen] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const [shareOpen, setShareOpen] = useState(false);
@@ -110,23 +135,33 @@ export default function WorkspaceShell({
   const [newWorkspaceName, setNewWorkspaceName] = useState("");
   const [creatingWorkspace, setCreatingWorkspace] = useState(false);
 
-  const loadFolders = useCallback(async () => {
-    setFoldersLoading(true);
+  const loadFolders = useCallback(async (silent = false) => {
+    // Only show the skeleton on the first load; background refreshes (rename,
+    // color, delete, item changes) update in place so the sidebar never flashes.
+    if (!silent) setFoldersLoading(true);
     const res = await fetch(`/api/workspace/folders?slug=${company.slug}`);
     if (res.ok) setFolders(await res.json());
     setFoldersLoading(false);
   }, [company.slug]);
 
+  // Folders are seeded from the server on first paint; skip that initial fetch
+  // (later mutations still call loadFolders directly).
+  const foldersSeeded = useRef(!!initialFolders);
   useEffect(() => {
+    if (foldersSeeded.current) {
+      foldersSeeded.current = false;
+      return;
+    }
     loadFolders();
   }, [loadFolders]);
 
   useEffect(() => {
+    if (initialCompanies) return; // seeded from the server
     fetch("/api/workspace/my-companies")
       .then((r) => r.json())
       .then(setMyCompanies)
       .catch(() => {});
-  }, []);
+  }, [initialCompanies]);
 
   function handleSearch(e: React.ChangeEvent<HTMLInputElement>) {
     setSearchQuery(e.target.value);
@@ -139,7 +174,7 @@ export default function WorkspaceShell({
   }
 
   function handleFolderCreated() {
-    loadFolders();
+    loadFolders(true);
     setCreateFolderOpen(false);
     setCreateSubfolderParent(null);
   }
@@ -190,18 +225,21 @@ export default function WorkspaceShell({
 
   async function handleToggleView(view: "cards" | "register") {
     if (!selectedFolder || selectedFolder.viewType === view) return;
-    // Optimistic — flip the view immediately, then persist + sync the sidebar
+    const prev = selectedFolder.viewType;
+    const folderId = selectedFolder.id;
+    // Optimistic — flip the view instantly in both the content and the sidebar
+    // copy, no refetch (avoids the sidebar skeleton flashing on every toggle).
     setSelectedFolder({ ...selectedFolder, viewType: view });
+    setFolders((fs) => fs.map((f) => (f.id === folderId ? { ...f, viewType: view } : f)));
     const res = await fetch("/api/workspace/folders", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: selectedFolder.id, slug: company.slug, viewType: view }),
+      body: JSON.stringify({ id: folderId, slug: company.slug, viewType: view }),
     });
-    if (res.ok) {
-      loadFolders();
-    } else {
+    if (!res.ok) {
       toast.error("Could not change the view.");
-      setSelectedFolder({ ...selectedFolder, viewType: selectedFolder.viewType });
+      setSelectedFolder((sf) => (sf && sf.id === folderId ? { ...sf, viewType: prev } : sf));
+      setFolders((fs) => fs.map((f) => (f.id === folderId ? { ...f, viewType: prev } : f)));
     }
   }
 
@@ -408,7 +446,7 @@ export default function WorkspaceShell({
                     const res = await fetch(`/api/workspace/folders?id=${id}&slug=${company.slug}`, { method: "DELETE" });
                     if (res.ok) {
                       toast.success("Folder deleted.");
-                      loadFolders();
+                      loadFolders(true);
                       if (selectedFolder?.id === id) setSelectedFolder(null);
                     } else {
                       toast.error("Could not delete folder.");
@@ -422,7 +460,7 @@ export default function WorkspaceShell({
                     });
                     if (res.ok) {
                       toast.success("Folder renamed.");
-                      loadFolders();
+                      loadFolders(true);
                     } else {
                       toast.error("Could not rename folder.");
                     }
@@ -435,7 +473,7 @@ export default function WorkspaceShell({
                     });
                     if (res.ok) {
                       toast.success("Color updated.");
-                      loadFolders();
+                      loadFolders(true);
                     } else {
                       toast.error("Could not change color.");
                     }
@@ -547,7 +585,7 @@ export default function WorkspaceShell({
                   folder={selectedFolder}
                   isManager={isManager}
                   onAddItem={() => setAddItemOpen(true)}
-                  onRefresh={loadFolders}
+                  onRefresh={() => loadFolders(true)}
                   onEdit={isManager ? handleEdit : undefined}
                   refreshKey={refreshKey}
                 />
@@ -558,6 +596,7 @@ export default function WorkspaceShell({
                 isManager={isManager}
                 refreshKey={refreshKey}
                 onEdit={isManager ? handleEdit : undefined}
+                initialItems={initialItems}
               />
             )}
           </div>

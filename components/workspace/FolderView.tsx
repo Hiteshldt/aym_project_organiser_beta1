@@ -28,6 +28,14 @@ type Item = {
   historyCount: number;
 };
 
+// Pinned first, then newest-first — mirrors the server's ORDER BY.
+function sortItems(list: Item[]): Item[] {
+  return [...list].sort((a, b) => {
+    if (a.isPinned !== b.isPinned) return a.isPinned ? -1 : 1;
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  });
+}
+
 function ItemSkeleton() {
   return (
     <div className="border border-[#ebebeb] rounded-xl bg-white px-4 py-3.5 flex items-start gap-3">
@@ -88,23 +96,35 @@ export default function FolderView({
       danger: true,
     });
     if (!ok) return;
+    // Optimistic — drop it now, restore on failure.
+    const prev = items;
+    setItems((cur) => cur.filter((i) => i.id !== id));
     const res = await fetch(`/api/workspace/items?id=${id}&slug=${slug}`, { method: "DELETE" });
     if (!res.ok) {
       toast.error("Could not delete item.");
+      setItems(prev);
       return;
     }
     toast.success("Item deleted.");
-    load();
   }
 
   async function handlePin(id: string, isPinned: boolean) {
+    // Optimistic — flip + reorder immediately, revalidate on failure.
+    const prev = items;
+    setItems((cur) =>
+      sortItems(cur.map((i) => (i.id === id ? { ...i, isPinned: !isPinned } : i)))
+    );
     const res = await fetch("/api/workspace/items", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id, slug, isPinned: !isPinned }),
     });
-    if (res.ok) toast.success(isPinned ? "Unpinned." : "Pinned to top.");
-    load();
+    if (res.ok) {
+      toast.success(isPinned ? "Unpinned." : "Pinned to top.");
+    } else {
+      toast.error("Could not update pin.");
+      setItems(prev);
+    }
   }
 
   if (loading) {
