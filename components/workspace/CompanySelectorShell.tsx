@@ -144,7 +144,7 @@ export default function CompanySelectorShell({
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g. Acme Inc"
+                  placeholder="e.g. Google"
                   maxLength={60}
                   autoFocus
                   className="w-full font-display text-2xl leading-tight bg-transparent border-b border-line focus:border-accent transition-colors outline-none py-2 placeholder:text-mute-soft text-ink"

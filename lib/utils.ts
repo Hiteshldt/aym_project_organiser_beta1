@@ -35,6 +35,57 @@ export function prettyUrl(url: string) {
   }
 }
 
+// Query params that are view-state / tracking noise, not resource identity.
+// Stripped before comparing two URLs so the same Google Doc opened with
+// "?gid=…" and "?usp=sharing" is recognised as one link. Meaningful params
+// (e.g. YouTube's "?v=") are deliberately kept.
+const URL_NOISE_PARAMS = new Set([
+  "usp",
+  "gid",
+  "fbclid",
+  "gclid",
+  "ref",
+  "ref_src",
+  "source",
+  "utm_source",
+  "utm_medium",
+  "utm_campaign",
+  "utm_term",
+  "utm_content",
+  "mc_cid",
+  "mc_eid",
+  "igshid",
+  "spm",
+]);
+
+/**
+ * Canonicalize a URL for duplicate detection:
+ * - lowercase scheme + host, drop a leading "www."
+ * - drop the #fragment
+ * - drop known tracking / view-state query params, keep the rest (sorted)
+ * - strip a trailing slash
+ * Two links to the same resource collapse to the same string. Falls back to a
+ * trimmed/lowercased copy if the input isn't a parseable URL.
+ */
+export function normalizeUrl(raw: string): string {
+  try {
+    const u = new URL(raw.trim());
+    u.protocol = u.protocol.toLowerCase();
+    u.hostname = u.hostname.replace(/^www\./, "").toLowerCase();
+    u.hash = "";
+    const kept = new URLSearchParams();
+    [...u.searchParams.entries()]
+      .filter(([k]) => !URL_NOISE_PARAMS.has(k.toLowerCase()))
+      .sort(([a], [b]) => a.localeCompare(b))
+      .forEach(([k, v]) => kept.append(k, v));
+    u.search = kept.toString();
+    if (u.pathname.length > 1) u.pathname = u.pathname.replace(/\/+$/, "");
+    return u.toString();
+  } catch {
+    return raw.trim().toLowerCase();
+  }
+}
+
 export function formatDate(date: Date | string) {
   return new Date(date).toLocaleDateString("en-IN", {
     day: "numeric",

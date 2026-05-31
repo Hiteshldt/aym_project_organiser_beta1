@@ -3,6 +3,7 @@ import { db } from "@/db";
 import { items, folders, companies, companyMembers } from "@/db/schema";
 import { eq, and, ne } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
+import { normalizeUrl } from "@/lib/utils";
 
 /**
  * Pure read endpoint for duplicate-URL checks.
@@ -42,28 +43,32 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Not a member" }, { status: 403 });
   }
 
-  // Look up the duplicate, excluding the item being edited (if any)
+  // Compare normalized URLs so the same resource with different tracking /
+  // view-state params (?gid, ?usp, #…) is recognised as one link.
+  const target = normalizeUrl(url);
   const conditions = [
-    eq(items.url, url),
     eq(items.companyId, access[0].companyId),
+    eq(items.type, "link"),
   ];
   if (excludeId) conditions.push(ne(items.id, excludeId));
 
-  const dup = await db
+  const candidates = await db
     .select({
       id: items.id,
       title: items.title,
       folderId: items.folderId,
       folderName: folders.name,
       createdAt: items.createdAt,
+      url: items.url,
     })
     .from(items)
     .innerJoin(folders, eq(folders.id, items.folderId))
-    .where(and(...conditions))
-    .limit(1);
+    .where(and(...conditions));
 
-  if (!dup[0]) {
+  const match = candidates.find((c) => c.url && normalizeUrl(c.url) === target);
+  if (!match) {
     return NextResponse.json({ duplicate: false });
   }
-  return NextResponse.json({ duplicate: true, existing: dup[0] });
+  const { url: _omit, ...existing } = match;
+  return NextResponse.json({ duplicate: true, existing });
 }

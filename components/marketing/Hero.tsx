@@ -106,7 +106,7 @@ function MockWindow() {
           </div>
           <div className="flex-1 flex justify-center min-w-0">
             <div className="font-mono-ui text-[10px] sm:text-[11px] text-mute-soft tracking-wide truncate">
-              <span className="hidden sm:inline">ayuvam.com/workspace/acme-studio</span>
+              <span className="hidden sm:inline">ayuvam.com/workspace/google</span>
               <span className="sm:hidden">ayuvam.com</span>
             </div>
           </div>
@@ -119,7 +119,7 @@ function MockWindow() {
           <div className="hidden sm:block border-r border-line bg-paper-elevated p-3">
             <div className="flex items-center justify-between mb-3 px-1">
               <span className="font-display-italic text-base text-ink">
-                Acme Studio
+                Google
               </span>
             </div>
 

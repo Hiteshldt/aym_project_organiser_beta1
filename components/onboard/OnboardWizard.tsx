@@ -89,7 +89,7 @@ export default function OnboardWizard({
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="e.g. Acme Inc, or your studio name"
+                placeholder="e.g. Google, or your studio name"
                 maxLength={60}
                 autoFocus
                 className="w-full font-display text-3xl md:text-4xl leading-tight tracking-[-0.02em] bg-transparent border-b border-line-strong focus:border-accent transition-colors outline-none py-3 placeholder:text-mute-soft text-ink"

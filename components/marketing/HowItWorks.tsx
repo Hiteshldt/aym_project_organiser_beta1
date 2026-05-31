@@ -21,7 +21,7 @@ export default function HowItWorks() {
         <Step
           number="01"
           title="Create a workspace per client."
-          body="Acme. Northwind. Olive. One workspace each. Folders inside for proposals, files, links, whatever lives there."
+          body="Google. Apple. Spotify. One workspace each. Folders inside for proposals, files, links, whatever lives there."
         />
         <Step
           number="02"

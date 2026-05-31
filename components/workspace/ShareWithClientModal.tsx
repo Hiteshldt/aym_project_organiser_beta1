@@ -290,7 +290,7 @@ export default function ShareWithClientModal({
                 <Label htmlFor="share-label">Label (optional)</Label>
                 <Input
                   id="share-label"
-                  placeholder="e.g. Acme — main point of contact"
+                  placeholder="e.g. Google — main point of contact"
                   value={label}
                   onChange={(e) => setLabel(e.target.value)}
                 />
@@ -304,7 +304,7 @@ export default function ShareWithClientModal({
                 <Input
                   id="share-email"
                   type="email"
-                  placeholder="rachel@acme.com"
+                  placeholder="alex@google.com"
                   value={clientEmail}
                   onChange={(e) => setClientEmail(e.target.value)}
                 />

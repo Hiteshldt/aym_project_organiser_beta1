@@ -143,8 +143,8 @@ export async function GET(req: NextRequest) {
     }
 
     // Text tokens: each must match somewhere (Google-style AND across fields).
-    // We also match a space-stripped variant so "pure air" finds tag "pureair"
-    // and "pureair" finds a title "Pure Air".
+    // We also match a space-stripped variant so "data sheet" finds tag
+    // "datasheet" and "datasheet" finds a title "Data Sheet".
     for (const token of textTokens) {
       const pattern = `%${token}%`;
       const squashed = `%${token.replace(/[^a-z0-9]/g, "")}%`;
@@ -156,7 +156,7 @@ export async function GET(req: NextRequest) {
         ilike(items.fileName, pattern),
         // tag match (exact-ish, partial)
         sql`EXISTS (SELECT 1 FROM unnest(${items.tags}) AS tag WHERE tag ILIKE ${pattern})`,
-        // space-stripped tag match — handles "pure air" ↔ "pureair"
+        // space-stripped tag match — handles "data sheet" ↔ "datasheet"
         sql`EXISTS (SELECT 1 FROM unnest(${items.tags}) AS tag WHERE replace(tag, ' ', '') ILIKE ${squashed})`
       );
       if (tokenCond) conditions.push(tokenCond);

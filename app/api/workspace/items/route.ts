@@ -4,6 +4,7 @@ import { items, itemHistory, folders, companyMembers, companies, users } from "@
 import { eq, and, desc, sql } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { generateShortCode } from "@/lib/shortcode";
+import { normalizeUrl } from "@/lib/utils";
 
 async function getCompanyAccess(userId: string, slug: string) {
   const result = await db
@@ -87,18 +88,34 @@ export async function POST(req: NextRequest) {
   if (!access) return NextResponse.json({ error: "Not a member" }, { status: 403 });
   if (access.role !== "manager") return NextResponse.json({ error: "Managers only" }, { status: 403 });
 
-  // Duplicate check — skipped when the user explicitly chose "save as new anyway"
+  // Duplicate check — skipped when the user explicitly chose "save as new anyway".
+  // We compare normalized URLs so the same resource opened with different
+  // tracking / view-state params (?gid, ?usp, #…) counts as one link.
   if (url && type === "link" && !overrideDuplicate) {
-    const dup = await db
-      .select({ id: items.id, title: items.title, folderId: items.folderId, createdAt: items.createdAt })
+    const target = normalizeUrl(url);
+    const candidates = await db
+      .select({
+        id: items.id,
+        title: items.title,
+        folderId: items.folderId,
+        createdAt: items.createdAt,
+        url: items.url,
+        folderName: folders.name,
+      })
       .from(items)
-      .where(and(eq(items.url, url), eq(items.companyId, access.company.id)))
-      .limit(1);
-    if (dup[0]) {
-      const folder = await db.select({ name: folders.name }).from(folders).where(eq(folders.id, dup[0].folderId)).limit(1);
+      .innerJoin(folders, eq(folders.id, items.folderId))
+      .where(and(eq(items.companyId, access.company.id), eq(items.type, "link")));
+    const match = candidates.find((c) => c.url && normalizeUrl(c.url) === target);
+    if (match) {
       return NextResponse.json({
         duplicate: true,
-        existing: { ...dup[0], folderName: folder[0]?.name || "Unknown folder" },
+        existing: {
+          id: match.id,
+          title: match.title,
+          folderId: match.folderId,
+          createdAt: match.createdAt,
+          folderName: match.folderName,
+        },
       }, { status: 409 });
     }
   }

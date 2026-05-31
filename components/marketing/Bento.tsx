@@ -39,7 +39,7 @@ export default function Bento() {
 
           {/* Visual: stack of workspace cards */}
           <div className="mt-auto pt-6 grid grid-cols-3 gap-2">
-            {["Acme Studio", "Northwind Co.", "Olive Brand"].map((name, i) => (
+            {["Google", "Apple", "Spotify"].map((name, i) => (
               <div
                 key={name}
                 className={`rounded-lg border p-3 ${
@@ -113,7 +113,7 @@ export default function Bento() {
                   Already in <span className="text-warning">Proposals</span>
                 </p>
                 <p className="text-[11px] text-mute font-mono-ui mt-0.5">
-                  Acme — pitch deck v2 · added 12 days ago
+                  Google — Pixel 9 launch deck v2 · added 12 days ago
                 </p>
               </div>
             </div>

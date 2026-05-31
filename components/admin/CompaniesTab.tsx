@@ -123,7 +123,7 @@ export default function CompaniesTab() {
               <div className="space-y-1.5">
                 <Label>Company name</Label>
                 <Input
-                  placeholder="Acme Studio"
+                  placeholder="Google"
                   value={companyName}
                   onChange={(e) => setCompanyName(e.target.value)}
                   required

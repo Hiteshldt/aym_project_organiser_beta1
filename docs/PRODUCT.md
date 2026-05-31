@@ -20,7 +20,7 @@ Three pillars. Only three.
 
 | | What it means |
 |---|---|
-| **One workspace per client** | Isolated. Acme sees Acme's work, not Northwind's. |
+| **One workspace per client** | Isolated. Google sees Google's work, not Apple's. |
 | **Organized content** | Collections (card folders) and Registers (deliverable tables). Items are links or files. Tagged, dated, searchable, deduplicated. |
 | **Beautiful client access** | A magic link. No signup. Read-only. Revocable. |
 

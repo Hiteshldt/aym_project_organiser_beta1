@@ -85,7 +85,7 @@ export default function CreateFolderModal({
           <div className="space-y-1.5">
             <Label>Folder name</Label>
             <Input
-              placeholder="Proposals, Designs, PureAir Tower…"
+              placeholder="Proposals, Designs, Pixel launch…"
               value={name}
               onChange={(e) => setName(e.target.value)}
               autoFocus

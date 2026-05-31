@@ -655,7 +655,7 @@ export default function WorkspaceShell({
           </DialogHeader>
           <form onSubmit={handleCreateWorkspace} className="px-6 pb-6 space-y-4">
             <Input
-              placeholder="e.g. Acme Inc"
+              placeholder="e.g. Google"
               value={newWorkspaceName}
               onChange={(e) => setNewWorkspaceName(e.target.value)}
               maxLength={60}
