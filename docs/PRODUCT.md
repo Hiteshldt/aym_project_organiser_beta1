@@ -29,6 +29,7 @@ Three pillars. Only three.
 Every folder is a **register**: a spreadsheet-style table, one row per deliverable, with columns **Name · Description · Status · Link · Remark · Updated**. Inspired by how studios track deliverables in Google Sheets — but native, searchable, and shareable.
 
 - **Inline editing** — double-click any cell (name, description, link, remark) to edit it in place. Enter saves. No modal needed.
+- **Detail panel** — click a row to open a slide-over with every field (status, color, tags, date, remark) and the item's update-history timeline.
 - **Status** — a colored dropdown per row (To do · In progress · Delivered · Approved by default). Each register's status set is fully customizable — rename, recolor, add your own.
 - **Row colors** — tint any row with a color to flag or group it, just like a spreadsheet.
 - **Dividers + sticky header** — readable grid lines so it scans like a real sheet.

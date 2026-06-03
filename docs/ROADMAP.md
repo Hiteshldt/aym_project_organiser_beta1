@@ -45,7 +45,9 @@ Last updated: **May 28, 2026**
 - **Folder color editor** — change any folder's color via the menu, swatches in a popover
 - Custom **404 page** — brand-aligned, with home + workspace CTAs
 - **Register grid** — every folder is now a spreadsheet-style register (Name · Description · Status · Link · Remark · Updated). **Inline cell editing** (double-click, Enter to save), **customizable status dropdown** (per register, recolor/rename/add), **row colors**, grid dividers + sticky header. Cards view was retired — register is the single, consistent view, and it drives the client share view. Search results use the same grid.
-- **Dark mode** — night theme for the app + client share view (sun/moon toggle in the top bar), scoped so marketing stays light. Built on the CSS-variable token system; status/row colors adapt.
+- **Dark mode** — neutral-charcoal night theme for the app + client share view (sun/moon toggle in the top bar), scoped so marketing stays light. Built on the CSS-variable token system; status/row colors adapt.
+- **Item detail panel** — click any row to open a slide-over with full editing (title, description, link, status, row color, tags, date, remark) plus the update-history timeline + "log an update" box. Double-click still edits a cell inline. Replaced the old edit modal; the add modal is now add-only with status + color pickers.
+- **Type-to-confirm folder delete** — deleting a folder (which removes everything inside) now requires typing its exact name, GitHub-style.
 - **Item description** field — short subtitle, shown on compact cards and as the Register Description column
 - **Compact item cards** — denser two-line rows, domain instead of full URL, inline tags
 - **Stronger search** — now also matches description, fileName, and space-stripped tags ("data sheet" ↔ "datasheet")

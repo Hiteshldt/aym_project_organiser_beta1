@@ -55,18 +55,6 @@ type Folder = {
 
 type MyCompany = { id: string; name: string; slug: string; role: string };
 
-type EditableItem = {
-  id: string;
-  title: string;
-  type: "link" | "file";
-  url: string | null;
-  fileName: string | null;
-  fileSize: number | null;
-  tags: string[];
-  notes: string | null;
-  itemDate: string;
-};
-
 function SidebarSkeleton() {
   return (
     <div className="px-3 py-2 space-y-1">
@@ -113,7 +101,6 @@ export default function WorkspaceShell({
   const [companySwitchOpen, setCompanySwitchOpen] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const [shareOpen, setShareOpen] = useState(false);
-  const [editingItem, setEditingItem] = useState<EditableItem | null>(null);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [newWorkspaceOpen, setNewWorkspaceOpen] = useState(false);
   const [newWorkspaceName, setNewWorkspaceName] = useState("");
@@ -175,12 +162,7 @@ export default function WorkspaceShell({
 
   function handleItemAdded() {
     setAddItemOpen(false);
-    setEditingItem(null);
     setRefreshKey((k) => k + 1);
-  }
-
-  function handleEdit(item: EditableItem) {
-    setEditingItem(item);
   }
 
   function selectFolderAndClose(f: Folder | null) {
@@ -436,10 +418,11 @@ export default function WorkspaceShell({
                       const ok = await confirm({
                         title: "Delete this folder?",
                         body: target
-                          ? `"${target.name}" and all items inside it will be permanently deleted.`
+                          ? `"${target.name}" and all items inside it will be permanently deleted. This can't be undone.`
                           : "All items inside it will be permanently deleted.",
                         confirmLabel: "Delete folder",
                         danger: true,
+                        ...(target && { requireText: target.name }),
                       });
                       if (!ok) return;
                       const res = await fetch(`/api/workspace/folders?id=${id}&slug=${company.slug}`, { method: "DELETE" });
@@ -544,7 +527,6 @@ export default function WorkspaceShell({
                   statusOptions={resolvedStatusOptions}
                   onStatusOptionsChange={selectedFolder && isManager ? handleStatusOptionsChange : undefined}
                   onAddItem={() => setAddItemOpen(true)}
-                  onEdit={isManager ? handleEdit : undefined}
                   refreshKey={refreshKey}
                   initialItems={selectedFolder ? undefined : initialItems}
                   showFolderColumn={!selectedFolder}
@@ -563,15 +545,7 @@ export default function WorkspaceShell({
               slug={company.slug}
               folderId={selectedFolder?.id || ""}
               folderName={selectedFolder?.name || ""}
-              onSuccess={handleItemAdded}
-            />
-            <AddItemModal
-              open={!!editingItem}
-              onClose={() => setEditingItem(null)}
-              slug={company.slug}
-              folderId={editingItem ? "edit" : ""}
-              folderName=""
-              item={editingItem}
+              statusOptions={resolvedStatusOptions}
               onSuccess={handleItemAdded}
             />
             <CreateFolderModal

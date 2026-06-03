@@ -39,21 +39,24 @@
    ──────────────────────────────────────────────────────────────── */
 
 .dark {
-  --ink: #f3f1ec;
-  --paper: #14130f;
-  --paper-elevated: #1c1b15;
-  --line: #2c2a22;
-  --line-strong: #3a382e;
-  --mute: #9a968c;
-  --mute-soft: #6a675d;
+  /* Neutral charcoal — readable, lets the terracotta accent + status colors pop. */
+  --ink: #f4f3f0;
+  --paper: #16161a;
+  --paper-elevated: #1e1e24;
+  /* Borders/dividers need clear separation from the panels (#1e1e24) or the
+     spreadsheet grid lines vanish — keep these noticeably lighter. */
+  --line: #3d3d47;
+  --line-strong: #54545f;
+  --mute: #a8a6a0;
+  --mute-soft: #7e7c76;
 
   --accent: #e26244;
   --accent-hover: #ed6e4f;
-  --accent-soft: #3a241b;
-  --accent-soft-hover: #472c20;
+  --accent-soft: #3a2a26;
+  --accent-soft-hover: #4a352f;
 
   --success: #4caf7d;
-  --danger: #d96a52;
+  --danger: #e07057;
   --warning: #d68a4a;
 
   --background: var(--paper);
@@ -170,7 +173,7 @@ body {
   -webkit-backdrop-filter: saturate(1.4) blur(12px);
 }
 .dark .nav-blur {
-  background: rgba(20, 19, 15, 0.72);
+  background: rgba(22, 22, 26, 0.72);
 }
 
 /* Soft "hairline" border — almost imperceptible */

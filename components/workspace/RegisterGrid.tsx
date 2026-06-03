@@ -41,6 +41,7 @@ import {
   isRegisterColor,
 } from "@/lib/register";
 import { useConfirm } from "@/components/ui/confirm";
+import ItemPanel from "./ItemPanel";
 import { toast } from "sonner";
 
 type Folder = { id: string; name: string } | null;
@@ -67,18 +68,6 @@ export type RegisterItem = {
   updatedAt?: string;
   createdByName: string;
   historyCount: number;
-};
-
-type EditableItem = {
-  id: string;
-  title: string;
-  type: "link" | "file";
-  url: string | null;
-  fileName: string | null;
-  fileSize: number | null;
-  tags: string[];
-  notes: string | null;
-  itemDate: string;
 };
 
 // Shared cell styling — thin grid lines on every side give the spreadsheet feel.
@@ -109,7 +98,6 @@ export default function RegisterGrid({
   statusOptions,
   onStatusOptionsChange,
   onAddItem,
-  onEdit,
   refreshKey,
   initialItems,
   showFolderColumn = false,
@@ -120,7 +108,6 @@ export default function RegisterGrid({
   statusOptions: StatusOption[];
   onStatusOptionsChange?: (opts: StatusOption[]) => void;
   onAddItem: () => void;
-  onEdit?: (item: EditableItem) => void;
   refreshKey: number;
   initialItems?: RegisterItem[];
   showFolderColumn?: boolean;
@@ -132,6 +119,21 @@ export default function RegisterGrid({
   // One open per-row menu at a time: { id, kind }
   const [openMenu, setOpenMenu] = useState<{ id: string; kind: "status" | "color" } | null>(null);
   const [statusMgrOpen, setStatusMgrOpen] = useState(false);
+  // Detail panel: single-click a row opens it; double-click a cell edits inline.
+  // A short timer disambiguates the two so they don't fight.
+  const [openItemId, setOpenItemId] = useState<string | null>(null);
+  const openTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const cancelOpen = useCallback(() => {
+    if (openTimer.current) {
+      clearTimeout(openTimer.current);
+      openTimer.current = null;
+    }
+  }, []);
+  const scheduleOpen = useCallback((id: string) => {
+    cancelOpen();
+    openTimer.current = setTimeout(() => setOpenItemId(id), 200);
+  }, [cancelOpen]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -153,7 +155,7 @@ export default function RegisterGrid({
 
   // ── Mutations (optimistic) ──────────────────────────────────────
   const patchItem = useCallback(
-    async (id: string, patch: Partial<RegisterItem>) => {
+    async (id: string, patch: Partial<RegisterItem> & { updateNote?: string }) => {
       const prev = items;
       setItems((list) => list.map((it) => (it.id === id ? { ...it, ...patch } : it)));
       const res = await fetch("/api/workspace/items", {
@@ -169,7 +171,7 @@ export default function RegisterGrid({
     [items, slug]
   );
 
-  async function handleDelete(id: string) {
+  async function handleDelete(id: string): Promise<boolean> {
     const target = items.find((i) => i.id === id);
     const ok = await confirm({
       title: "Delete this row?",
@@ -177,15 +179,17 @@ export default function RegisterGrid({
       confirmLabel: "Delete",
       danger: true,
     });
-    if (!ok) return;
+    if (!ok) return false;
     const prev = items;
     setItems((list) => list.filter((i) => i.id !== id));
     const res = await fetch(`/api/workspace/items?id=${id}&slug=${slug}`, { method: "DELETE" });
-    if (res.ok) toast.success("Row deleted.");
-    else {
-      setItems(prev);
-      toast.error("Could not delete row.");
+    if (res.ok) {
+      toast.success("Row deleted.");
+      return true;
     }
+    setItems(prev);
+    toast.error("Could not delete row.");
+    return false;
   }
 
   function copyUrl(item: RegisterItem) {
@@ -204,6 +208,8 @@ export default function RegisterGrid({
 
   // Column count for skeleton / colspans
   const cols = 4 + (showFolderColumn ? 1 : 0) + (isManager ? 1 : 0);
+
+  const openItem = openItemId ? items.find((i) => i.id === openItemId) ?? null : null;
 
   if (!loading && items.length === 0) {
     return (
@@ -265,8 +271,10 @@ export default function RegisterGrid({
                 return (
                   <tr
                     key={item.id}
+                    onClick={() => scheduleOpen(item.id)}
+                    onDoubleClick={cancelOpen}
                     className={cn(
-                      "group border-b border-line last:border-b-0 align-top transition-colors",
+                      "group border-b border-line last:border-b-0 align-top transition-colors cursor-pointer",
                       tint || "hover:bg-paper",
                       item.isPinned && !tint && "bg-accent-soft/30"
                     )}
@@ -309,7 +317,7 @@ export default function RegisterGrid({
                     <td className={cn(CELL, "relative")}>
                       {isManager ? (
                         <button
-                          onClick={() => setOpenMenu(openMenu?.id === item.id && openMenu.kind === "status" ? null : { id: item.id, kind: "status" })}
+                          onClick={(e) => { e.stopPropagation(); setOpenMenu(openMenu?.id === item.id && openMenu.kind === "status" ? null : { id: item.id, kind: "status" }); }}
                           className={cn(
                             "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium transition-colors max-w-full",
                             status ? STATUS_CHIP[status.color] : "text-mute-soft hover:text-mute border border-dashed border-line"
@@ -329,7 +337,7 @@ export default function RegisterGrid({
                       {openMenu?.id === item.id && openMenu.kind === "status" && (
                         <>
                           <div className="fixed inset-0 z-40" onClick={() => setOpenMenu(null)} />
-                          <div className="absolute z-50 mt-1 left-3 min-w-[160px] bg-paper-elevated border border-line rounded-lg shadow-lg py-1">
+                          <div onClick={(e) => e.stopPropagation()} className="absolute z-50 mt-1 left-3 min-w-[160px] bg-paper-elevated border border-line rounded-lg shadow-lg py-1">
                             {statusOptions.map((opt) => (
                               <button
                                 key={opt.label}
@@ -419,7 +427,7 @@ export default function RegisterGrid({
 
                     {/* Actions */}
                     {isManager && (
-                      <td className="px-2 py-2 align-top relative">
+                      <td className="px-2 py-2 align-top relative" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center gap-0.5 justify-end opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                           {/* Row color */}
                           <Button
@@ -440,11 +448,9 @@ export default function RegisterGrid({
                               <Scissors className="h-3 w-3" />
                             </Button>
                           )}
-                          {onEdit && (
-                            <Button variant="ghost" size="icon-sm" onClick={() => onEdit(toEditable(item))} title="Edit all fields">
-                              <Pencil className="h-3 w-3" />
-                            </Button>
-                          )}
+                          <Button variant="ghost" size="icon-sm" onClick={() => setOpenItemId(item.id)} title="Open details">
+                            <Pencil className="h-3 w-3" />
+                          </Button>
                           <Button variant="ghost" size="icon-sm" onClick={() => patchItem(item.id, { isPinned: !item.isPinned })} title={item.isPinned ? "Unpin" : "Pin"}>
                             {item.isPinned ? <PinOff className="h-3 w-3 text-accent" /> : <Pin className="h-3 w-3" />}
                           </Button>
@@ -510,22 +516,25 @@ export default function RegisterGrid({
           onSave={(opts) => { onStatusOptionsChange(opts); setStatusMgrOpen(false); }}
         />
       )}
+
+      {/* Detail panel */}
+      {openItem && (
+        <ItemPanel
+          key={openItem.id}
+          slug={slug}
+          item={openItem}
+          isManager={isManager}
+          statusOptions={statusOptions}
+          onClose={() => setOpenItemId(null)}
+          onPatch={(patch) => patchItem(openItem.id, patch)}
+          onDelete={async () => {
+            const ok = await handleDelete(openItem.id);
+            if (ok) setOpenItemId(null);
+          }}
+        />
+      )}
     </div>
   );
-}
-
-function toEditable(item: RegisterItem): EditableItem {
-  return {
-    id: item.id,
-    title: item.title,
-    type: item.type,
-    url: item.url,
-    fileName: item.fileName,
-    fileSize: item.fileSize,
-    tags: item.tags,
-    notes: item.notes,
-    itemDate: item.itemDate,
-  };
 }
 
 // ── Inline-editable cell ──────────────────────────────────────────
@@ -566,6 +575,7 @@ function InlineText({
       <textarea
         autoFocus
         value={draft}
+        onClick={(e) => e.stopPropagation()}
         onChange={(e) => setDraft(e.target.value)}
         onBlur={commit}
         onKeyDown={(e) => {
@@ -578,6 +588,7 @@ function InlineText({
       <input
         autoFocus
         value={draft}
+        onClick={(e) => e.stopPropagation()}
         onChange={(e) => setDraft(e.target.value)}
         onBlur={commit}
         onKeyDown={(e) => {

@@ -7,7 +7,8 @@
       "Bash(npx tsx *)",
       "Bash(grep -rnE \"bg-white|#[0-9a-fA-F]{3,6}|text-gray|bg-gray|border-gray|text-black\" components/ui)",
       "Bash(grep -nE \"bg-white|#[0-9a-fA-F]{3,6}|text-gray|bg-gray\" components/ui/confirm.tsx components/ui/toaster.tsx)",
-      "Bash(npm run *)"
+      "Bash(npm run *)",
+      "Bash(grep -rnoE \"\\(border|bg|ring|divide\\)-\\\\[#[0-9a-fA-F]{3,6}\\\\]\" components/workspace components/share components/ui)"
     ],
     "additionalDirectories": [
       "/Users/hiteshgupta/Vs Code/hitesh/files-organiser/app/api/auth"

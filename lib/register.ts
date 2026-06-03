@@ -64,17 +64,18 @@ export const COLOR_DOT: Record<RegisterColor, string> = {
   pink: "bg-pink-500",
 };
 
-// Row tint — applied to a whole register row. Subtle so text stays readable.
+// Row tint — applied to a whole register row. Subtle so text stays readable,
+// but strong enough to read on the dark charcoal base.
 export const ROW_TINT: Record<RegisterColor, string> = {
-  slate: "bg-slate-50 dark:bg-slate-400/10",
-  red: "bg-red-50 dark:bg-red-400/10",
-  orange: "bg-orange-50 dark:bg-orange-400/10",
-  amber: "bg-amber-50 dark:bg-amber-400/10",
-  green: "bg-green-50 dark:bg-green-400/10",
-  teal: "bg-teal-50 dark:bg-teal-400/10",
-  blue: "bg-blue-50 dark:bg-blue-400/10",
-  violet: "bg-violet-50 dark:bg-violet-400/10",
-  pink: "bg-pink-50 dark:bg-pink-400/10",
+  slate: "bg-slate-50 dark:bg-slate-400/15",
+  red: "bg-red-50 dark:bg-red-400/15",
+  orange: "bg-orange-50 dark:bg-orange-400/15",
+  amber: "bg-amber-50 dark:bg-amber-400/15",
+  green: "bg-green-50 dark:bg-green-400/15",
+  teal: "bg-teal-50 dark:bg-teal-400/15",
+  blue: "bg-blue-50 dark:bg-blue-400/15",
+  violet: "bg-violet-50 dark:bg-violet-400/15",
+  pink: "bg-pink-50 dark:bg-pink-400/15",
 };
 
 export function isRegisterColor(v: unknown): v is RegisterColor {

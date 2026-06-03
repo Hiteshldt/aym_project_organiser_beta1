@@ -19,7 +19,13 @@ import {
   AlertTriangle,
   Upload,
 } from "lucide-react";
-import { MAX_FILE_SIZE, formatDateTime } from "@/lib/utils";
+import { MAX_FILE_SIZE, formatDateTime, cn } from "@/lib/utils";
+import {
+  type StatusOption,
+  STATUS_CHIP,
+  COLOR_DOT,
+  REGISTER_COLORS,
+} from "@/lib/register";
 import { toast } from "sonner";
 
 type DuplicateInfo = {
@@ -29,19 +35,10 @@ type DuplicateInfo = {
   createdAt: string;
 };
 
-type EditableItem = {
-  id: string;
-  title: string;
-  description?: string | null;
-  type: "link" | "file";
-  url: string | null;
-  fileName: string | null;
-  fileSize: number | null;
-  tags: string[];
-  notes: string | null;
-  itemDate: string;
-};
-
+/**
+ * Add-only modal. Editing an existing row happens in the slide-over ItemPanel
+ * (opened by clicking the row), so this stays a focused "create" form.
+ */
 export default function AddItemModal({
   open,
   onClose,
@@ -49,7 +46,7 @@ export default function AddItemModal({
   folderId,
   folderName,
   onSuccess,
-  item,
+  statusOptions = [],
 }: {
   open: boolean;
   onClose: () => void;
@@ -57,21 +54,18 @@ export default function AddItemModal({
   folderId: string;
   folderName: string;
   onSuccess: () => void;
-  /** When passed, modal opens in edit mode for this item. */
-  item?: EditableItem | null;
+  statusOptions?: StatusOption[];
 }) {
-  const isEditing = !!item;
-
   const [type, setType] = useState<"link" | "file">("link");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [url, setUrl] = useState("");
+  const [status, setStatus] = useState<string | null>(null);
+  const [rowColor, setRowColor] = useState<string | null>(null);
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
   const [notes, setNotes] = useState("");
-  const [itemDate, setItemDate] = useState(
-    new Date().toISOString().slice(0, 16)
-  );
+  const [itemDate, setItemDate] = useState(new Date().toISOString().slice(0, 16));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [duplicate, setDuplicate] = useState<DuplicateInfo | null>(null);
@@ -81,34 +75,13 @@ export default function AddItemModal({
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  // Sync local state with `item` whenever the modal opens or item changes
-  useEffect(() => {
-    if (!open) return;
-    if (item) {
-      setType(item.type);
-      setTitle(item.title);
-      setDescription(item.description ?? "");
-      setUrl(item.url ?? "");
-      setTags(item.tags ?? []);
-      setTagInput("");
-      setNotes(item.notes ?? "");
-      setItemDate(new Date(item.itemDate).toISOString().slice(0, 16));
-    } else {
-      reset();
-    }
-    setError("");
-    setDuplicate(null);
-    setUpdateNote("");
-    setFile(null);
-    setSaving(false);
-    setUploading(false);
-  }, [open, item]);
-
   function reset() {
     setType("link");
     setTitle("");
     setDescription("");
     setUrl("");
+    setStatus(null);
+    setRowColor(null);
     setTags([]);
     setTagInput("");
     setNotes("");
@@ -118,49 +91,39 @@ export default function AddItemModal({
     setDuplicate(null);
     setUpdateNote("");
     setFile(null);
+    setUploading(false);
   }
 
+  useEffect(() => {
+    if (open) reset();
+  }, [open]);
+
   function handleClose() {
-    if (!isEditing) reset();
+    reset();
     onClose();
   }
 
-  /** Normalize free-text into a tag: lowercase, spaces → hyphens, strip junk. */
   function normalizeTag(raw: string): string {
-    return raw
-      .trim()
-      .toLowerCase()
-      .replace(/\s+/g, "-")
-      .replace(/[^a-z0-9_-]/g, "");
+    return raw.trim().toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9_-]/g, "");
   }
-
   function commitTag(raw: string) {
     const t = normalizeTag(raw);
     if (!t) return;
     setTags((prev) => (prev.includes(t) ? prev : [...prev, t]));
     setTagInput("");
   }
-
   function handleTagKey(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === "Enter" || e.key === ",") {
       e.preventDefault();
       if (tagInput.trim()) commitTag(tagInput);
     } else if (e.key === "Backspace" && !tagInput && tags.length > 0) {
-      // Quick-delete the last tag on backspace from empty input
       setTags((prev) => prev.slice(0, -1));
     }
   }
-
-  function handleTagBlur() {
-    // If the user typed but didn't press Enter, still commit the tag
-    if (tagInput.trim()) commitTag(tagInput);
-  }
-
   function removeTag(t: string) {
     setTags((prev) => prev.filter((tag) => tag !== t));
   }
 
-  /** Pure duplicate check — no side effects on the server. */
   const checkDuplicate = useCallback(async () => {
     if (!url.trim() || type !== "link") {
       setDuplicate(null);
@@ -168,19 +131,17 @@ export default function AddItemModal({
     }
     setCheckingDup(true);
     setDuplicate(null);
-    const params = new URLSearchParams({ slug, url: url.trim() });
-    if (item?.id) params.set("excludeId", item.id);
-    const res = await fetch(`/api/workspace/items/check?${params}`);
+    const res = await fetch(`/api/workspace/items/check?slug=${slug}&url=${encodeURIComponent(url.trim())}`);
     setCheckingDup(false);
     if (res.ok) {
       const data = await res.json();
       if (data.duplicate) setDuplicate(data.existing);
     }
-  }, [url, type, slug, item?.id]);
+  }, [url, type, slug]);
 
   async function handleSubmit(e: React.FormEvent | null, forceNew = false) {
     e?.preventDefault();
-    if (!folderId && !isEditing) {
+    if (!folderId) {
       setError("Please select a folder first.");
       return;
     }
@@ -188,35 +149,7 @@ export default function AddItemModal({
     setSaving(true);
 
     try {
-      // ─── EDIT MODE ────────────────────────────────────────────────
-      if (isEditing && item) {
-        const res = await fetch("/api/workspace/items", {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            id: item.id,
-            slug,
-            title: title || (type === "file" ? item.fileName : url) || "Untitled",
-            description: description.trim() || null,
-            ...(type === "link" && { url: url || null }),
-            tags,
-            notes,
-            itemDate,
-            ...(updateNote.trim() && { updateNote: updateNote.trim() }),
-          }),
-        });
-        if (!res.ok) {
-          setError("Could not save changes.");
-          setSaving(false);
-          return;
-        }
-        toast.success("Item updated.");
-        onSuccess();
-        return;
-      }
-
-      // ─── ADD-NEW MODE WITH DUPLICATE: add note to existing instead ───
-      // (skipped when the user explicitly chose "save as new anyway")
+      // Duplicate found and the user hasn't chosen "save as new": add a note instead.
       if (duplicate && !forceNew) {
         if (!updateNote.trim()) {
           setError("Add a short note about the update.");
@@ -226,11 +159,7 @@ export default function AddItemModal({
         const res = await fetch("/api/workspace/items/history", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            itemId: duplicate.id,
-            slug,
-            updateNote: updateNote.trim(),
-          }),
+          body: JSON.stringify({ itemId: duplicate.id, slug, updateNote: updateNote.trim() }),
         });
         if (!res.ok) {
           setError("Could not add update note.");
@@ -242,7 +171,6 @@ export default function AddItemModal({
         return;
       }
 
-      // ─── ADD-NEW MODE, NO DUPLICATE: create the item ───
       let uploadedUrl: string | null = url || null;
       let fileKey: string | null = null;
       let fileName: string | null = null;
@@ -257,10 +185,7 @@ export default function AddItemModal({
         setUploading(true);
         const fd = new FormData();
         fd.append("file", file);
-        const uploadRes = await fetch("/api/workspace/upload", {
-          method: "POST",
-          body: fd,
-        });
+        const uploadRes = await fetch("/api/workspace/upload", { method: "POST", body: fd });
         setUploading(false);
         if (!uploadRes.ok) {
           const data = await uploadRes.json();
@@ -281,11 +206,10 @@ export default function AddItemModal({
         body: JSON.stringify({
           slug,
           folderId,
-          title:
-            title ||
-            (type === "file" ? file?.name : url) ||
-            "Untitled",
+          title: title || (type === "file" ? file?.name : url) || "Untitled",
           description: description.trim() || null,
+          status,
+          rowColor,
           type,
           url: uploadedUrl,
           fileKey,
@@ -299,8 +223,6 @@ export default function AddItemModal({
       });
 
       if (res.status === 409) {
-        // Race condition: someone else created the same URL between our check
-        // and submit. Show the warning and let the user retry with a note.
         const data = await res.json();
         setDuplicate(data.existing);
         setSaving(false);
@@ -311,7 +233,7 @@ export default function AddItemModal({
         setSaving(false);
         return;
       }
-      toast.success(forceNew ? "Saved as a new item." : "Item added.");
+      toast.success(forceNew ? "Saved as a new item." : "Row added.");
       onSuccess();
     } catch {
       setError("Something went wrong.");
@@ -331,86 +253,51 @@ export default function AddItemModal({
     setError("");
   }
 
-  // In add-new mode with a duplicate, the warning block owns the actions —
-  // so the footer collapses to just Cancel. Everywhere else: a normal submit.
-  const duplicateInAddMode = !!duplicate && !isEditing;
-  const submitLabel = isEditing ? "Save changes" : "Save item";
+  const duplicateBlocks = !!duplicate;
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>
-            {isEditing ? "Edit item" : `Add to ${folderName || "folder"}`}
-          </DialogTitle>
+          <DialogTitle>Add to {folderName || "folder"}</DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="px-6 pb-6 space-y-4">
-          {/* Type switcher — only when adding new, can't switch type on edit */}
-          {!isEditing && (
-            <div className="flex rounded-lg border border-line p-0.5 w-fit">
-              {(["link", "file"] as const).map((t) => (
-                <button
-                  key={t}
-                  type="button"
-                  onClick={() => {
-                    setType(t);
-                    setError("");
-                    setDuplicate(null);
-                  }}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
-                    type === t
-                      ? "bg-ink text-paper"
-                      : "text-mute hover:text-ink"
-                  }`}
-                >
-                  {t === "link" ? (
-                    <Link2 className="h-3.5 w-3.5" />
-                  ) : (
-                    <FileText className="h-3.5 w-3.5" />
-                  )}
-                  {t === "link" ? "Link" : "File"}
-                </button>
-              ))}
-            </div>
-          )}
+        <form onSubmit={handleSubmit} className="px-6 pb-6 space-y-4 max-h-[70vh] overflow-y-auto">
+          {/* Type switcher */}
+          <div className="flex rounded-lg border border-line p-0.5 w-fit">
+            {(["link", "file"] as const).map((t) => (
+              <button
+                key={t}
+                type="button"
+                onClick={() => { setType(t); setError(""); setDuplicate(null); }}
+                className={cn(
+                  "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all",
+                  type === t ? "bg-ink text-paper" : "text-mute hover:text-ink"
+                )}
+              >
+                {t === "link" ? <Link2 className="h-3.5 w-3.5" /> : <FileText className="h-3.5 w-3.5" />}
+                {t === "link" ? "Link" : "File"}
+              </button>
+            ))}
+          </div>
 
           {/* URL or file */}
           {type === "link" ? (
             <div className="space-y-1.5">
-              <Label>URL{!isEditing && " *"}</Label>
+              <Label>URL *</Label>
               <Input
                 type="url"
-                placeholder="https://www.canva.com/design/…"
+                placeholder="https://www.figma.com/file/…"
                 value={url}
-                onChange={(e) => {
-                  setUrl(e.target.value);
-                  setDuplicate(null);
-                }}
+                onChange={(e) => { setUrl(e.target.value); setDuplicate(null); }}
                 onBlur={checkDuplicate}
-                required={!isEditing}
+                required
               />
               {checkingDup && (
                 <p className="text-xs text-mute-soft flex items-center gap-1">
-                  <Loader2 className="h-3 w-3 animate-spin" /> Checking for
-                  duplicates…
+                  <Loader2 className="h-3 w-3 animate-spin" /> Checking for duplicates…
                 </p>
               )}
-            </div>
-          ) : isEditing ? (
-            // Edit mode for file — show metadata, can't replace the file
-            <div className="space-y-1.5">
-              <Label>File</Label>
-              <div className="rounded-lg border border-line bg-paper p-3 flex items-center gap-2 text-sm">
-                <FileText className="h-4 w-4 text-warning shrink-0" />
-                <span className="truncate text-ink">{item?.fileName}</span>
-                <span className="text-mute-soft text-xs ml-auto">
-                  {item?.fileSize ? `${(item.fileSize / 1024 / 1024).toFixed(1)} MB` : ""}
-                </span>
-              </div>
-              <p className="text-[11px] text-mute-soft">
-                To replace the file, delete this item and add a new one.
-              </p>
             </div>
           ) : (
             <div className="space-y-1.5">
@@ -423,9 +310,7 @@ export default function AddItemModal({
                   <div className="flex items-center justify-center gap-2 text-sm text-ink">
                     <FileText className="h-4 w-4 text-warning" />
                     <span>{file.name}</span>
-                    <span className="text-mute-soft">
-                      ({(file.size / 1024 / 1024).toFixed(1)} MB)
-                    </span>
+                    <span className="text-mute-soft">({(file.size / 1024 / 1024).toFixed(1)} MB)</span>
                   </div>
                 ) : (
                   <>
@@ -434,84 +319,50 @@ export default function AddItemModal({
                   </>
                 )}
               </div>
-              <input
-                ref={fileRef}
-                type="file"
-                className="hidden"
-                onChange={handleFileChange}
-              />
+              <input ref={fileRef} type="file" className="hidden" onChange={handleFileChange} />
             </div>
           )}
 
-          {/* Duplicate warning */}
+          {/* Duplicate warning — non-blocking */}
           {duplicate && (
-            <div className="rounded-lg border border-warning/30 bg-amber-50/60 p-3 space-y-2">
+            <div className="rounded-lg border border-warning/30 bg-amber-50/60 dark:bg-warning/10 p-3 space-y-2">
               <div className="flex items-start gap-2">
                 <AlertTriangle className="h-4 w-4 text-warning shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-xs font-medium text-ink">
-                    This link already exists
-                  </p>
+                  <p className="text-xs font-medium text-ink">This link already exists</p>
                   <p className="text-xs text-mute mt-0.5">
-                    &ldquo;{duplicate.title}&rdquo; in{" "}
-                    <strong className="text-ink">{duplicate.folderName}</strong>
+                    &ldquo;{duplicate.title}&rdquo; in <strong className="text-ink">{duplicate.folderName}</strong>
                     {" "}· added {formatDateTime(duplicate.createdAt)}
                   </p>
                 </div>
               </div>
-              {!isEditing && (
-                <>
-                  <div className="space-y-1">
-                    <Label className="text-mute">Update note (optional)</Label>
-                    <Textarea
-                      placeholder="e.g. Updated pricing section, v4 with new images…"
-                      value={updateNote}
-                      onChange={(e) => setUpdateNote(e.target.value)}
-                      className="text-xs min-h-[60px]"
-                    />
-                  </div>
-                  <div className="flex flex-col sm:flex-row gap-2 pt-1">
-                    <Button
-                      type="submit"
-                      variant="outline"
-                      size="sm"
-                      className="flex-1"
-                      disabled={saving || !updateNote.trim()}
-                      title={!updateNote.trim() ? "Write a note first" : undefined}
-                    >
-                      Add note to existing
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="accent"
-                      size="sm"
-                      className="flex-1"
-                      disabled={saving}
-                      onClick={() => handleSubmit(null, true)}
-                    >
-                      Save as a new item
-                    </Button>
-                  </div>
-                  <p className="text-[11px] text-mute-soft">
-                    Add a note to keep one entry and log the change — or save this
-                    as a separate new item if it really belongs here too.
-                  </p>
-                </>
-              )}
+              <div className="space-y-1">
+                <Label className="text-mute">Update note (optional)</Label>
+                <Textarea
+                  placeholder="e.g. Updated pricing section, v4 with new images…"
+                  value={updateNote}
+                  onChange={(e) => setUpdateNote(e.target.value)}
+                  className="text-xs min-h-[60px]"
+                />
+              </div>
+              <div className="flex flex-col sm:flex-row gap-2 pt-1">
+                <Button type="submit" variant="outline" size="sm" className="flex-1" disabled={saving || !updateNote.trim()}>
+                  Add note to existing
+                </Button>
+                <Button type="button" variant="accent" size="sm" className="flex-1" disabled={saving} onClick={() => handleSubmit(null, true)}>
+                  Save as a new item
+                </Button>
+              </div>
             </div>
           )}
 
           {/* Title */}
           <div className="space-y-1.5">
             <Label>Title</Label>
-            <Input
-              placeholder="Pitch deck v3"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-            />
+            <Input placeholder="Pitch deck v3" value={title} onChange={(e) => setTitle(e.target.value)} />
           </div>
 
-          {/* Description — short one-liner */}
+          {/* Description */}
           <div className="space-y-1.5">
             <Label>Description</Label>
             <Input
@@ -520,19 +371,61 @@ export default function AddItemModal({
               maxLength={200}
               onChange={(e) => setDescription(e.target.value)}
             />
-            <p className="text-[11px] text-mute-soft">
-              Optional. A quick subtitle shown next to the title and in registers.
-            </p>
+          </div>
+
+          {/* Status */}
+          {statusOptions.length > 0 && (
+            <div className="space-y-1.5">
+              <Label>Status</Label>
+              <div className="flex flex-wrap gap-1.5">
+                {statusOptions.map((opt) => (
+                  <button
+                    key={opt.label}
+                    type="button"
+                    onClick={() => setStatus(status === opt.label ? null : opt.label)}
+                    className={cn(
+                      "rounded-full px-2.5 py-1 text-xs font-medium transition-all",
+                      status === opt.label
+                        ? STATUS_CHIP[opt.color] + " ring-2 ring-offset-1 ring-accent ring-offset-paper-elevated"
+                        : STATUS_CHIP[opt.color] + " opacity-60 hover:opacity-100"
+                    )}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Row color */}
+          <div className="space-y-1.5">
+            <Label>Row color</Label>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {REGISTER_COLORS.map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => setRowColor(rowColor === c ? null : c)}
+                  title={c}
+                  className={cn(
+                    "h-6 w-6 rounded-full transition-transform hover:scale-110",
+                    COLOR_DOT[c],
+                    rowColor === c && "ring-2 ring-offset-1 ring-ink ring-offset-paper-elevated"
+                  )}
+                />
+              ))}
+              {rowColor && (
+                <button type="button" onClick={() => setRowColor(null)} className="text-[11px] text-mute hover:text-ink ml-1">
+                  Clear
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Date */}
           <div className="space-y-1.5">
             <Label>Date &amp; time</Label>
-            <Input
-              type="datetime-local"
-              value={itemDate}
-              onChange={(e) => setItemDate(e.target.value)}
-            />
+            <Input type="datetime-local" value={itemDate} onChange={(e) => setItemDate(e.target.value)} />
           </div>
 
           {/* Tags */}
@@ -540,42 +433,29 @@ export default function AddItemModal({
             <Label>Tags</Label>
             <div className="flex flex-wrap gap-1.5 p-2 border border-line rounded-lg bg-paper-elevated min-h-[40px]">
               {tags.map((t) => (
-                <span
-                  key={t}
-                  className="inline-flex items-center gap-1 bg-accent-soft text-accent-hover rounded-md px-2 py-0.5 text-xs font-medium"
-                >
+                <span key={t} className="inline-flex items-center gap-1 bg-accent-soft text-accent-hover rounded-md px-2 py-0.5 text-xs font-medium">
                   #{t}
-                  <button
-                    type="button"
-                    onClick={() => removeTag(t)}
-                    className="text-accent/70 hover:text-accent"
-                  >
+                  <button type="button" onClick={() => removeTag(t)} className="text-accent/70 hover:text-accent">
                     <X className="h-2.5 w-2.5" />
                   </button>
                 </span>
               ))}
               <input
                 type="text"
-                placeholder={
-                  tags.length === 0
-                    ? "Type a tag, press Enter…"
-                    : "Add more…"
-                }
+                placeholder={tags.length === 0 ? "Type a tag, press Enter…" : "Add more…"}
                 value={tagInput}
                 onChange={(e) => setTagInput(e.target.value)}
                 onKeyDown={handleTagKey}
-                onBlur={handleTagBlur}
-                className="flex-1 min-w-[120px] text-xs outline-none bg-transparent placeholder:text-mute-soft"
+                onBlur={() => tagInput.trim() && commitTag(tagInput)}
+                className="flex-1 min-w-[120px] text-xs outline-none bg-transparent text-ink placeholder:text-mute-soft"
               />
             </div>
-            <p className="text-[11px] text-mute-soft">
-              Press Enter or comma to add. Spaces become hyphens.
-            </p>
+            <p className="text-[11px] text-mute-soft">Press Enter or comma to add. Spaces become hyphens.</p>
           </div>
 
           {/* Notes */}
           <div className="space-y-1.5">
-            <Label>Notes</Label>
+            <Label>Remark</Label>
             <Textarea
               placeholder="Any context that will help find this later…"
               value={notes}
@@ -584,48 +464,18 @@ export default function AddItemModal({
             />
           </div>
 
-          {/* Update note in edit mode (optional, separate from dup flow) */}
-          {isEditing && !duplicate && (
-            <div className="space-y-1.5">
-              <Label>What changed? (optional)</Label>
-              <Textarea
-                placeholder="e.g. Replaced pricing with v4 numbers"
-                value={updateNote}
-                onChange={(e) => setUpdateNote(e.target.value)}
-                className="min-h-[50px]"
-              />
-              <p className="text-[11px] text-mute-soft">
-                If filled, this gets added to the item&apos;s history timeline.
-              </p>
-            </div>
-          )}
-
           {error && <p className="text-xs text-danger">{error}</p>}
 
-          <div className="flex gap-2 pt-1">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleClose}
-              className="flex-1"
-            >
-              Cancel
-            </Button>
-            {!duplicateInAddMode && (
-              <Button
-                type="submit"
-                variant="accent"
-                className="flex-1"
-                disabled={saving || uploading || (!folderId && !isEditing)}
-              >
-                {saving || uploading ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  submitLabel
-                )}
+          {!duplicateBlocks && (
+            <div className="flex gap-2 pt-1">
+              <Button type="button" variant="outline" onClick={handleClose} className="flex-1">
+                Cancel
               </Button>
-            )}
-          </div>
+              <Button type="submit" variant="accent" className="flex-1" disabled={saving || uploading || !folderId}>
+                {saving || uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Add row"}
+              </Button>
+            </div>
+          )}
         </form>
       </DialogContent>
     </Dialog>

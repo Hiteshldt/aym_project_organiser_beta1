@@ -15,6 +15,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { AlertTriangle } from "lucide-react";
 
 type ConfirmOptions = {
@@ -23,6 +24,10 @@ type ConfirmOptions = {
   confirmLabel?: string;
   cancelLabel?: string;
   danger?: boolean;
+  /** When set, the confirm button stays disabled until the user types this
+   *  exact string (e.g. the folder name) — guards genuinely destructive acts. */
+  requireText?: string;
+  requireTextLabel?: string;
 };
 
 type Resolver = (ok: boolean) => void;
@@ -39,11 +44,13 @@ const ConfirmContext = createContext<((opts: ConfirmOptions) => Promise<boolean>
  */
 export function ConfirmProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<ConfirmOptions | null>(null);
+  const [typed, setTyped] = useState("");
   const resolverRef = useRef<Resolver | null>(null);
 
   const confirm = useCallback((opts: ConfirmOptions) => {
     return new Promise<boolean>((resolve) => {
       resolverRef.current = resolve;
+      setTyped("");
       setState(opts);
     });
   }, []);
@@ -52,7 +59,10 @@ export function ConfirmProvider({ children }: { children: React.ReactNode }) {
     resolverRef.current?.(ok);
     resolverRef.current = null;
     setState(null);
+    setTyped("");
   }
+
+  const textGate = !!state?.requireText && typed.trim() !== state.requireText;
 
   return (
     <ConfirmContext.Provider value={confirm}>
@@ -77,12 +87,31 @@ export function ConfirmProvider({ children }: { children: React.ReactNode }) {
               {state.body && <DialogDescription>{state.body}</DialogDescription>}
             </DialogHeader>
 
-            <div className="px-6 pb-6 pt-2 flex gap-2 justify-end">
+            {state.requireText && (
+              <div className="px-6 pb-1 space-y-1.5">
+                <p className="text-xs text-mute">
+                  {state.requireTextLabel ?? (
+                    <>Type <span className="font-medium text-ink">{state.requireText}</span> to confirm.</>
+                  )}
+                </p>
+                <Input
+                  value={typed}
+                  onChange={(e) => setTyped(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !textGate) handleResult(true);
+                  }}
+                  placeholder={state.requireText}
+                  autoFocus
+                />
+              </div>
+            )}
+
+            <div className="px-6 pb-6 pt-3 flex gap-2 justify-end">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => handleResult(false)}
-                autoFocus
+                autoFocus={!state.requireText}
               >
                 {state.cancelLabel ?? "Cancel"}
               </Button>
@@ -90,6 +119,7 @@ export function ConfirmProvider({ children }: { children: React.ReactNode }) {
                 type="button"
                 variant={state.danger ? "destructive" : "accent"}
                 onClick={() => handleResult(true)}
+                disabled={textGate}
               >
                 {state.confirmLabel ?? "Confirm"}
               </Button>
