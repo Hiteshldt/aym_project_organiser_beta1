@@ -90,13 +90,13 @@ function FolderNode({
       <div
         className={cn(
           "group flex items-center gap-1 px-2 py-1.5 rounded-lg mx-1 cursor-pointer transition-colors relative",
-          isSelected ? "bg-accent-soft text-accent-hover" : "hover:bg-[#f5f5f5] text-[#555]"
+          isSelected ? "bg-accent-soft text-accent-hover" : "hover:bg-line/50 text-mute"
         )}
         style={{ paddingLeft: `${8 + depth * 14}px` }}
       >
         <button
           onClick={() => { if (hasChildren) setOpen(!open); }}
-          className="shrink-0 text-[#ccc] hover:text-[#888] transition-colors w-4"
+          className="shrink-0 text-mute-soft hover:text-mute transition-colors w-4"
         >
           {hasChildren ? (
             <ChevronRight className={cn("h-3.5 w-3.5 transition-transform", open && "rotate-90")} />
@@ -123,7 +123,7 @@ function FolderNode({
                 }
               }}
               maxLength={120}
-              className="flex-1 min-w-0 text-xs bg-white border border-accent rounded px-1.5 py-0.5 outline-none focus:ring-1 focus:ring-accent"
+              className="flex-1 min-w-0 text-xs bg-paper-elevated text-ink border border-accent rounded px-1.5 py-0.5 outline-none focus:ring-1 focus:ring-accent"
             />
           </div>
         ) : (
@@ -138,7 +138,7 @@ function FolderNode({
             className="flex items-center gap-2 flex-1 min-w-0 text-left"
           >
             <span className={cn("w-2 h-2 rounded-full shrink-0", colors.dot)} />
-            <span className={cn("text-xs truncate", isSelected ? "font-medium text-accent-hover" : "text-[#444]")}>
+            <span className={cn("text-xs truncate", isSelected ? "font-medium text-accent-hover" : "text-ink")}>
               {folder.name}
             </span>
           </button>
@@ -148,14 +148,14 @@ function FolderNode({
           <div className="relative">
             <button
               onClick={(e) => { e.stopPropagation(); setMenuOpen(!menuOpen); }}
-              className="opacity-0 group-hover:opacity-100 p-0.5 rounded text-[#bbb] hover:text-[#555] transition-all"
+              className="opacity-0 group-hover:opacity-100 p-0.5 rounded text-mute-soft hover:text-mute transition-all"
             >
               <MoreHorizontal className="h-3.5 w-3.5" />
             </button>
             {colorPickerOpen && onChangeColor && (
               <>
                 <div className="fixed inset-0 z-10" onClick={() => setColorPickerOpen(false)} />
-                <div className="absolute right-0 top-full mt-1 z-20 bg-white border border-[#e5e5e5] rounded-lg shadow-lg overflow-hidden p-2">
+                <div className="absolute right-0 top-full mt-1 z-20 bg-paper-elevated border border-line rounded-lg shadow-lg overflow-hidden p-2">
                   <div className="flex items-center gap-1.5">
                     {COLOR_KEYS.map((c) => {
                       const colorTokens = FOLDER_COLORS[c];
@@ -170,7 +170,7 @@ function FolderNode({
                           title={c}
                           className={cn(
                             "h-6 w-6 rounded-full transition-transform flex items-center justify-center",
-                            isCurrent && "ring-2 ring-offset-1 ring-[#111]"
+                            isCurrent && "ring-2 ring-offset-1 ring-ink ring-offset-paper-elevated"
                           )}
                         >
                           <span className={cn("h-3.5 w-3.5 rounded-full", colorTokens.dot)} />
@@ -184,7 +184,7 @@ function FolderNode({
             {menuOpen && (
               <>
                 <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
-                <div className="absolute right-0 top-full mt-1 z-20 bg-white border border-[#e5e5e5] rounded-lg shadow-lg overflow-hidden min-w-[160px]">
+                <div className="absolute right-0 top-full mt-1 z-20 bg-paper-elevated border border-line rounded-lg shadow-lg overflow-hidden min-w-[160px]">
                   {onRename && (
                     <button
                       onClick={() => {
@@ -192,7 +192,7 @@ function FolderNode({
                         setRenameValue(folder.name);
                         setRenaming(true);
                       }}
-                      className="flex items-center gap-2 w-full px-3 py-2 text-xs text-[#555] hover:bg-[#f5f5f5]"
+                      className="flex items-center gap-2 w-full px-3 py-2 text-xs text-mute hover:bg-line/50"
                     >
                       <Pencil className="h-3 w-3" /> Rename
                     </button>
@@ -203,7 +203,7 @@ function FolderNode({
                         setMenuOpen(false);
                         setColorPickerOpen(true);
                       }}
-                      className="flex items-center gap-2 w-full px-3 py-2 text-xs text-[#555] hover:bg-[#f5f5f5]"
+                      className="flex items-center gap-2 w-full px-3 py-2 text-xs text-mute hover:bg-line/50"
                     >
                       <Palette className="h-3 w-3" /> Change color
                     </button>
@@ -211,7 +211,7 @@ function FolderNode({
                   {onCreateSubfolder && (
                     <button
                       onClick={() => { setMenuOpen(false); onCreateSubfolder(folder); }}
-                      className="flex items-center gap-2 w-full px-3 py-2 text-xs text-[#555] hover:bg-[#f5f5f5]"
+                      className="flex items-center gap-2 w-full px-3 py-2 text-xs text-mute hover:bg-line/50"
                     >
                       <Plus className="h-3 w-3" /> Add subfolder
                     </button>
@@ -219,7 +219,7 @@ function FolderNode({
                   {onDelete && (
                     <button
                       onClick={() => { setMenuOpen(false); onDelete(folder.id); }}
-                      className="flex items-center gap-2 w-full px-3 py-2 text-xs text-rose-500 hover:bg-rose-50"
+                      className="flex items-center gap-2 w-full px-3 py-2 text-xs text-danger hover:bg-danger/10"
                     >
                       <Trash2 className="h-3 w-3" /> Delete folder
                     </button>

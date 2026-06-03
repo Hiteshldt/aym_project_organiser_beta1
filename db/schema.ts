@@ -7,6 +7,7 @@ import {
   pgEnum,
   boolean,
   index,
+  jsonb,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
@@ -84,6 +85,11 @@ export const folders = pgTable(
     parentId: text("parent_id"),
     color: folderColorEnum("color").notNull().default("slate"),
     viewType: folderViewTypeEnum("view_type").notNull().default("cards"),
+    // Customizable status options for this register, e.g.
+    // [{ label: "In progress", color: "amber" }]. Null → use the app defaults.
+    statusOptions: jsonb("status_options").$type<
+      { label: string; color: string }[]
+    >(),
     createdBy: text("created_by")
       .notNull()
       .references(() => users.id),
@@ -101,6 +107,10 @@ export const items = pgTable(
     title: varchar("title", { length: 500 }).notNull(),
     description: varchar("description", { length: 500 }),
     shortCode: varchar("short_code", { length: 16 }).unique(),
+    // Register row's status label (matches one of the folder's statusOptions)
+    // and an optional row tint color key. Both null by default.
+    status: varchar("status", { length: 60 }),
+    rowColor: varchar("row_color", { length: 20 }),
     type: itemTypeEnum("type").notNull(),
     url: text("url"),
     fileKey: text("file_key"),

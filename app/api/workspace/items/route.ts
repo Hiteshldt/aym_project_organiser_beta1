@@ -51,6 +51,8 @@ export async function GET(req: NextRequest) {
       title: items.title,
       description: items.description,
       shortCode: items.shortCode,
+      status: items.status,
+      rowColor: items.rowColor,
       type: items.type,
       url: items.url,
       fileKey: items.fileKey,
@@ -82,7 +84,7 @@ export async function POST(req: NextRequest) {
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await req.json();
-  const { slug, folderId, title, description, type, url, fileKey, fileName, fileSize, tags, notes, itemDate, overrideDuplicate } = body;
+  const { slug, folderId, title, description, type, url, fileKey, fileName, fileSize, tags, notes, itemDate, status, rowColor, overrideDuplicate } = body;
 
   const access = await getCompanyAccess(session.user.id, slug);
   if (!access) return NextResponse.json({ error: "Not a member" }, { status: 403 });
@@ -136,6 +138,8 @@ export async function POST(req: NextRequest) {
     tags: tags || [],
     notes: notes || null,
     itemDate: itemDate ? new Date(itemDate) : new Date(),
+    status: status || null,
+    rowColor: rowColor || null,
     createdBy: session.user.id,
   };
 
@@ -162,7 +166,7 @@ export async function PATCH(req: NextRequest) {
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await req.json();
-  const { id, slug, title, description, url, tags, notes, itemDate, isPinned, updateNote } = body;
+  const { id, slug, title, description, url, tags, notes, itemDate, isPinned, status, rowColor, updateNote } = body;
 
   const access = await getCompanyAccess(session.user.id, slug);
   if (!access || access.role !== "manager") {
@@ -179,6 +183,8 @@ export async function PATCH(req: NextRequest) {
       ...(notes !== undefined && { notes }),
       ...(itemDate !== undefined && { itemDate: new Date(itemDate) }),
       ...(isPinned !== undefined && { isPinned }),
+      ...(status !== undefined && { status }),
+      ...(rowColor !== undefined && { rowColor }),
       updatedAt: new Date(),
     })
     .where(and(eq(items.id, id), eq(items.companyId, access.company.id)))

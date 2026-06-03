@@ -92,7 +92,7 @@ export default function CreateFolderModal({
               required
             />
             <p className="text-[11px] text-mute-soft">
-              Open it later and switch between Cards and Register view anytime.
+              Each folder is a register — a clean table of rows you can edit inline.
             </p>
           </div>
 
@@ -107,7 +107,7 @@ export default function CreateFolderModal({
                   className={cn(
                     "w-6 h-6 rounded-full border-2 transition-all",
                     FOLDER_COLORS[c].dot,
-                    color === c ? "border-[#111] scale-110" : "border-transparent"
+                    color === c ? "border-ink scale-110" : "border-transparent"
                   )}
                   title={c}
                 />

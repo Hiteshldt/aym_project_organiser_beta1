@@ -56,6 +56,8 @@ export default async function WorkspaceSlugPage({
         title: items.title,
         description: items.description,
         shortCode: items.shortCode,
+        status: items.status,
+        rowColor: items.rowColor,
         type: items.type,
         url: items.url,
         fileKey: items.fileKey,

@@ -12,7 +12,8 @@
     "db:push": "drizzle-kit push",
     "db:seed": "npx tsx db/seed.ts",
     "db:backfill-shortcodes": "npx tsx db/backfill-shortcodes.ts",
-    "db:add-indexes": "npx tsx db/add-indexes.ts"
+    "db:add-indexes": "npx tsx db/add-indexes.ts",
+    "db:add-register-fields": "npx tsx db/add-register-fields.ts"
   },
   "dependencies": {
     "@auth/drizzle-adapter": "^1.11.2",

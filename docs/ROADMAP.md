@@ -44,13 +44,13 @@ Last updated: **May 28, 2026**
 - **Promise-based confirm dialogs** — all 7 browser `confirm()` calls replaced with branded UI
 - **Folder color editor** — change any folder's color via the menu, swatches in a popover
 - Custom **404 page** — brand-aligned, with home + workspace CTAs
-- **Registers** — folders can be created as a "Register": a structured deliverables table (Name · Description · Link · Remark · Updated). Picked via template chooser at folder creation. Renders in workspace and in the client share view.
+- **Register grid** — every folder is now a spreadsheet-style register (Name · Description · Status · Link · Remark · Updated). **Inline cell editing** (double-click, Enter to save), **customizable status dropdown** (per register, recolor/rename/add), **row colors**, grid dividers + sticky header. Cards view was retired — register is the single, consistent view, and it drives the client share view. Search results use the same grid.
+- **Dark mode** — night theme for the app + client share view (sun/moon toggle in the top bar), scoped so marketing stays light. Built on the CSS-variable token system; status/row colors adapt.
 - **Item description** field — short subtitle, shown on compact cards and as the Register Description column
 - **Compact item cards** — denser two-line rows, domain instead of full URL, inline tags
 - **Stronger search** — now also matches description, fileName, and space-stripped tags ("data sheet" ↔ "datasheet")
 - **Short links** — every item gets a `/l/<code>` short URL that redirects to its real link. Copy from the card or register row. Public `/l/[code]` route, backfilled for existing items.
 - **Non-blocking duplicates** — the "link already exists" warning now offers both "Add note to existing" and "Save as a new item" (overrideDuplicate). Never a dead-end.
-- **Cards/Register view toggle** — folders are no longer locked to a type at creation; toggle the view in the folder header. Persists per folder and drives the client share view. Folder creation simplified back to name + color.
 - **Top-bar workspace switcher** — always-on dropdown to switch between workspaces, with "+ New workspace" inline create (any user can spin up a new workspace and becomes its manager).
 
 ### Sharing — the core product promise

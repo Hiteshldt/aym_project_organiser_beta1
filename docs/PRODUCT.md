@@ -21,17 +21,23 @@ Three pillars. Only three.
 | | What it means |
 |---|---|
 | **One workspace per client** | Isolated. Google sees Google's work, not Apple's. |
-| **Organized content** | Collections (card folders) and Registers (deliverable tables). Items are links or files. Tagged, dated, searchable, deduplicated. |
+| **Organized content** | Every folder is a register — a structured deliverables table. Items are links or files. Tagged, dated, searchable, deduplicated. |
 | **Beautiful client access** | A magic link. No signup. Read-only. Revocable. |
 
-### Two views: Cards and Register
+### The register — one clean table per folder
 
-A folder is just a folder. Inside it, you toggle between two views from the header (managers only):
+Every folder is a **register**: a spreadsheet-style table, one row per deliverable, with columns **Name · Description · Status · Link · Remark · Updated**. Inspired by how studios track deliverables in Google Sheets — but native, searchable, and shareable.
 
-- **Cards** — compact card rows. Best for loose links and files. The default.
-- **Register** — a structured table, one row per deliverable, with columns: **Name · Description · Link · Remark · Updated**. Best for managing a project's assets like a clean spreadsheet (a product's spec sheet, drawings, manuals). Inspired by how studios track deliverables in Google Sheets — but native, searchable, and shareable.
+- **Inline editing** — double-click any cell (name, description, link, remark) to edit it in place. Enter saves. No modal needed.
+- **Status** — a colored dropdown per row (To do · In progress · Delivered · Approved by default). Each register's status set is fully customizable — rename, recolor, add your own.
+- **Row colors** — tint any row with a color to flag or group it, just like a spreadsheet.
+- **Dividers + sticky header** — readable grid lines so it scans like a real sheet.
 
-The toggle **persists to the folder** and **drives what the client sees** in the share link — set a deliverables folder to Register and your client opens a clean table; leave a loose folder as Cards. Same underlying items either way; the view is pure presentation.
+The register **drives what the client sees** in the share link: they open the same clean table (read-only), with your statuses and row colors intact.
+
+### Dark mode
+
+A night theme for the whole app and the client share view — toggle the sun/moon in the top bar. Row and status colors adapt automatically. (The marketing site stays light.)
 
 ### Short links
 

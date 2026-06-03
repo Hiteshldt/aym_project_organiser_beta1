@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Class-based dark mode: `dark:` utilities apply inside `.dark`. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* ────────────────────────────────────────────────────────────────
    Ayuvam brand tokens — see BRAND_PLAN.md §3
    ──────────────────────────────────────────────────────────────── */
@@ -28,6 +31,35 @@
   /* Legacy mapping (kept so existing app still compiles while we migrate) */
   --background: var(--paper);
   --foreground: var(--ink);
+}
+
+/* ────────────────────────────────────────────────────────────────
+   Dark mode — redefine the same tokens. Anything built on bg-paper /
+   text-ink / border-line flips automatically.
+   ──────────────────────────────────────────────────────────────── */
+
+.dark {
+  --ink: #f3f1ec;
+  --paper: #14130f;
+  --paper-elevated: #1c1b15;
+  --line: #2c2a22;
+  --line-strong: #3a382e;
+  --mute: #9a968c;
+  --mute-soft: #6a675d;
+
+  --accent: #e26244;
+  --accent-hover: #ed6e4f;
+  --accent-soft: #3a241b;
+  --accent-soft-hover: #472c20;
+
+  --success: #4caf7d;
+  --danger: #d96a52;
+  --warning: #d68a4a;
+
+  --background: var(--paper);
+  --foreground: var(--ink);
+
+  color-scheme: dark;
 }
 
 @theme inline {
@@ -136,6 +168,9 @@ body {
   background: rgba(251, 250, 247, 0.72);
   backdrop-filter: saturate(1.4) blur(12px);
   -webkit-backdrop-filter: saturate(1.4) blur(12px);
+}
+.dark .nav-blur {
+  background: rgba(20, 19, 15, 0.72);
 }
 
 /* Soft "hairline" border — almost imperceptible */

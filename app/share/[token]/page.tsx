@@ -70,6 +70,8 @@ export default async function SharePage({
         id: items.id,
         title: items.title,
         description: items.description,
+        status: items.status,
+        rowColor: items.rowColor,
         type: items.type,
         url: items.url,
         fileName: items.fileName,
