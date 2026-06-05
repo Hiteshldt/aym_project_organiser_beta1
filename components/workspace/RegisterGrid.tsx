@@ -19,6 +19,7 @@ import {
   Settings2,
   Palette,
   PanelRight,
+  GripVertical,
   Folder as FolderIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -183,6 +184,34 @@ export default function RegisterGrid({
     return false;
   }
 
+  // ── Drag-to-reorder (manager, leaf folder only) ─────────────────
+  const reorderable = isManager && !!folder && canAdd;
+  const [dragId, setDragId] = useState<string | null>(null); // handle pressed → row draggable
+  const [draggingId, setDraggingId] = useState<string | null>(null);
+  const [overId, setOverId] = useState<string | null>(null);
+
+  function reorder(fromId: string, toId: string) {
+    if (fromId === toId) return;
+    const fromIdx = items.findIndex((i) => i.id === fromId);
+    const toIdx = items.findIndex((i) => i.id === toId);
+    if (fromIdx < 0 || toIdx < 0) return;
+    const next = [...items];
+    const [moved] = next.splice(fromIdx, 1);
+    next.splice(toIdx, 0, moved);
+    setItems(next);
+    fetch("/api/workspace/items/reorder", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ slug, orderedIds: next.map((i) => i.id) }),
+    }).then((r) => { if (!r.ok) toast.error("Could not save the new order."); });
+  }
+
+  function clearDrag() {
+    setDragId(null);
+    setDraggingId(null);
+    setOverId(null);
+  }
+
   function copyUrl(item: RegisterItem) {
     if (!item.url) return;
     navigator.clipboard.writeText(item.url);
@@ -200,7 +229,7 @@ export default function RegisterGrid({
     setMenu({ id, kind, rect: (e.currentTarget as HTMLElement).getBoundingClientRect() });
   }
 
-  const colCount = 6 + (isManager ? 1 : 0);
+  const colCount = 6 + (isManager ? 1 : 0) + (reorderable ? 1 : 0);
   const openItem = openItemId ? items.find((i) => i.id === openItemId) ?? null : null;
   const menuItem = menu ? items.find((i) => i.id === menu.id) ?? null : null;
 
@@ -248,6 +277,7 @@ export default function RegisterGrid({
         <table className="w-full min-w-[720px] text-sm border-collapse">
           <thead>
             <tr className="border-b border-line">
+              {reorderable && <th className="w-6 bg-paper border-r border-line" />}
               <th className={cn(HEAD, "w-10")}>#</th>
               <th className={HEAD}>Name</th>
               <th className={cn(HEAD, "hidden md:table-cell")}>Description</th>
@@ -268,12 +298,34 @@ export default function RegisterGrid({
                 return (
                   <tr
                     key={item.id}
+                    draggable={reorderable && dragId === item.id}
+                    onDragStart={(e) => { setDraggingId(item.id); e.dataTransfer.effectAllowed = "move"; }}
+                    onDragOver={(e) => { if (!draggingId) return; e.preventDefault(); setOverId(item.id); }}
+                    onDrop={(e) => { e.preventDefault(); if (draggingId) reorder(draggingId, item.id); clearDrag(); }}
+                    onDragEnd={clearDrag}
                     className={cn(
                       "group border-b border-line last:border-b-0 align-top transition-colors",
                       tint || "hover:bg-paper",
-                      item.isPinned && !tint && "bg-accent-soft/30"
+                      item.isPinned && !tint && "bg-accent-soft/30",
+                      draggingId === item.id && "opacity-40",
+                      overId === item.id && draggingId && draggingId !== item.id && "border-t-2 border-t-accent"
                     )}
                   >
+                    {/* Drag handle */}
+                    {reorderable && (
+                      <td className="border-r border-line px-1 py-2 align-top">
+                        <button
+                          onMouseDown={() => setDragId(item.id)}
+                          onMouseUp={() => setDragId(null)}
+                          title="Drag to reorder"
+                          aria-label="Drag to reorder"
+                          className="cursor-grab active:cursor-grabbing text-mute-soft hover:text-mute opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <GripVertical className="h-3.5 w-3.5" />
+                        </button>
+                      </td>
+                    )}
+
                     {/* # / open */}
                     <td className={cn(CELL, "text-[11px] text-mute-soft font-mono-ui")}>
                       <button

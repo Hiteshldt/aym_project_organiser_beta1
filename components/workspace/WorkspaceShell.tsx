@@ -530,6 +530,26 @@ export default function WorkspaceShell({
                         toast.error("Could not change color.");
                       }
                     } : undefined}
+                    onReorder={isManager ? async (orderedIds) => {
+                      // Optimistic: reorder the siblings in place, keeping the rest stable.
+                      setFolders((fs) => {
+                        const idx = new Map(orderedIds.map((id, i) => [id, i]));
+                        return [...fs].sort((a, b) => {
+                          const ai = idx.get(a.id);
+                          const bi = idx.get(b.id);
+                          return ai != null && bi != null ? ai - bi : 0;
+                        });
+                      });
+                      const res = await fetch("/api/workspace/folders/reorder", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ slug: company.slug, orderedIds }),
+                      });
+                      if (!res.ok) {
+                        toast.error("Could not save the folder order.");
+                        loadFolders(true);
+                      }
+                    } : undefined}
                     slug={company.slug}
                     isManager={isManager}
                   />

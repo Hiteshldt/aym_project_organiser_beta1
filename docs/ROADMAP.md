@@ -52,6 +52,8 @@ Last updated: **May 28, 2026**
 - **Smart tags** — when adding a row, one keystroke imports the tags from the folder's last item; tag autocomplete suggests existing workspace tags as you type.
 - **Multiple labeled links** — each item keeps a primary link plus any number of labeled extras (Raw, Final, Source…). Editable in the detail panel, shown as a `+N` in the grid and as chips on the client view.
 - **Container folders** — a folder with sub-folders becomes a navigator (shows its sub-folders, no "Add row"); items live in the leaves.
+- **Drag-to-reorder** — a grip handle (⋮⋮) on each register row and each folder/sub-folder; drag to set a manual order that persists (per-folder for rows, per-parent for folders). Native drag with a live drop indicator; order flows through to the client share view.
+- **Typo-tolerant search** — when an exact search finds nothing, a `pg_trgm` similarity fallback returns the closest titles/descriptions, so small misspellings still surface the right item.
 - **Item description** field — short subtitle, shown on compact cards and as the Register Description column
 - **Compact item cards** — denser two-line rows, domain instead of full URL, inline tags
 - **Stronger search** — now also matches description, fileName, and space-stripped tags ("data sheet" ↔ "datasheet")

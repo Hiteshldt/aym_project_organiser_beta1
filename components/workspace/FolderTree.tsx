@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { ChevronRight, MoreHorizontal, Plus, Trash2, Pencil, Palette } from "lucide-react";
+import { useState, useEffect, useRef, createContext, useContext } from "react";
+import { ChevronRight, MoreHorizontal, Plus, Trash2, Pencil, Palette, GripVertical } from "lucide-react";
 import { FOLDER_COLORS } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 
@@ -16,6 +16,20 @@ type FolderType = {
   createdAt: string;
 };
 
+// Drag-to-reorder (siblings only) shared down the tree via context.
+type FolderDnd = {
+  enabled: boolean;
+  dragId: string | null;
+  draggingId: string | null;
+  overId: string | null;
+  setDragId: (id: string | null) => void;
+  start: (f: FolderType) => void;
+  over: (f: FolderType, e: React.DragEvent) => void;
+  drop: (f: FolderType) => void;
+  end: () => void;
+};
+const DndContext = createContext<FolderDnd | null>(null);
+
 type Props = {
   folders: FolderType[];
   selectedId: string | null;
@@ -24,6 +38,7 @@ type Props = {
   onDelete?: (id: string) => void;
   onRename?: (id: string, name: string) => Promise<void> | void;
   onChangeColor?: (id: string, color: string) => Promise<void> | void;
+  onReorder?: (orderedIds: string[]) => void;
   slug: string;
   isManager: boolean;
 };
@@ -57,6 +72,7 @@ function FolderNode({
   const [renaming, setRenaming] = useState(false);
   const [renameValue, setRenameValue] = useState(folder.name);
   const renameRef = useRef<HTMLInputElement>(null);
+  const dnd = useContext(DndContext);
   const children = allFolders.filter((f) => f.parentId === folder.id);
   const hasChildren = children.length > 0;
   const colors = FOLDER_COLORS[folder.color as keyof typeof FOLDER_COLORS] || FOLDER_COLORS.slate;
@@ -88,12 +104,31 @@ function FolderNode({
   return (
     <div>
       <div
+        draggable={!!dnd?.enabled && dnd.dragId === folder.id}
+        onDragStart={() => dnd?.start(folder)}
+        onDragOver={(e) => dnd?.over(folder, e)}
+        onDrop={(e) => { e.preventDefault(); dnd?.drop(folder); }}
+        onDragEnd={() => dnd?.end()}
         className={cn(
           "group flex items-center gap-1 px-2 py-1.5 rounded-lg mx-1 cursor-pointer transition-colors relative",
-          isSelected ? "bg-accent-soft text-accent-hover" : "hover:bg-line/50 text-mute"
+          isSelected ? "bg-accent-soft text-accent-hover" : "hover:bg-line/50 text-mute",
+          dnd?.draggingId === folder.id && "opacity-40",
+          dnd?.overId === folder.id && dnd?.draggingId && dnd.draggingId !== folder.id && "border-t-2 border-t-accent"
         )}
         style={{ paddingLeft: `${8 + depth * 14}px` }}
       >
+        {dnd?.enabled && (
+          <button
+            onMouseDown={() => dnd.setDragId(folder.id)}
+            onMouseUp={() => dnd.setDragId(null)}
+            onClick={(e) => e.stopPropagation()}
+            title="Drag to reorder"
+            aria-label="Drag to reorder"
+            className="shrink-0 -ml-1 cursor-grab active:cursor-grabbing text-mute-soft hover:text-mute opacity-0 group-hover:opacity-100 transition-opacity"
+          >
+            <GripVertical className="h-3 w-3" />
+          </button>
+        )}
         <button
           onClick={() => { if (hasChildren) setOpen(!open); }}
           className="shrink-0 text-mute-soft hover:text-mute transition-colors w-4"
@@ -262,26 +297,72 @@ export default function FolderTree({
   onDelete,
   onRename,
   onChangeColor,
+  onReorder,
   isManager,
 }: Props) {
+  const [dragId, setDragId] = useState<string | null>(null);
+  const [draggingId, setDraggingId] = useState<string | null>(null);
+  const [draggingParentId, setDraggingParentId] = useState<string | null>(null);
+  const [overId, setOverId] = useState<string | null>(null);
+
+  const end = () => {
+    setDragId(null);
+    setDraggingId(null);
+    setDraggingParentId(null);
+    setOverId(null);
+  };
+
+  const dnd: FolderDnd = {
+    enabled: !!onReorder && isManager,
+    dragId,
+    draggingId,
+    overId,
+    setDragId,
+    start: (f) => { setDraggingId(f.id); setDraggingParentId(f.parentId); },
+    over: (f, e) => {
+      if (draggingId && draggingParentId === f.parentId) {
+        e.preventDefault();
+        setOverId(f.id);
+      }
+    },
+    drop: (f) => {
+      if (!draggingId || draggingId === f.id || draggingParentId !== f.parentId) {
+        end();
+        return;
+      }
+      const sibs = folders.filter((x) => x.parentId === f.parentId).map((x) => x.id);
+      const from = sibs.indexOf(draggingId);
+      const to = sibs.indexOf(f.id);
+      if (from < 0 || to < 0) { end(); return; }
+      const next = [...sibs];
+      const [m] = next.splice(from, 1);
+      next.splice(to, 0, m);
+      onReorder?.(next);
+      end();
+    },
+    end,
+  };
+
   const rootFolders = folders.filter((f) => !f.parentId);
   return (
-    <div className="py-1">
-      {rootFolders.map((folder) => (
-        <FolderNode
-          key={folder.id}
-          folder={folder}
-          depth={0}
-          allFolders={folders}
-          selectedId={selectedId}
-          onSelect={onSelect}
-          onCreateSubfolder={onCreateSubfolder}
-          onDelete={onDelete}
-          onRename={onRename}
-          onChangeColor={onChangeColor}
-          isManager={isManager}
-        />
-      ))}
-    </div>
+    <DndContext.Provider value={dnd}>
+      <div className="py-1">
+        {rootFolders.map((folder) => (
+          <FolderNode
+            key={folder.id}
+            folder={folder}
+            depth={0}
+            allFolders={folders}
+            selectedId={selectedId}
+            onSelect={onSelect}
+            onCreateSubfolder={onCreateSubfolder}
+            onDelete={onDelete}
+            onRename={onRename}
+            onChangeColor={onChangeColor}
+            isManager={isManager}
+          />
+        ))}
+      </div>
+    </DndContext.Provider>
   );
 }

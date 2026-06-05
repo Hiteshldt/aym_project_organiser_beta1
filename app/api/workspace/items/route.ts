@@ -1,7 +1,7 @@
 import { auth } from "@/lib/auth";
 import { db } from "@/db";
 import { items, itemHistory, folders, companyMembers, companies, users } from "@/db/schema";
-import { eq, and, desc, sql } from "drizzle-orm";
+import { eq, and, desc, asc, sql } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { generateShortCode } from "@/lib/shortcode";
 import { normalizeUrl } from "@/lib/utils";
@@ -74,7 +74,7 @@ export async function GET(req: NextRequest) {
     .innerJoin(users, eq(items.createdBy, users.id))
     .innerJoin(folders, eq(items.folderId, folders.id))
     .where(folderId ? and(baseWhere, eq(items.folderId, folderId)) : baseWhere)
-    .orderBy(desc(items.isPinned), desc(items.createdAt))
+    .orderBy(desc(items.isPinned), asc(items.position), desc(items.createdAt))
     .limit(recent ? 10 : 500);
 
   return NextResponse.json(results);

@@ -1,6 +1,6 @@
 import { db } from "@/db";
 import { clientShares, companies, folders, items, users } from "@/db/schema";
-import { eq, and, isNull, desc, or, gt } from "drizzle-orm";
+import { eq, and, isNull, desc, asc, or, gt } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import ShareView from "@/components/share/ShareView";
@@ -63,7 +63,7 @@ export default async function SharePage({
       .select()
       .from(folders)
       .where(eq(folders.companyId, share.companyId))
-      .orderBy(folders.createdAt),
+      .orderBy(folders.position, folders.createdAt),
 
     db
       .select({
@@ -90,7 +90,7 @@ export default async function SharePage({
       .innerJoin(users, eq(items.createdBy, users.id))
       .innerJoin(folders, eq(items.folderId, folders.id))
       .where(eq(items.companyId, share.companyId))
-      .orderBy(desc(items.isPinned), desc(items.createdAt))
+      .orderBy(desc(items.isPinned), asc(items.position), desc(items.createdAt))
       .limit(500),
   ]);
 

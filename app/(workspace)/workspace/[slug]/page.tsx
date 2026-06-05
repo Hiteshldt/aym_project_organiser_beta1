@@ -2,7 +2,7 @@ import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { db } from "@/db";
 import { companies, companyMembers, folders, items, users } from "@/db/schema";
-import { eq, and, desc, sql } from "drizzle-orm";
+import { eq, and, desc, asc, sql } from "drizzle-orm";
 import WorkspaceShell from "@/components/workspace/WorkspaceShell";
 
 export default async function WorkspaceSlugPage({
@@ -49,7 +49,7 @@ export default async function WorkspaceSlugPage({
       .select()
       .from(folders)
       .where(eq(folders.companyId, company.id))
-      .orderBy(folders.createdAt),
+      .orderBy(folders.position, folders.createdAt),
     db
       .select({
         id: items.id,
@@ -79,7 +79,7 @@ export default async function WorkspaceSlugPage({
       .innerJoin(users, eq(items.createdBy, users.id))
       .innerJoin(folders, eq(items.folderId, folders.id))
       .where(eq(items.companyId, company.id))
-      .orderBy(desc(items.isPinned), desc(items.createdAt))
+      .orderBy(desc(items.isPinned), asc(items.position), desc(items.createdAt))
       .limit(500),
     db
       .select({

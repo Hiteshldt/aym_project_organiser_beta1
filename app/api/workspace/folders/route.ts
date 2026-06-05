@@ -42,7 +42,7 @@ export async function GET(req: NextRequest) {
     .select()
     .from(folders)
     .where(eq(folders.companyId, access.company.id))
-    .orderBy(folders.createdAt);
+    .orderBy(folders.position, folders.createdAt);
 
   return NextResponse.json(allFolders);
 }

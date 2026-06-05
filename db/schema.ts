@@ -85,6 +85,8 @@ export const folders = pgTable(
     parentId: text("parent_id"),
     color: folderColorEnum("color").notNull().default("slate"),
     viewType: folderViewTypeEnum("view_type").notNull().default("cards"),
+    // Manual drag-to-reorder order among siblings (lower = higher up).
+    position: integer("position").notNull().default(0),
     // Customizable status options for this register, e.g.
     // [{ label: "In progress", color: "amber" }]. Null → use the app defaults.
     statusOptions: jsonb("status_options").$type<
@@ -128,6 +130,8 @@ export const items = pgTable(
     notes: text("notes"),
     itemDate: timestamp("item_date").notNull().defaultNow(),
     isPinned: boolean("is_pinned").notNull().default(false),
+    // Manual drag-to-reorder order within a folder (lower = higher up).
+    position: integer("position").notNull().default(0),
     createdBy: text("created_by")
       .notNull()
       .references(() => users.id),

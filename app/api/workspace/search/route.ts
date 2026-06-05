@@ -171,33 +171,54 @@ export async function GET(req: NextRequest) {
     conditions.push(eq(items.type, type as "link" | "file"));
   }
 
+  const selectFields = {
+    id: items.id,
+    title: items.title,
+    description: items.description,
+    shortCode: items.shortCode,
+    type: items.type,
+    url: items.url,
+    fileKey: items.fileKey,
+    fileName: items.fileName,
+    fileSize: items.fileSize,
+    folderId: items.folderId,
+    folderName: folders.name,
+    tags: items.tags,
+    notes: items.notes,
+    itemDate: items.itemDate,
+    isPinned: items.isPinned,
+    createdAt: items.createdAt,
+    createdByName: users.name,
+    historyCount: sql<number>`(select count(*) from item_history where item_id = ${items.id})`.mapWith(Number),
+  };
+
   const results = await db
-    .select({
-      id: items.id,
-      title: items.title,
-      description: items.description,
-      shortCode: items.shortCode,
-      type: items.type,
-      url: items.url,
-      fileKey: items.fileKey,
-      fileName: items.fileName,
-      fileSize: items.fileSize,
-      folderId: items.folderId,
-      folderName: folders.name,
-      tags: items.tags,
-      notes: items.notes,
-      itemDate: items.itemDate,
-      isPinned: items.isPinned,
-      createdAt: items.createdAt,
-      createdByName: users.name,
-      historyCount: sql<number>`(select count(*) from item_history where item_id = ${items.id})`.mapWith(Number),
-    })
+    .select(selectFields)
     .from(items)
     .innerJoin(folders, eq(items.folderId, folders.id))
     .innerJoin(users, eq(items.createdBy, users.id))
     .where(and(...conditions))
     .orderBy(desc(items.isPinned), desc(items.createdAt))
     .limit(100);
+
+  // Typo-tolerant fallback: if an exact match found nothing, return the closest
+  // titles/descriptions by trigram similarity (pg_trgm).
+  if (results.length === 0 && q) {
+    const fuzzy = await db
+      .select(selectFields)
+      .from(items)
+      .innerJoin(folders, eq(items.folderId, folders.id))
+      .innerJoin(users, eq(items.createdBy, users.id))
+      .where(
+        and(
+          eq(items.companyId, access[0].companyId),
+          sql`(similarity(${items.title}, ${q}) > 0.2 OR similarity(coalesce(${items.description}, ''), ${q}) > 0.2)`
+        )
+      )
+      .orderBy(sql`similarity(${items.title}, ${q}) DESC`)
+      .limit(20);
+    return NextResponse.json(fuzzy);
+  }
 
   return NextResponse.json(results);
 }
