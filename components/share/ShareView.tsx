@@ -42,6 +42,7 @@ type Item = {
   rowColor?: string | null;
   type: "link" | "file";
   url: string | null;
+  links?: { label: string; url: string }[] | null;
   fileName: string | null;
   fileSize: number | null;
   folderId: string;
@@ -320,16 +321,33 @@ function RegisterTable({
                   )}
                 </td>
                 <td className={CELL}>
-                  {item.type === "link" && item.url ? (
-                    <a href={item.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-accent hover:text-accent-hover font-mono-ui truncate max-w-[150px] group/link">
-                      <span className="truncate">{prettyUrl(item.url)}</span>
-                      <ExternalLink className="h-2.5 w-2.5 shrink-0 opacity-0 group-hover/link:opacity-100" />
-                    </a>
-                  ) : item.fileName ? (
-                    <span className="text-xs text-mute font-mono-ui truncate block max-w-[150px]">{item.fileName}</span>
-                  ) : (
-                    <span className="text-mute-soft">—</span>
-                  )}
+                  <div className="space-y-1">
+                    {item.type === "link" && item.url ? (
+                      <a href={item.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-accent hover:text-accent-hover font-mono-ui truncate max-w-[150px] group/link">
+                        <span className="truncate">{prettyUrl(item.url)}</span>
+                        <ExternalLink className="h-2.5 w-2.5 shrink-0 opacity-0 group-hover/link:opacity-100" />
+                      </a>
+                    ) : item.fileName ? (
+                      <span className="text-xs text-mute font-mono-ui truncate block max-w-[150px]">{item.fileName}</span>
+                    ) : (
+                      <span className="text-mute-soft">—</span>
+                    )}
+                    {item.links && item.links.length > 0 && (
+                      <div className="flex flex-wrap gap-1">
+                        {item.links.map((l, i) => (
+                          <a
+                            key={i}
+                            href={l.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center text-[10px] text-accent/80 hover:text-accent border border-line rounded px-1.5 py-0.5 font-mono-ui max-w-[120px] truncate"
+                          >
+                            {l.label || "link"}
+                          </a>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </td>
                 <td className={cn(CELL, "hidden lg:table-cell text-xs text-mute leading-snug max-w-[320px] whitespace-pre-wrap")}>
                   {item.notes || <span className="text-mute-soft">—</span>}

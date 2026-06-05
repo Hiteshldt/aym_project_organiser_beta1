@@ -55,6 +55,7 @@ export async function GET(req: NextRequest) {
       rowColor: items.rowColor,
       type: items.type,
       url: items.url,
+      links: items.links,
       fileKey: items.fileKey,
       fileName: items.fileName,
       fileSize: items.fileSize,
@@ -84,7 +85,7 @@ export async function POST(req: NextRequest) {
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await req.json();
-  const { slug, folderId, title, description, type, url, fileKey, fileName, fileSize, tags, notes, itemDate, status, rowColor, overrideDuplicate } = body;
+  const { slug, folderId, title, description, type, url, links, fileKey, fileName, fileSize, tags, notes, itemDate, status, rowColor, overrideDuplicate } = body;
 
   const access = await getCompanyAccess(session.user.id, slug);
   if (!access) return NextResponse.json({ error: "Not a member" }, { status: 403 });
@@ -130,6 +131,7 @@ export async function POST(req: NextRequest) {
     description: description || null,
     type,
     url: url || null,
+    links: Array.isArray(links) && links.length ? links : null,
     fileKey: fileKey || null,
     fileName: fileName || null,
     fileSize: fileSize || null,
@@ -166,7 +168,7 @@ export async function PATCH(req: NextRequest) {
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await req.json();
-  const { id, slug, title, description, url, tags, notes, itemDate, isPinned, status, rowColor, updateNote } = body;
+  const { id, slug, title, description, url, links, tags, notes, itemDate, isPinned, status, rowColor, updateNote } = body;
 
   const access = await getCompanyAccess(session.user.id, slug);
   if (!access || access.role !== "manager") {
@@ -179,6 +181,7 @@ export async function PATCH(req: NextRequest) {
       ...(title !== undefined && { title }),
       ...(description !== undefined && { description }),
       ...(url !== undefined && { url }),
+      ...(links !== undefined && { links: Array.isArray(links) && links.length ? links : null }),
       ...(tags !== undefined && { tags }),
       ...(notes !== undefined && { notes }),
       ...(itemDate !== undefined && { itemDate: new Date(itemDate) }),

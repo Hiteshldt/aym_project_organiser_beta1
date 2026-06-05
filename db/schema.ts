@@ -113,6 +113,8 @@ export const items = pgTable(
     rowColor: varchar("row_color", { length: 20 }),
     type: itemTypeEnum("type").notNull(),
     url: text("url"),
+    // Extra labeled links beyond the primary `url` (e.g. Raw / Final / Source).
+    links: jsonb("links").$type<{ label: string; url: string }[]>(),
     fileKey: text("file_key"),
     fileName: varchar("file_name", { length: 500 }),
     fileSize: integer("file_size"),

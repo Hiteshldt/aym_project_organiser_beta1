@@ -57,6 +57,7 @@ export type RegisterItem = {
   rowColor: string | null;
   type: "link" | "file";
   url: string | null;
+  links?: { label: string; url: string }[] | null;
   fileKey: string | null;
   fileName: string | null;
   fileSize: number | null;
@@ -350,21 +351,28 @@ export default function RegisterGrid({
                           placeholder={item.type === "file" ? item.fileName ?? "—" : "—"}
                           mono
                           display={
-                            item.type === "link" && item.url ? (
-                              <a
-                                href={item.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1 text-xs text-accent hover:text-accent-hover font-mono-ui truncate max-w-[150px] group/link"
-                              >
-                                <span className="truncate">{prettyUrl(item.url)}</span>
-                                <ExternalLink className="h-2.5 w-2.5 shrink-0 opacity-0 group-hover/link:opacity-100" />
-                              </a>
-                            ) : item.fileName ? (
-                              <span className="text-xs text-mute font-mono-ui truncate block max-w-[150px]">{item.fileName}</span>
-                            ) : (
-                              <span className="text-mute-soft">—</span>
-                            )
+                            <span className="inline-flex items-center gap-1 max-w-full">
+                              {item.type === "link" && item.url ? (
+                                <a
+                                  href={item.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 text-xs text-accent hover:text-accent-hover font-mono-ui truncate max-w-[130px] group/link"
+                                >
+                                  <span className="truncate">{prettyUrl(item.url)}</span>
+                                  <ExternalLink className="h-2.5 w-2.5 shrink-0 opacity-0 group-hover/link:opacity-100" />
+                                </a>
+                              ) : item.fileName ? (
+                                <span className="text-xs text-mute font-mono-ui truncate block max-w-[130px]">{item.fileName}</span>
+                              ) : (
+                                <span className="text-mute-soft">—</span>
+                              )}
+                              {item.links && item.links.length > 0 && (
+                                <span className="shrink-0 text-[10px] text-mute-soft font-mono-ui" title={`${item.links.length} more link${item.links.length !== 1 ? "s" : ""}`}>
+                                  +{item.links.length}
+                                </span>
+                              )}
+                            </span>
                           }
                           onSave={(v) => patchItem(item.id, { url: v || null })}
                         />

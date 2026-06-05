@@ -15,6 +15,7 @@ import {
   Clock,
   ChevronDown,
   Loader2,
+  Plus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -77,8 +78,24 @@ export default function ItemPanel({
   const [historyLoading, setHistoryLoading] = useState(true);
   const [updateNote, setUpdateNote] = useState("");
   const [savingNote, setSavingNote] = useState(false);
+  const [links, setLinks] = useState<{ label: string; url: string }[]>(item.links ?? []);
 
   const status = findStatus(statusOptions, item.status);
+
+  function commitLinks(next: { label: string; url: string }[]) {
+    onPatch({ links: next.map((l) => ({ label: l.label.trim(), url: l.url.trim() })).filter((l) => l.url) });
+  }
+  function updateLink(i: number, patch: Partial<{ label: string; url: string }>) {
+    setLinks((ls) => ls.map((l, idx) => (idx === i ? { ...l, ...patch } : l)));
+  }
+  function addLink() {
+    setLinks((ls) => [...ls, { label: "", url: "" }]);
+  }
+  function removeLink(i: number) {
+    const next = links.filter((_, idx) => idx !== i);
+    setLinks(next);
+    commitLinks(next);
+  }
 
   useEffect(() => {
     let alive = true;
@@ -234,6 +251,49 @@ export default function ItemPanel({
               </button>
             )}
           </Field>
+
+          {/* Extra links */}
+          {(isManager || links.length > 0) && (
+            <Field label="More links">
+              {isManager ? (
+                <div className="space-y-1.5">
+                  {links.map((l, i) => (
+                    <div key={i} className="flex items-center gap-1.5">
+                      <Input
+                        value={l.label}
+                        onChange={(e) => updateLink(i, { label: e.target.value })}
+                        onBlur={() => commitLinks(links)}
+                        placeholder="Label"
+                        className="h-8 w-24 text-xs"
+                      />
+                      <Input
+                        value={l.url}
+                        onChange={(e) => updateLink(i, { url: e.target.value })}
+                        onBlur={() => commitLinks(links)}
+                        placeholder="https://…"
+                        className="h-8 flex-1 text-xs font-mono-ui"
+                      />
+                      <button type="button" onClick={() => removeLink(i)} className="shrink-0 text-mute-soft hover:text-danger p-1" title="Remove">
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                  <button type="button" onClick={addLink} className="inline-flex items-center gap-1 text-xs text-accent hover:text-accent-hover">
+                    <Plus className="h-3.5 w-3.5" /> Add a link
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-1">
+                  {links.map((l, i) => (
+                    <a key={i} href={l.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-xs text-accent hover:text-accent-hover">
+                      <ExternalLink className="h-3 w-3 shrink-0" />
+                      <span className="truncate">{l.label || l.url}</span>
+                    </a>
+                  ))}
+                </div>
+              )}
+            </Field>
+          )}
 
           {/* Status */}
           <Field label="Status">

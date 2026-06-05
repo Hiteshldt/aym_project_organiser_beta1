@@ -1,9 +1,23 @@
 import { auth } from "@/lib/auth";
 import { db } from "@/db";
 import { companies, companyMembers } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { slugify } from "@/lib/utils";
+
+/** Returns the company + the caller's role, or null if they aren't a member. */
+async function memberAccess(userId: string, slug: string) {
+  const rows = await db
+    .select({ id: companies.id, name: companies.name, role: companyMembers.role })
+    .from(companies)
+    .innerJoin(
+      companyMembers,
+      and(eq(companyMembers.companyId, companies.id), eq(companyMembers.userId, userId))
+    )
+    .where(eq(companies.slug, slug))
+    .limit(1);
+  return rows[0] ?? null;
+}
 
 /**
  * Self-service workspace creation. Any signed-in user can create a workspace
@@ -71,4 +85,49 @@ export async function POST(req: NextRequest) {
   });
 
   return NextResponse.json(company, { status: 201 });
+}
+
+/** Rename a workspace. Slug stays stable so share links / bookmarks don't break. */
+export async function PATCH(req: NextRequest) {
+  const session = await auth();
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const { slug, name } = await req.json();
+  if (!slug) return NextResponse.json({ error: "slug required" }, { status: 400 });
+  const trimmed = (name ?? "").trim();
+  if (!trimmed) return NextResponse.json({ error: "Name required" }, { status: 400 });
+  if (trimmed.length > 60) {
+    return NextResponse.json({ error: "Name must be 60 characters or fewer" }, { status: 400 });
+  }
+
+  const access = await memberAccess(session.user.id, slug);
+  if (!access || access.role !== "manager") {
+    return NextResponse.json({ error: "Managers only" }, { status: 403 });
+  }
+
+  const [updated] = await db
+    .update(companies)
+    .set({ name: trimmed })
+    .where(eq(companies.id, access.id))
+    .returning();
+
+  return NextResponse.json(updated);
+}
+
+/** Delete a workspace and everything in it (folders, items, shares cascade). */
+export async function DELETE(req: NextRequest) {
+  const session = await auth();
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const { searchParams } = new URL(req.url);
+  const slug = searchParams.get("slug");
+  if (!slug) return NextResponse.json({ error: "slug required" }, { status: 400 });
+
+  const access = await memberAccess(session.user.id, slug);
+  if (!access || access.role !== "manager") {
+    return NextResponse.json({ error: "Managers only" }, { status: 403 });
+  }
+
+  await db.delete(companies).where(eq(companies.id, access.id));
+  return NextResponse.json({ success: true });
 }

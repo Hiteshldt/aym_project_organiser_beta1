@@ -13,7 +13,8 @@
     "db:seed": "npx tsx db/seed.ts",
     "db:backfill-shortcodes": "npx tsx db/backfill-shortcodes.ts",
     "db:add-indexes": "npx tsx db/add-indexes.ts",
-    "db:add-register-fields": "npx tsx db/add-register-fields.ts"
+    "db:add-register-fields": "npx tsx db/add-register-fields.ts",
+    "db:add-item-links": "npx tsx db/add-item-links.ts"
   },
   "dependencies": {
     "@auth/drizzle-adapter": "^1.11.2",

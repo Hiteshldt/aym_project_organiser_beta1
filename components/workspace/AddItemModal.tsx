@@ -64,6 +64,9 @@ export default function AddItemModal({
   const [rowColor, setRowColor] = useState<string | null>(null);
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
+  const [suggestedTags, setSuggestedTags] = useState<string[]>([]);
+  const [allTags, setAllTags] = useState<string[]>([]);
+  const [tagHintDismissed, setTagHintDismissed] = useState(false);
   const [notes, setNotes] = useState("");
   const [itemDate, setItemDate] = useState(new Date().toISOString().slice(0, 16));
   const [saving, setSaving] = useState(false);
@@ -92,11 +95,34 @@ export default function AddItemModal({
     setUpdateNote("");
     setFile(null);
     setUploading(false);
+    setTagHintDismissed(false);
   }
 
   useEffect(() => {
     if (open) reset();
   }, [open]);
+
+  // On open, load this folder's most-recent tags (to offer importing them) and
+  // the workspace's tag vocabulary (for autocomplete).
+  useEffect(() => {
+    if (!open || !folderId) return;
+    let alive = true;
+    fetch(`/api/workspace/items?slug=${slug}&folderId=${folderId}&recent=1`)
+      .then((r) => (r.ok ? r.json() : []))
+      .then((list: { tags: string[] }[]) => {
+        if (!alive) return;
+        const withTags = list.find((i) => i.tags && i.tags.length > 0);
+        setSuggestedTags(withTags?.tags ?? []);
+      })
+      .catch(() => {});
+    fetch(`/api/workspace/tags?slug=${slug}`)
+      .then((r) => (r.ok ? r.json() : []))
+      .then((t: string[]) => alive && setAllTags(t))
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, [open, folderId, slug]);
 
   function handleClose() {
     reset();
@@ -112,12 +138,16 @@ export default function AddItemModal({
     setTags((prev) => (prev.includes(t) ? prev : [...prev, t]));
     setTagInput("");
   }
+  const canImportTags = !tagInput.trim() && tags.length === 0 && suggestedTags.length > 0 && !tagHintDismissed;
+
   function handleTagKey(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === "Enter" || e.key === ",") {
       e.preventDefault();
       if (tagInput.trim()) commitTag(tagInput);
-    } else if (e.key === "Backspace" && !tagInput && tags.length > 0) {
-      setTags((prev) => prev.slice(0, -1));
+      else if (canImportTags) { setTags(suggestedTags); setTagHintDismissed(true); }
+    } else if (e.key === "Backspace" && !tagInput) {
+      if (tags.length > 0) setTags((prev) => prev.slice(0, -1));
+      else if (canImportTags) setTagHintDismissed(true);
     }
   }
   function removeTag(t: string) {
@@ -442,6 +472,7 @@ export default function AddItemModal({
               ))}
               <input
                 type="text"
+                list="ws-tag-suggest"
                 placeholder={tags.length === 0 ? "Type a tag, press Enter…" : "Add more…"}
                 value={tagInput}
                 onChange={(e) => setTagInput(e.target.value)}
@@ -449,8 +480,25 @@ export default function AddItemModal({
                 onBlur={() => tagInput.trim() && commitTag(tagInput)}
                 className="flex-1 min-w-[120px] text-xs outline-none bg-transparent text-ink placeholder:text-mute-soft"
               />
+              <datalist id="ws-tag-suggest">
+                {allTags.map((t) => (
+                  <option key={t} value={t} />
+                ))}
+              </datalist>
             </div>
-            <p className="text-[11px] text-mute-soft">Press Enter or comma to add. Spaces become hyphens.</p>
+            {canImportTags ? (
+              <p className="text-[11px] text-mute-soft">
+                Press <kbd className="font-mono-ui text-ink">↵</kbd> to import from your last item:{" "}
+                {suggestedTags.map((t) => (
+                  <span key={t} className="text-accent">#{t} </span>
+                ))}
+                <button type="button" onClick={() => setTagHintDismissed(true)} className="ml-1 underline hover:text-mute">
+                  dismiss
+                </button>
+              </p>
+            ) : (
+              <p className="text-[11px] text-mute-soft">Press Enter or comma to add. Spaces become hyphens.</p>
+            )}
           </div>
 
           {/* Notes */}

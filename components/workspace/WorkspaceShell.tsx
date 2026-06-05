@@ -29,6 +29,8 @@ import {
   Table2,
   Check,
   Loader2,
+  Settings,
+  Trash2,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import {
@@ -39,6 +41,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 type Company = { id: string; name: string; slug: string };
 type Folder = {
@@ -106,6 +109,9 @@ export default function WorkspaceShell({
   const [newWorkspaceOpen, setNewWorkspaceOpen] = useState(false);
   const [newWorkspaceName, setNewWorkspaceName] = useState("");
   const [creatingWorkspace, setCreatingWorkspace] = useState(false);
+  const [wsSettingsOpen, setWsSettingsOpen] = useState(false);
+  const [wsName, setWsName] = useState(company.name);
+  const [savingWs, setSavingWs] = useState(false);
 
   const loadFolders = useCallback(async (silent = false) => {
     // Only show the skeleton on the first load; background refreshes (rename,
@@ -195,6 +201,49 @@ export default function WorkspaceShell({
     router.push(`/workspace/${created.slug}`);
   }
 
+  async function handleRenameWorkspace(e: React.FormEvent) {
+    e.preventDefault();
+    const name = wsName.trim();
+    if (!name || name === company.name) {
+      setWsSettingsOpen(false);
+      return;
+    }
+    setSavingWs(true);
+    const res = await fetch("/api/workspace/companies", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ slug: company.slug, name }),
+    });
+    setSavingWs(false);
+    if (res.ok) {
+      toast.success("Workspace renamed.");
+      setMyCompanies((cs) => cs.map((c) => (c.slug === company.slug ? { ...c, name } : c)));
+      setWsSettingsOpen(false);
+      router.refresh();
+    } else {
+      const data = await res.json().catch(() => ({}));
+      toast.error(data.error ?? "Could not rename the workspace.");
+    }
+  }
+
+  async function handleDeleteWorkspace() {
+    const ok = await confirm({
+      title: "Delete this workspace?",
+      body: `"${company.name}" and all its folders, items, and share links will be permanently deleted. This can't be undone.`,
+      confirmLabel: "Delete workspace",
+      danger: true,
+      requireText: company.name,
+    });
+    if (!ok) return;
+    const res = await fetch(`/api/workspace/companies?slug=${company.slug}`, { method: "DELETE" });
+    if (res.ok) {
+      toast.success("Workspace deleted.");
+      router.push("/workspace");
+    } else {
+      toast.error("Could not delete the workspace.");
+    }
+  }
+
   // Status options for the open register (folder), falling back to defaults.
   const resolvedStatusOptions: StatusOption[] =
     selectedFolder?.statusOptions && selectedFolder.statusOptions.length
@@ -282,6 +331,19 @@ export default function WorkspaceShell({
                       </Link>
                     ))}
                     <div className="my-1 border-t border-line" />
+                    {isManager && (
+                      <button
+                        onClick={() => {
+                          setCompanySwitchOpen(false);
+                          setWsName(company.name);
+                          setWsSettingsOpen(true);
+                        }}
+                        className="flex items-center gap-2 w-full px-3 py-2 text-sm text-mute hover:bg-line/50 transition-colors"
+                      >
+                        <Settings className="h-3.5 w-3.5 shrink-0" />
+                        Workspace settings
+                      </button>
+                    )}
                     <button
                       onClick={() => {
                         setCompanySwitchOpen(false);
@@ -579,6 +641,50 @@ export default function WorkspaceShell({
             />
           </>
         )}
+
+        {/* Workspace settings — managers only */}
+        <Dialog open={wsSettingsOpen} onOpenChange={(o) => { if (!o) setWsSettingsOpen(false); }}>
+          <DialogContent className="max-w-sm">
+            <DialogHeader>
+              <DialogTitle>Workspace settings</DialogTitle>
+              <DialogDescription>Rename this workspace, or delete it for good.</DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleRenameWorkspace} className="px-6 pb-6 space-y-4">
+              <div className="space-y-1.5">
+                <Label>Workspace name</Label>
+                <Input
+                  value={wsName}
+                  onChange={(e) => setWsName(e.target.value)}
+                  maxLength={60}
+                  autoFocus
+                />
+                <p className="text-[11px] text-mute-soft">The link stays the same — only the name changes.</p>
+              </div>
+              <div className="flex gap-2">
+                <Button type="button" variant="outline" className="flex-1" onClick={() => setWsSettingsOpen(false)}>
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  variant="accent"
+                  className="flex-1"
+                  disabled={savingWs || !wsName.trim() || wsName.trim() === company.name}
+                >
+                  {savingWs ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save"}
+                </Button>
+              </div>
+              <div className="border-t border-line pt-3">
+                <button
+                  type="button"
+                  onClick={handleDeleteWorkspace}
+                  className="inline-flex items-center gap-1.5 text-xs text-mute hover:text-danger transition-colors"
+                >
+                  <Trash2 className="h-3.5 w-3.5" /> Delete this workspace
+                </button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
 
         {/* New workspace — available to everyone */}
         <Dialog

@@ -48,6 +48,10 @@ Last updated: **May 28, 2026**
 - **Dark mode** — neutral-charcoal night theme for the app + client share view (sun/moon toggle in the top bar), scoped so marketing stays light. Built on the CSS-variable token system; status/row colors adapt.
 - **Item detail panel** — click any row to open a slide-over with full editing (title, description, link, status, row color, tags, date, remark) plus the update-history timeline + "log an update" box. Double-click still edits a cell inline. Replaced the old edit modal; the add modal is now add-only with status + color pickers.
 - **Type-to-confirm folder delete** — deleting a folder (which removes everything inside) now requires typing its exact name, GitHub-style.
+- **Workspace settings** — rename a workspace or delete it (cascades folders/items/shares) from the workspace switcher; manager-only, delete is type-to-confirm. Slug stays stable on rename so share links don't break.
+- **Smart tags** — when adding a row, one keystroke imports the tags from the folder's last item; tag autocomplete suggests existing workspace tags as you type.
+- **Multiple labeled links** — each item keeps a primary link plus any number of labeled extras (Raw, Final, Source…). Editable in the detail panel, shown as a `+N` in the grid and as chips on the client view.
+- **Container folders** — a folder with sub-folders becomes a navigator (shows its sub-folders, no "Add row"); items live in the leaves.
 - **Item description** field — short subtitle, shown on compact cards and as the Register Description column
 - **Compact item cards** — denser two-line rows, domain instead of full URL, inline tags
 - **Stronger search** — now also matches description, fileName, and space-stripped tags ("data sheet" ↔ "datasheet")

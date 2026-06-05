@@ -74,6 +74,7 @@ export default async function SharePage({
         rowColor: items.rowColor,
         type: items.type,
         url: items.url,
+        links: items.links,
         fileName: items.fileName,
         fileSize: items.fileSize,
         folderId: items.folderId,
