@@ -11,6 +11,7 @@ import { ThemeController, ThemeToggle } from "@/components/theme";
 import { DEFAULT_STATUS_OPTIONS, type StatusOption } from "@/lib/register";
 import FolderTree from "./FolderTree";
 import RegisterGrid, { type RegisterItem } from "./RegisterGrid";
+import FolderOverview from "./FolderOverview";
 import SearchResults from "./SearchResults";
 import AddItemModal from "./AddItemModal";
 import CreateFolderModal from "./CreateFolderModal";
@@ -199,6 +200,13 @@ export default function WorkspaceShell({
     selectedFolder?.statusOptions && selectedFolder.statusOptions.length
       ? (selectedFolder.statusOptions as StatusOption[])
       : DEFAULT_STATUS_OPTIONS;
+
+  // A folder with sub-folders is a *container*: it navigates to its children
+  // and can't hold its own rows (items live in the leaves).
+  const childFolders = selectedFolder
+    ? folders.filter((f) => f.parentId === selectedFolder.id)
+    : [];
+  const isContainer = !!selectedFolder && childFolders.length > 0;
 
   // Persist a register's customized status set (optimistic).
   const handleStatusOptionsChange = useCallback(
@@ -493,13 +501,15 @@ export default function WorkspaceShell({
                       {selectedFolder ? selectedFolder.name : "All items"}
                     </h2>
                     <p className="text-xs text-mute-soft mt-0.5">
-                      {selectedFolder
-                        ? "Register · a row per deliverable"
-                        : "Everything across all folders"}
+                      {!selectedFolder
+                        ? "Everything across all folders"
+                        : isContainer
+                          ? `${childFolders.length} folder${childFolders.length !== 1 ? "s" : ""} inside · open one to add items`
+                          : "Register · a row per deliverable"}
                     </p>
                   </div>
                 </div>
-                {isManager && selectedFolder && (
+                {isManager && selectedFolder && !isContainer && (
                   <Button size="sm" variant="accent" onClick={() => setAddItemOpen(true)}>
                     <Plus className="h-3.5 w-3.5" />
                     Add row
@@ -519,18 +529,24 @@ export default function WorkspaceShell({
                   onRefresh={() => {}}
                 />
               ) : (
-                <RegisterGrid
-                  key={selectedFolder?.id ?? "all"}
-                  slug={company.slug}
-                  folder={selectedFolder}
-                  isManager={isManager}
-                  statusOptions={resolvedStatusOptions}
-                  onStatusOptionsChange={selectedFolder && isManager ? handleStatusOptionsChange : undefined}
-                  onAddItem={() => setAddItemOpen(true)}
-                  refreshKey={refreshKey}
-                  initialItems={selectedFolder ? undefined : initialItems}
-                  showFolderColumn={!selectedFolder}
-                />
+                <>
+                  {isContainer && (
+                    <FolderOverview folders={childFolders} onSelect={selectFolderAndClose} />
+                  )}
+                  <RegisterGrid
+                    key={selectedFolder?.id ?? "all"}
+                    slug={company.slug}
+                    folder={selectedFolder}
+                    isManager={isManager}
+                    statusOptions={resolvedStatusOptions}
+                    onStatusOptionsChange={selectedFolder && isManager && !isContainer ? handleStatusOptionsChange : undefined}
+                    onAddItem={() => setAddItemOpen(true)}
+                    refreshKey={refreshKey}
+                    initialItems={selectedFolder ? undefined : initialItems}
+                    showFolder={!selectedFolder}
+                    canAdd={!isContainer}
+                  />
+                </>
               )}
             </div>
           </div>

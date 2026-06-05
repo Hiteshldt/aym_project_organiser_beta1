@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useRef, type CSSProperties } from "react";
+import { createPortal } from "react-dom";
 import {
   Plus,
   Table2,
@@ -9,7 +10,6 @@ import {
   ExternalLink,
   Copy,
   Check,
-  Pencil,
   Trash2,
   Pin,
   PinOff,
@@ -18,6 +18,8 @@ import {
   X,
   Settings2,
   Palette,
+  PanelRight,
+  Folder as FolderIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -91,6 +93,8 @@ function GridSkeleton({ cols }: { cols: number }) {
   );
 }
 
+type MenuState = { id: string; kind: "status" | "color"; rect: DOMRect };
+
 export default function RegisterGrid({
   slug,
   folder,
@@ -100,7 +104,8 @@ export default function RegisterGrid({
   onAddItem,
   refreshKey,
   initialItems,
-  showFolderColumn = false,
+  showFolder = false,
+  canAdd = true,
 }: {
   slug: string;
   folder: Folder;
@@ -110,30 +115,16 @@ export default function RegisterGrid({
   onAddItem: () => void;
   refreshKey: number;
   initialItems?: RegisterItem[];
-  showFolderColumn?: boolean;
+  showFolder?: boolean;
+  canAdd?: boolean;
 }) {
   const confirm = useConfirm();
   const [items, setItems] = useState<RegisterItem[]>(initialItems ?? []);
   const [loading, setLoading] = useState(!initialItems);
   const [copiedId, setCopiedId] = useState<string | null>(null);
-  // One open per-row menu at a time: { id, kind }
-  const [openMenu, setOpenMenu] = useState<{ id: string; kind: "status" | "color" } | null>(null);
+  const [menu, setMenu] = useState<MenuState | null>(null);
   const [statusMgrOpen, setStatusMgrOpen] = useState(false);
-  // Detail panel: single-click a row opens it; double-click a cell edits inline.
-  // A short timer disambiguates the two so they don't fight.
   const [openItemId, setOpenItemId] = useState<string | null>(null);
-  const openTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const cancelOpen = useCallback(() => {
-    if (openTimer.current) {
-      clearTimeout(openTimer.current);
-      openTimer.current = null;
-    }
-  }, []);
-  const scheduleOpen = useCallback((id: string) => {
-    cancelOpen();
-    openTimer.current = setTimeout(() => setOpenItemId(id), 200);
-  }, [cancelOpen]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -143,7 +134,6 @@ export default function RegisterGrid({
     setLoading(false);
   }, [slug, folder]);
 
-  // Seeded from the server on first paint (all-items only) — skip that fetch.
   const seeded = useRef(!!initialItems);
   useEffect(() => {
     if (seeded.current) {
@@ -199,27 +189,34 @@ export default function RegisterGrid({
     toast.success("Link copied.");
     setTimeout(() => setCopiedId(null), 2000);
   }
-
   function copyShort(item: RegisterItem) {
     if (!item.shortCode) return;
     navigator.clipboard.writeText(buildShortLinkUrl(item.shortCode));
     toast.success("Short link copied.");
   }
 
-  // Column count for skeleton / colspans
-  const cols = 4 + (showFolderColumn ? 1 : 0) + (isManager ? 1 : 0);
+  function openMenuFor(e: React.MouseEvent, id: string, kind: "status" | "color") {
+    setMenu({ id, kind, rect: (e.currentTarget as HTMLElement).getBoundingClientRect() });
+  }
 
+  const colCount = 6 + (isManager ? 1 : 0);
   const openItem = openItemId ? items.find((i) => i.id === openItemId) ?? null : null;
+  const menuItem = menu ? items.find((i) => i.id === menu.id) ?? null : null;
 
   if (!loading && items.length === 0) {
+    if (!canAdd) return null; // container folder — the sub-folder overview is the content
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center px-6">
         <div className="h-12 w-12 rounded-xl bg-accent-soft flex items-center justify-center mb-3">
           <Table2 className="h-5 w-5 text-accent" />
         </div>
-        <p className="text-sm text-ink font-medium">This register is empty.</p>
+        <p className="text-sm text-ink font-medium">
+          {folder ? "This register is empty." : "No items yet."}
+        </p>
         <p className="text-xs text-mute mt-1 max-w-xs">
-          Add a row for each deliverable — name it, link it, set a status.
+          {folder
+            ? "Add a row for each deliverable — name it, link it, set a status."
+            : "Items you add to folders show up here."}
         </p>
         {isManager && folder && (
           <Button size="sm" variant="accent" className="mt-4" onClick={onAddItem}>
@@ -233,7 +230,7 @@ export default function RegisterGrid({
   return (
     <div className="px-4 sm:px-6 py-4">
       {/* Toolbar */}
-      {isManager && folder && (
+      {isManager && folder && canAdd && (
         <div className="flex items-center justify-end mb-2">
           <button
             onClick={() => setStatusMgrOpen(true)}
@@ -247,7 +244,7 @@ export default function RegisterGrid({
       )}
 
       <div className="border border-line rounded-xl overflow-x-auto bg-paper-elevated">
-        <table className="w-full min-w-[760px] text-sm border-collapse">
+        <table className="w-full min-w-[720px] text-sm border-collapse">
           <thead>
             <tr className="border-b border-line">
               <th className={cn(HEAD, "w-10")}>#</th>
@@ -256,14 +253,13 @@ export default function RegisterGrid({
               <th className={cn(HEAD, "w-32")}>Status</th>
               <th className={cn(HEAD, "w-40")}>Link</th>
               <th className={cn(HEAD, "hidden lg:table-cell")}>Remark</th>
-              {showFolderColumn && <th className={cn(HEAD, "hidden sm:table-cell w-32")}>Folder</th>}
               <th className={cn(HEAD, "w-24")}>Updated</th>
-              {isManager && <th className="px-3 py-2 w-28 bg-paper" />}
+              {isManager && <th className="px-3 py-2 w-32 bg-paper" />}
             </tr>
           </thead>
           <tbody>
             {loading ? (
-              <GridSkeleton cols={cols + 3} />
+              <GridSkeleton cols={colCount} />
             ) : (
               items.map((item, idx) => {
                 const tint = isRegisterColor(item.rowColor) ? ROW_TINT[item.rowColor] : "";
@@ -271,33 +267,43 @@ export default function RegisterGrid({
                 return (
                   <tr
                     key={item.id}
-                    onClick={() => scheduleOpen(item.id)}
-                    onDoubleClick={cancelOpen}
                     className={cn(
-                      "group border-b border-line last:border-b-0 align-top transition-colors cursor-pointer",
+                      "group border-b border-line last:border-b-0 align-top transition-colors",
                       tint || "hover:bg-paper",
                       item.isPinned && !tint && "bg-accent-soft/30"
                     )}
                   >
-                    {/* # */}
-                    <td className={cn(CELL, "text-[11px] text-mute-soft font-mono-ui")}>{idx + 1}</td>
+                    {/* # / open */}
+                    <td className={cn(CELL, "text-[11px] text-mute-soft font-mono-ui")}>
+                      <button
+                        onClick={() => setOpenItemId(item.id)}
+                        title="Open details"
+                        className="inline-flex items-center justify-center w-5 h-5 rounded hover:text-ink"
+                      >
+                        <span className="group-hover:hidden">{idx + 1}</span>
+                        <PanelRight className="hidden group-hover:block h-3 w-3" />
+                      </button>
+                    </td>
 
-                    {/* Name */}
+                    {/* Name — click opens the detail panel */}
                     <td className={CELL}>
                       <div className="flex items-start gap-1.5">
                         <span className={cn("shrink-0 mt-0.5", item.type === "link" ? "text-accent" : "text-warning")}>
                           {item.type === "link" ? <Link2 className="h-3 w-3" /> : <FileText className="h-3 w-3" />}
                         </span>
                         <div className="min-w-0 flex-1">
-                          <InlineText
-                            value={item.title}
-                            editable={isManager}
-                            placeholder="Untitled"
-                            className="font-medium text-ink leading-snug"
-                            onSave={(v) => patchItem(item.id, { title: v || "Untitled" })}
-                          />
-                          {item.isPinned && (
-                            <Pin className="inline h-2.5 w-2.5 text-accent ml-1" fill="currentColor" />
+                          <button
+                            onClick={() => setOpenItemId(item.id)}
+                            className="text-left font-medium text-ink leading-snug hover:text-accent transition-colors"
+                          >
+                            {item.title}
+                            {item.isPinned && <Pin className="inline h-2.5 w-2.5 text-accent ml-1" fill="currentColor" />}
+                          </button>
+                          {showFolder && (
+                            <span className="mt-0.5 inline-flex items-center gap-1 text-[10px] text-mute-soft font-mono-ui">
+                              <FolderIcon className="h-2.5 w-2.5" />
+                              {item.folderName}
+                            </span>
                           )}
                         </div>
                       </div>
@@ -314,10 +320,10 @@ export default function RegisterGrid({
                     </td>
 
                     {/* Status */}
-                    <td className={cn(CELL, "relative")}>
+                    <td className={CELL}>
                       {isManager ? (
                         <button
-                          onClick={(e) => { e.stopPropagation(); setOpenMenu(openMenu?.id === item.id && openMenu.kind === "status" ? null : { id: item.id, kind: "status" }); }}
+                          onClick={(e) => openMenuFor(e, item.id, "status")}
                           className={cn(
                             "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium transition-colors max-w-full",
                             status ? STATUS_CHIP[status.color] : "text-mute-soft hover:text-mute border border-dashed border-line"
@@ -332,36 +338,6 @@ export default function RegisterGrid({
                         </span>
                       ) : (
                         <span className="text-mute-soft">—</span>
-                      )}
-
-                      {openMenu?.id === item.id && openMenu.kind === "status" && (
-                        <>
-                          <div className="fixed inset-0 z-40" onClick={() => setOpenMenu(null)} />
-                          <div onClick={(e) => e.stopPropagation()} className="absolute z-50 mt-1 left-3 min-w-[160px] bg-paper-elevated border border-line rounded-lg shadow-lg py-1">
-                            {statusOptions.map((opt) => (
-                              <button
-                                key={opt.label}
-                                onClick={() => { patchItem(item.id, { status: opt.label }); setOpenMenu(null); }}
-                                className="flex items-center gap-2 w-full px-3 py-1.5 text-xs text-ink hover:bg-line/50 text-left"
-                              >
-                                <span className={cn("h-2 w-2 rounded-full shrink-0", COLOR_DOT[opt.color])} />
-                                <span className="truncate">{opt.label}</span>
-                                {item.status === opt.label && <Check className="h-3 w-3 ml-auto text-accent" />}
-                              </button>
-                            ))}
-                            {item.status && (
-                              <>
-                                <div className="my-1 border-t border-line" />
-                                <button
-                                  onClick={() => { patchItem(item.id, { status: null }); setOpenMenu(null); }}
-                                  className="flex items-center gap-2 w-full px-3 py-1.5 text-xs text-mute hover:bg-line/50 text-left"
-                                >
-                                  <X className="h-3 w-3" /> Clear
-                                </button>
-                              </>
-                            )}
-                          </div>
-                        </>
                       )}
                     </td>
 
@@ -379,7 +355,6 @@ export default function RegisterGrid({
                                 href={item.url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                onClick={(e) => e.stopPropagation()}
                                 className="inline-flex items-center gap-1 text-xs text-accent hover:text-accent-hover font-mono-ui truncate max-w-[150px] group/link"
                               >
                                 <span className="truncate">{prettyUrl(item.url)}</span>
@@ -413,13 +388,6 @@ export default function RegisterGrid({
                       />
                     </td>
 
-                    {/* Folder (all-items mode) */}
-                    {showFolderColumn && (
-                      <td className={cn(CELL, "hidden sm:table-cell text-xs text-mute")}>
-                        <span className="truncate block max-w-[120px]">{item.folderName}</span>
-                      </td>
-                    )}
-
                     {/* Updated */}
                     <td className={cn(CELL, "text-[11px] text-mute-soft whitespace-nowrap")}>
                       {formatDate(item.itemDate)}
@@ -427,15 +395,12 @@ export default function RegisterGrid({
 
                     {/* Actions */}
                     {isManager && (
-                      <td className="px-2 py-2 align-top relative" onClick={(e) => e.stopPropagation()}>
+                      <td className="px-2 py-2 align-top">
                         <div className="flex items-center gap-0.5 justify-end opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
-                          {/* Row color */}
-                          <Button
-                            variant="ghost"
-                            size="icon-sm"
-                            onClick={() => setOpenMenu(openMenu?.id === item.id && openMenu.kind === "color" ? null : { id: item.id, kind: "color" })}
-                            title="Row color"
-                          >
+                          <Button variant="ghost" size="icon-sm" onClick={() => setOpenItemId(item.id)} title="Open details">
+                            <PanelRight className="h-3 w-3" />
+                          </Button>
+                          <Button variant="ghost" size="icon-sm" onClick={(e) => openMenuFor(e, item.id, "color")} title="Row color">
                             <Palette className="h-3 w-3" />
                           </Button>
                           {item.type === "link" && item.url && (
@@ -448,9 +413,6 @@ export default function RegisterGrid({
                               <Scissors className="h-3 w-3" />
                             </Button>
                           )}
-                          <Button variant="ghost" size="icon-sm" onClick={() => setOpenItemId(item.id)} title="Open details">
-                            <Pencil className="h-3 w-3" />
-                          </Button>
                           <Button variant="ghost" size="icon-sm" onClick={() => patchItem(item.id, { isPinned: !item.isPinned })} title={item.isPinned ? "Unpin" : "Pin"}>
                             {item.isPinned ? <PinOff className="h-3 w-3 text-accent" /> : <Pin className="h-3 w-3" />}
                           </Button>
@@ -458,32 +420,6 @@ export default function RegisterGrid({
                             <Trash2 className="h-3 w-3 text-mute-soft hover:text-danger" />
                           </Button>
                         </div>
-
-                        {openMenu?.id === item.id && openMenu.kind === "color" && (
-                          <>
-                            <div className="fixed inset-0 z-40" onClick={() => setOpenMenu(null)} />
-                            <div className="absolute right-2 z-50 mt-1 bg-paper-elevated border border-line rounded-lg shadow-lg p-2">
-                              <div className="grid grid-cols-5 gap-1.5">
-                                {REGISTER_COLORS.map((c) => (
-                                  <button
-                                    key={c}
-                                    onClick={() => { patchItem(item.id, { rowColor: c }); setOpenMenu(null); }}
-                                    title={c}
-                                    className={cn("h-5 w-5 rounded-full transition-transform hover:scale-110", COLOR_DOT[c], item.rowColor === c && "ring-2 ring-offset-1 ring-ink ring-offset-paper-elevated")}
-                                  />
-                                ))}
-                              </div>
-                              {item.rowColor && (
-                                <button
-                                  onClick={() => { patchItem(item.id, { rowColor: null }); setOpenMenu(null); }}
-                                  className="mt-2 w-full text-[11px] text-mute hover:text-ink flex items-center justify-center gap-1 py-1"
-                                >
-                                  <X className="h-3 w-3" /> No color
-                                </button>
-                              )}
-                            </div>
-                          </>
-                        )}
                       </td>
                     )}
                   </tr>
@@ -496,7 +432,7 @@ export default function RegisterGrid({
 
       {!loading && items.length > 0 && (
         <div className="flex items-center justify-between mt-2">
-          {isManager && folder && (
+          {isManager && folder && canAdd && (
             <button onClick={onAddItem} className="inline-flex items-center gap-1 text-xs text-accent hover:text-accent-hover">
               <Plus className="h-3.5 w-3.5" /> Add row
             </button>
@@ -505,6 +441,53 @@ export default function RegisterGrid({
             {items.length} row{items.length !== 1 ? "s" : ""} · double-click a cell to edit
           </p>
         </div>
+      )}
+
+      {/* Status / color popover — portaled so the table's overflow never clips it */}
+      {menu && menuItem && (
+        <PortalMenu rect={menu.rect} onClose={() => setMenu(null)}>
+          {menu.kind === "status" ? (
+            <>
+              {statusOptions.map((opt) => (
+                <button
+                  key={opt.label}
+                  onClick={() => { patchItem(menuItem.id, { status: opt.label }); setMenu(null); }}
+                  className="flex items-center gap-2 w-full px-3 py-1.5 text-xs text-ink hover:bg-line/50 text-left"
+                >
+                  <span className={cn("h-2 w-2 rounded-full shrink-0", COLOR_DOT[opt.color])} />
+                  <span className="truncate">{opt.label}</span>
+                  {menuItem.status === opt.label && <Check className="h-3 w-3 ml-auto text-accent" />}
+                </button>
+              ))}
+              {menuItem.status && (
+                <>
+                  <div className="my-1 border-t border-line" />
+                  <button onClick={() => { patchItem(menuItem.id, { status: null }); setMenu(null); }} className="flex items-center gap-2 w-full px-3 py-1.5 text-xs text-mute hover:bg-line/50 text-left">
+                    <X className="h-3 w-3" /> Clear
+                  </button>
+                </>
+              )}
+            </>
+          ) : (
+            <div className="p-2">
+              <div className="grid grid-cols-5 gap-1.5">
+                {REGISTER_COLORS.map((c) => (
+                  <button
+                    key={c}
+                    onClick={() => { patchItem(menuItem.id, { rowColor: c }); setMenu(null); }}
+                    title={c}
+                    className={cn("h-5 w-5 rounded-full transition-transform hover:scale-110", COLOR_DOT[c], menuItem.rowColor === c && "ring-2 ring-offset-1 ring-ink ring-offset-paper-elevated")}
+                  />
+                ))}
+              </div>
+              {menuItem.rowColor && (
+                <button onClick={() => { patchItem(menuItem.id, { rowColor: null }); setMenu(null); }} className="mt-2 w-full text-[11px] text-mute hover:text-ink flex items-center justify-center gap-1 py-1">
+                  <X className="h-3 w-3" /> No color
+                </button>
+              )}
+            </div>
+          )}
+        </PortalMenu>
       )}
 
       {/* Status manager */}
@@ -534,6 +517,40 @@ export default function RegisterGrid({
         />
       )}
     </div>
+  );
+}
+
+// ── Portal-anchored popover (never clipped by the table's overflow) ──
+function PortalMenu({
+  rect,
+  onClose,
+  children,
+}: {
+  rect: DOMRect;
+  onClose: () => void;
+  children: React.ReactNode;
+}) {
+  if (typeof document === "undefined") return null;
+  const flipUp = rect.bottom > window.innerHeight - 260;
+  const style: CSSProperties = {
+    position: "fixed",
+    left: Math.min(rect.left, window.innerWidth - 196),
+    ...(flipUp
+      ? { top: rect.top - 4, transform: "translateY(-100%)" }
+      : { top: rect.bottom + 4 }),
+  };
+  return createPortal(
+    <>
+      <div className="fixed inset-0 z-[60]" onClick={onClose} />
+      <div
+        style={style}
+        onClick={(e) => e.stopPropagation()}
+        className="z-[61] min-w-[176px] max-h-[60vh] overflow-auto bg-paper-elevated border border-line rounded-lg shadow-xl py-1"
+      >
+        {children}
+      </div>
+    </>,
+    document.body
   );
 }
 
@@ -575,7 +592,6 @@ function InlineText({
       <textarea
         autoFocus
         value={draft}
-        onClick={(e) => e.stopPropagation()}
         onChange={(e) => setDraft(e.target.value)}
         onBlur={commit}
         onKeyDown={(e) => {
@@ -588,7 +604,6 @@ function InlineText({
       <input
         autoFocus
         value={draft}
-        onClick={(e) => e.stopPropagation()}
         onChange={(e) => setDraft(e.target.value)}
         onBlur={commit}
         onKeyDown={(e) => {
@@ -661,27 +676,13 @@ function StatusManager({
                 title="Click to change color"
                 className={cn("h-5 w-5 rounded-full shrink-0 transition-transform hover:scale-110", COLOR_DOT[opt.color])}
               />
-              <Input
-                value={opt.label}
-                onChange={(e) => update(i, { label: e.target.value })}
-                className="h-8 text-sm"
-                maxLength={40}
-              />
-              <button
-                type="button"
-                onClick={() => remove(i)}
-                className="shrink-0 text-mute-soft hover:text-danger p-1"
-                title="Remove"
-              >
+              <Input value={opt.label} onChange={(e) => update(i, { label: e.target.value })} className="h-8 text-sm" maxLength={40} />
+              <button type="button" onClick={() => remove(i)} className="shrink-0 text-mute-soft hover:text-danger p-1" title="Remove">
                 <Trash2 className="h-3.5 w-3.5" />
               </button>
             </div>
           ))}
-          <button
-            type="button"
-            onClick={add}
-            className="inline-flex items-center gap-1 text-xs text-accent hover:text-accent-hover pt-1"
-          >
+          <button type="button" onClick={add} className="inline-flex items-center gap-1 text-xs text-accent hover:text-accent-hover pt-1">
             <Plus className="h-3.5 w-3.5" /> Add a status
           </button>
 
