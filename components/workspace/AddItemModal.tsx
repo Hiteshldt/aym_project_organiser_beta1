@@ -13,7 +13,6 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Loader2,
-  Link2,
   FileText,
   X,
   AlertTriangle,
@@ -36,8 +35,9 @@ type DuplicateInfo = {
 };
 
 /**
- * Add-only modal. Editing an existing row happens in the slide-over ItemPanel
- * (opened by clicking the row), so this stays a focused "create" form.
+ * Add-only modal. Title is the only required field — a link or file can be
+ * attached now or added later from the item's detail panel. Editing an
+ * existing row happens in ItemPanel, so this stays a focused "create" form.
  */
 export default function AddItemModal({
   open,
@@ -56,7 +56,6 @@ export default function AddItemModal({
   onSuccess: () => void;
   statusOptions?: StatusOption[];
 }) {
-  const [type, setType] = useState<"link" | "file">("link");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [url, setUrl] = useState("");
@@ -79,7 +78,6 @@ export default function AddItemModal({
   const fileRef = useRef<HTMLInputElement>(null);
 
   function reset() {
-    setType("link");
     setTitle("");
     setDescription("");
     setUrl("");
@@ -102,8 +100,6 @@ export default function AddItemModal({
     if (open) reset();
   }, [open]);
 
-  // On open, load this folder's most-recent tags (to offer importing them) and
-  // the workspace's tag vocabulary (for autocomplete).
   useEffect(() => {
     if (!open || !folderId) return;
     let alive = true;
@@ -138,6 +134,7 @@ export default function AddItemModal({
     setTags((prev) => (prev.includes(t) ? prev : [...prev, t]));
     setTagInput("");
   }
+
   const canImportTags = !tagInput.trim() && tags.length === 0 && suggestedTags.length > 0 && !tagHintDismissed;
 
   function handleTagKey(e: React.KeyboardEvent<HTMLInputElement>) {
@@ -155,7 +152,7 @@ export default function AddItemModal({
   }
 
   const checkDuplicate = useCallback(async () => {
-    if (!url.trim() || type !== "link") {
+    if (!url.trim()) {
       setDuplicate(null);
       return;
     }
@@ -167,7 +164,7 @@ export default function AddItemModal({
       const data = await res.json();
       if (data.duplicate) setDuplicate(data.existing);
     }
-  }, [url, type, slug]);
+  }, [url, slug]);
 
   async function handleSubmit(e: React.FormEvent | null, forceNew = false) {
     e?.preventDefault();
@@ -175,11 +172,15 @@ export default function AddItemModal({
       setError("Please select a folder first.");
       return;
     }
+    if (!title.trim()) {
+      setError("Give it a title.");
+      return;
+    }
     setError("");
     setSaving(true);
 
     try {
-      // Duplicate found and the user hasn't chosen "save as new": add a note instead.
+      // Duplicate link found and not overriding → log a note on the existing one.
       if (duplicate && !forceNew) {
         if (!updateNote.trim()) {
           setError("Add a short note about the update.");
@@ -201,17 +202,15 @@ export default function AddItemModal({
         return;
       }
 
-      let uploadedUrl: string | null = url || null;
+      // A file (if attached) makes it a file item; otherwise it's a link item
+      // whose URL is optional — you can add the link later from the panel.
+      let type: "link" | "file" = "link";
+      let finalUrl: string | null = url.trim() || null;
       let fileKey: string | null = null;
       let fileName: string | null = null;
       let fileSize: number | null = null;
 
-      if (type === "file") {
-        if (!file) {
-          setError("Choose a file first.");
-          setSaving(false);
-          return;
-        }
+      if (file) {
         setUploading(true);
         const fd = new FormData();
         fd.append("file", file);
@@ -224,7 +223,8 @@ export default function AddItemModal({
           return;
         }
         const uploaded = await uploadRes.json();
-        uploadedUrl = uploaded.url;
+        type = "file";
+        finalUrl = uploaded.url;
         fileKey = uploaded.key;
         fileName = uploaded.name;
         fileSize = uploaded.size;
@@ -236,12 +236,12 @@ export default function AddItemModal({
         body: JSON.stringify({
           slug,
           folderId,
-          title: title || (type === "file" ? file?.name : url) || "Untitled",
+          title: title.trim(),
           description: description.trim() || null,
           status,
           rowColor,
           type,
-          url: uploadedUrl,
+          url: finalUrl,
           fileKey,
           fileName,
           fileSize,
@@ -283,8 +283,6 @@ export default function AddItemModal({
     setError("");
   }
 
-  const duplicateBlocks = !!duplicate;
-
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-lg">
@@ -293,65 +291,70 @@ export default function AddItemModal({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="px-6 pb-6 space-y-4 max-h-[70vh] overflow-y-auto">
-          {/* Type switcher */}
-          <div className="flex rounded-lg border border-line p-0.5 w-fit">
-            {(["link", "file"] as const).map((t) => (
-              <button
-                key={t}
-                type="button"
-                onClick={() => { setType(t); setError(""); setDuplicate(null); }}
-                className={cn(
-                  "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all",
-                  type === t ? "bg-ink text-paper" : "text-mute hover:text-ink"
-                )}
-              >
-                {t === "link" ? <Link2 className="h-3.5 w-3.5" /> : <FileText className="h-3.5 w-3.5" />}
-                {t === "link" ? "Link" : "File"}
-              </button>
-            ))}
+          {/* Title — the only required field */}
+          <div className="space-y-1.5">
+            <Label>Title *</Label>
+            <Input
+              placeholder="Pitch deck v3"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              autoFocus
+              required
+            />
           </div>
 
-          {/* URL or file */}
-          {type === "link" ? (
-            <div className="space-y-1.5">
-              <Label>URL *</Label>
-              <Input
-                type="url"
-                placeholder="https://www.figma.com/file/…"
-                value={url}
-                onChange={(e) => { setUrl(e.target.value); setDuplicate(null); }}
-                onBlur={checkDuplicate}
-                required
-              />
-              {checkingDup && (
-                <p className="text-xs text-mute-soft flex items-center gap-1">
-                  <Loader2 className="h-3 w-3 animate-spin" /> Checking for duplicates…
-                </p>
-              )}
-            </div>
-          ) : (
-            <div className="space-y-1.5">
-              <Label>File (max 20MB)</Label>
+          {/* Description */}
+          <div className="space-y-1.5">
+            <Label>Description</Label>
+            <Input
+              placeholder="A short line — what this is"
+              value={description}
+              maxLength={200}
+              onChange={(e) => setDescription(e.target.value)}
+            />
+          </div>
+
+          {/* Link — optional */}
+          <div className="space-y-1.5">
+            <Label>Link <span className="text-mute-soft font-normal">· optional, add later anytime</span></Label>
+            <Input
+              type="url"
+              placeholder="https://www.figma.com/file/…"
+              value={url}
+              onChange={(e) => { setUrl(e.target.value); setDuplicate(null); }}
+              onBlur={checkDuplicate}
+              disabled={!!file}
+            />
+            {checkingDup && (
+              <p className="text-xs text-mute-soft flex items-center gap-1">
+                <Loader2 className="h-3 w-3 animate-spin" /> Checking for duplicates…
+              </p>
+            )}
+          </div>
+
+          {/* File — optional alternative to a link */}
+          <div className="space-y-1.5">
+            <Label>Or attach a file <span className="text-mute-soft font-normal">· optional, max 20MB</span></Label>
+            {file ? (
+              <div className="flex items-center gap-2 rounded-lg border border-line bg-paper p-2.5 text-sm">
+                <FileText className="h-4 w-4 text-warning shrink-0" />
+                <span className="truncate text-ink">{file.name}</span>
+                <span className="text-mute-soft text-xs">({(file.size / 1024 / 1024).toFixed(1)} MB)</span>
+                <button type="button" onClick={() => setFile(null)} className="ml-auto text-mute-soft hover:text-danger">
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            ) : (
               <div
                 onClick={() => fileRef.current?.click()}
-                className="border border-dashed border-line rounded-lg p-6 text-center cursor-pointer hover:border-accent hover:bg-accent-soft/30 transition-all"
+                className="border border-dashed border-line rounded-lg p-4 text-center cursor-pointer hover:border-accent hover:bg-accent-soft/30 transition-all"
               >
-                {file ? (
-                  <div className="flex items-center justify-center gap-2 text-sm text-ink">
-                    <FileText className="h-4 w-4 text-warning" />
-                    <span>{file.name}</span>
-                    <span className="text-mute-soft">({(file.size / 1024 / 1024).toFixed(1)} MB)</span>
-                  </div>
-                ) : (
-                  <>
-                    <Upload className="h-6 w-6 text-mute-soft mx-auto mb-2" />
-                    <p className="text-xs text-mute">Click to select a file</p>
-                  </>
-                )}
+                <Upload className="h-5 w-5 text-mute-soft mx-auto mb-1.5" />
+                <p className="text-xs text-mute">Click to attach a file</p>
               </div>
-              <input ref={fileRef} type="file" className="hidden" onChange={handleFileChange} />
-            </div>
-          )}
+            )}
+            <input ref={fileRef} type="file" className="hidden" onChange={handleFileChange} />
+          </div>
 
           {/* Duplicate warning — non-blocking */}
           {duplicate && (
@@ -385,23 +388,6 @@ export default function AddItemModal({
               </div>
             </div>
           )}
-
-          {/* Title */}
-          <div className="space-y-1.5">
-            <Label>Title</Label>
-            <Input placeholder="Pitch deck v3" value={title} onChange={(e) => setTitle(e.target.value)} />
-          </div>
-
-          {/* Description */}
-          <div className="space-y-1.5">
-            <Label>Description</Label>
-            <Input
-              placeholder="A short line — what this is"
-              value={description}
-              maxLength={200}
-              onChange={(e) => setDescription(e.target.value)}
-            />
-          </div>
 
           {/* Status */}
           {statusOptions.length > 0 && (
@@ -514,12 +500,12 @@ export default function AddItemModal({
 
           {error && <p className="text-xs text-danger">{error}</p>}
 
-          {!duplicateBlocks && (
+          {!duplicate && (
             <div className="flex gap-2 pt-1">
               <Button type="button" variant="outline" onClick={handleClose} className="flex-1">
                 Cancel
               </Button>
-              <Button type="submit" variant="accent" className="flex-1" disabled={saving || uploading || !folderId}>
+              <Button type="submit" variant="accent" className="flex-1" disabled={saving || uploading || !folderId || !title.trim()}>
                 {saving || uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Add row"}
               </Button>
             </div>

@@ -138,6 +138,12 @@ export default function WorkspaceShell({
     loadFolders();
   }, [loadFolders]);
 
+  // Remember the workspace you're in, so "Back to workspace" from Settings
+  // returns here instead of the multi-workspace selector.
+  useEffect(() => {
+    try { localStorage.setItem("ayuvam-last-workspace", company.slug); } catch {}
+  }, [company.slug]);
+
   useEffect(() => {
     if (initialCompanies) return; // seeded from the server
     fetch("/api/workspace/my-companies")
@@ -331,19 +337,6 @@ export default function WorkspaceShell({
                       </Link>
                     ))}
                     <div className="my-1 border-t border-line" />
-                    {isManager && (
-                      <button
-                        onClick={() => {
-                          setCompanySwitchOpen(false);
-                          setWsName(company.name);
-                          setWsSettingsOpen(true);
-                        }}
-                        className="flex items-center gap-2 w-full px-3 py-2 text-sm text-mute hover:bg-line/50 transition-colors"
-                      >
-                        <Settings className="h-3.5 w-3.5 shrink-0" />
-                        Workspace settings
-                      </button>
-                    )}
                     <button
                       onClick={() => {
                         setCompanySwitchOpen(false);
@@ -569,6 +562,20 @@ export default function WorkspaceShell({
                 </>
               )}
             </div>
+
+            {/* Sidebar footer — workspace settings */}
+            {isManager && (
+              <div className="border-t border-line p-2">
+                <button
+                  onClick={() => { setWsName(company.name); setWsSettingsOpen(true); }}
+                  title="Workspace settings"
+                  className="flex items-center gap-2 w-full px-2 py-1.5 rounded-md text-xs text-mute hover:bg-line/50 hover:text-ink transition-colors"
+                >
+                  <Settings className="h-3.5 w-3.5 shrink-0" />
+                  Workspace settings
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Content */}

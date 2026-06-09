@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { signOut } from "next-auth/react";
 import { ArrowLeft, Loader2, Check, LogOut } from "lucide-react";
@@ -16,13 +16,23 @@ type User = {
 };
 
 export default function SettingsShell({ user }: { user: User }) {
+  // Return to the workspace you came from (the selector only shows when you
+  // genuinely have several and none is remembered).
+  const [backHref, setBackHref] = useState("/workspace");
+  useEffect(() => {
+    try {
+      const last = localStorage.getItem("ayuvam-last-workspace");
+      if (last) setBackHref(`/workspace/${last}`);
+    } catch {}
+  }, []);
+
   return (
     <div className="min-h-screen bg-grain text-ink">
       {/* Top bar */}
       <header className="border-b border-line bg-paper-elevated/60 nav-blur">
         <div className="mx-auto max-w-3xl px-6 h-14 flex items-center justify-between">
           <Link
-            href="/workspace"
+            href={backHref}
             className="inline-flex items-center gap-1.5 text-sm text-mute hover:text-ink transition-colors"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
