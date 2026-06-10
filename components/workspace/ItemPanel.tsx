@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import {
   X,
   Link2,
@@ -60,7 +60,7 @@ export default function ItemPanel({
   isManager,
   statusOptions,
   onClose,
-  onPatch,
+  onPatch: onPatchRaw,
   onDelete,
 }: {
   slug: string;
@@ -71,6 +71,19 @@ export default function ItemPanel({
   onPatch: (patch: Partial<RegisterItem> & { updateNote?: string }) => void;
   onDelete: () => void;
 }) {
+  // Every field change marks the session dirty; by default a dirty session
+  // wants a history note on close (the user can untick to skip the log).
+  const [dirty, setDirty] = useState(false);
+  const [logEnabled, setLogEnabled] = useState(true);
+  const [needNote, setNeedNote] = useState(false);
+  const noteRef = useRef<HTMLTextAreaElement>(null);
+  const onPatch = useCallback(
+    (patch: Partial<RegisterItem> & { updateNote?: string }) => {
+      setDirty(true);
+      onPatchRaw(patch);
+    },
+    [onPatchRaw]
+  );
   // Legacy file items carry their blob URL in `url`; treat that as the file's
   // address, not as an editable link.
   const isLegacyFile = item.type === "file" && !item.fileUrl && !!item.url;
@@ -157,18 +170,36 @@ export default function ItemPanel({
     const note = updateNote.trim();
     if (!note) return;
     setSavingNote(true);
-    onPatch({ updateNote: note, historyCount: item.historyCount + 1 });
+    onPatchRaw({ updateNote: note, historyCount: item.historyCount + 1 });
     setHistory((h) => [
       { id: `tmp-${Date.now()}`, updateNote: note, createdAt: new Date().toISOString(), createdByName: "You" },
       ...h,
     ]);
     setUpdateNote("");
     setSavingNote(false);
+    setDirty(false);
+    setNeedNote(false);
     toast.success("Update logged.");
   }
 
+  // Closing a dirty session: log the note (default), nudge for one if it's
+  // missing, or close silently when the user opted out of the history log.
+  function requestClose() {
+    const note = updateNote.trim();
+    if (isManager && dirty && logEnabled) {
+      if (!note) {
+        setNeedNote(true);
+        noteRef.current?.focus();
+        return;
+      }
+      onPatchRaw({ updateNote: note, historyCount: item.historyCount + 1 });
+      toast.success("Update logged.");
+    }
+    onClose();
+  }
+
   return (
-    <Dialog open onOpenChange={(o) => !o && onClose()}>
+    <Dialog open onOpenChange={(o) => !o && requestClose()}>
       <DialogContent className="max-w-2xl">
         <DialogTitle className="sr-only">{item.title}</DialogTitle>
 
@@ -440,16 +471,42 @@ export default function ItemPanel({
             <div className="md:col-span-3 border-t border-line pt-4">
               <Field label="Update history">
                 {isManager && (
-                  <div className="flex items-start gap-1.5 mb-2">
-                    <Textarea
-                      value={updateNote}
-                      onChange={(e) => setUpdateNote(e.target.value)}
-                      placeholder="Log an update — e.g. 'v4 with new pricing'"
-                      className="text-xs min-h-[40px]"
-                    />
-                    <Button variant="accent" size="sm" onClick={logUpdate} disabled={!updateNote.trim() || savingNote} className="shrink-0">
-                      {savingNote ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Log"}
-                    </Button>
+                  <div className="mb-2 space-y-1.5">
+                    <label className="flex items-center gap-2 text-xs text-mute cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={logEnabled}
+                        onChange={(e) => {
+                          setLogEnabled(e.target.checked);
+                          if (!e.target.checked) setNeedNote(false);
+                        }}
+                        className="h-3.5 w-3.5 accent-[var(--accent)]"
+                      />
+                      Log this update to history
+                      <span className="text-mute-soft">· untick for a silent edit</span>
+                    </label>
+                    {logEnabled && (
+                      <div className="flex items-start gap-1.5">
+                        <Textarea
+                          ref={noteRef}
+                          value={updateNote}
+                          onChange={(e) => {
+                            setUpdateNote(e.target.value);
+                            if (e.target.value.trim()) setNeedNote(false);
+                          }}
+                          placeholder="What changed? — e.g. 'v4 with new pricing'"
+                          className={cn("text-xs min-h-[40px]", needNote && "border-danger focus:border-danger")}
+                        />
+                        <Button variant="accent" size="sm" onClick={logUpdate} disabled={!updateNote.trim() || savingNote} className="shrink-0">
+                          {savingNote ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Log"}
+                        </Button>
+                      </div>
+                    )}
+                    {needNote && (
+                      <p className="text-[11px] text-danger">
+                        You made changes — describe them to close, or untick the box to skip the log.
+                      </p>
+                    )}
                   </div>
                 )}
                 {historyLoading ? (
