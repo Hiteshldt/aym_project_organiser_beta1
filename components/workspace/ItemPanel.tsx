@@ -16,6 +16,9 @@ import {
   ChevronDown,
   Loader2,
   Plus,
+  ArrowUpRight,
+  ArrowDownLeft,
+  Search,
 } from "lucide-react";
 import {
   Dialog,
@@ -45,6 +48,17 @@ type HistoryEntry = {
   createdByName: string;
 };
 
+type RefEntry = {
+  id: string;
+  targetId: string;
+  note: string | null;
+  title: string;
+  folderId: string;
+  folderName: string;
+};
+
+type RefCandidate = { id: string; title: string; folderId: string; folderName: string };
+
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="space-y-1">
@@ -62,6 +76,7 @@ export default function ItemPanel({
   onClose,
   onPatch: onPatchRaw,
   onDelete,
+  onNavigate,
 }: {
   slug: string;
   item: RegisterItem;
@@ -70,6 +85,8 @@ export default function ItemPanel({
   onClose: () => void;
   onPatch: (patch: Partial<RegisterItem> & { updateNote?: string }) => void;
   onDelete: () => void;
+  /** Jump to another item (possibly in another folder), e.g. a reference. */
+  onNavigate?: (folderId: string, itemId: string) => void;
 }) {
   // Every field change marks the session dirty; by default a dirty session
   // wants a history note on close (the user can untick to skip the log).
@@ -116,6 +133,83 @@ export default function ItemPanel({
       alive = false;
     };
   }, [item.id, slug]);
+
+  // ── References (item ↔ item, cross-folder) ─────────────────────
+  const [outRefs, setOutRefs] = useState<RefEntry[]>([]);
+  const [inRefs, setInRefs] = useState<RefEntry[]>([]);
+  const [addRefOpen, setAddRefOpen] = useState(false);
+  const [refQuery, setRefQuery] = useState("");
+  const [candidates, setCandidates] = useState<RefCandidate[] | null>(null);
+  const [picked, setPicked] = useState<RefCandidate | null>(null);
+  const [refNote, setRefNote] = useState("");
+  const [savingRef, setSavingRef] = useState(false);
+
+  useEffect(() => {
+    let alive = true;
+    fetch(`/api/workspace/items/references?itemId=${item.id}&slug=${slug}`)
+      .then((r) => (r.ok ? r.json() : { outgoing: [], incoming: [] }))
+      .then((d) => {
+        if (!alive) return;
+        setOutRefs(d.outgoing ?? []);
+        setInRefs(d.incoming ?? []);
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, [item.id, slug]);
+
+  function openAddRef() {
+    setAddRefOpen(true);
+    if (candidates === null) {
+      fetch(`/api/workspace/items?slug=${slug}`)
+        .then((r) => (r.ok ? r.json() : []))
+        .then((list: RefCandidate[]) => setCandidates(list))
+        .catch(() => setCandidates([]));
+    }
+  }
+
+  const refCandidates = (candidates ?? [])
+    .filter(
+      (c) =>
+        c.id !== item.id &&
+        !outRefs.some((r) => r.targetId === c.id) &&
+        (!refQuery.trim() ||
+          c.title.toLowerCase().includes(refQuery.trim().toLowerCase()) ||
+          c.folderName.toLowerCase().includes(refQuery.trim().toLowerCase()))
+    )
+    .slice(0, 6);
+
+  async function addReference() {
+    if (!picked || savingRef) return;
+    setSavingRef(true);
+    const res = await fetch("/api/workspace/items/references", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ slug, itemId: item.id, refItemId: picked.id, note: refNote.trim() || null }),
+    });
+    setSavingRef(false);
+    if (!res.ok) {
+      toast.error("Could not add the reference.");
+      return;
+    }
+    const created = await res.json();
+    setOutRefs((rs) => [
+      ...rs,
+      { id: created.id, targetId: picked.id, note: created.note, title: picked.title, folderId: picked.folderId, folderName: picked.folderName },
+    ]);
+    setPicked(null);
+    setRefQuery("");
+    setRefNote("");
+    setAddRefOpen(false);
+    toast.success("Reference added.");
+  }
+
+  async function removeReference(id: string) {
+    setOutRefs((rs) => rs.filter((r) => r.id !== id));
+    const res = await fetch(`/api/workspace/items/references?id=${id}&slug=${slug}`, { method: "DELETE" });
+    if (!res.ok) toast.error("Could not remove the reference.");
+  }
 
   const saveIfChanged = useCallback(
     (field: keyof RegisterItem, value: string | null) => {
@@ -348,6 +442,127 @@ export default function ItemPanel({
                 </Field>
               )}
 
+              {/* References — link related items, jump between them */}
+              {(isManager || outRefs.length > 0 || inRefs.length > 0) && (
+                <Field label="References">
+                  <div className="space-y-1.5">
+                    {outRefs.map((r) => (
+                      <div
+                        key={r.id}
+                        className="group rounded-lg border border-line bg-paper px-2.5 py-2 hover:border-line-strong transition-colors cursor-pointer"
+                        onClick={() => onNavigate?.(r.folderId, r.targetId)}
+                        title={`Open "${r.title}"`}
+                      >
+                        <span className="flex items-center gap-1.5 min-w-0">
+                          <ArrowUpRight className="h-3 w-3 text-accent shrink-0" />
+                          <span className="text-xs font-medium text-ink truncate">{r.title}</span>
+                          <span className="text-[10px] text-mute-soft font-mono-ui truncate shrink-0">· {r.folderName}</span>
+                          {isManager && (
+                            <button
+                              onClick={(e) => { e.stopPropagation(); removeReference(r.id); }}
+                              className="ml-auto shrink-0 text-mute-soft hover:text-danger opacity-0 group-hover:opacity-100 transition-opacity p-0.5"
+                              title="Remove reference"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          )}
+                        </span>
+                        {r.note && <p className="text-[11px] text-mute mt-0.5 pl-[18px] leading-snug">{r.note}</p>}
+                      </div>
+                    ))}
+
+                    {isManager &&
+                      (addRefOpen ? (
+                        <div className="rounded-lg border border-line bg-paper p-2 space-y-1.5">
+                          {!picked ? (
+                            <>
+                              <div className="relative">
+                                <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-mute-soft" />
+                                <input
+                                  autoFocus
+                                  value={refQuery}
+                                  onChange={(e) => setRefQuery(e.target.value)}
+                                  onKeyDown={(e) => e.key === "Escape" && setAddRefOpen(false)}
+                                  placeholder="Search items across folders…"
+                                  className="w-full bg-transparent text-xs text-ink placeholder:text-mute-soft outline-none pl-7 pr-2 py-1.5 border border-line rounded-md focus:border-accent"
+                                />
+                              </div>
+                              {candidates === null ? (
+                                <p className="text-[11px] text-mute-soft flex items-center gap-1 px-1">
+                                  <Loader2 className="h-3 w-3 animate-spin" /> Loading items…
+                                </p>
+                              ) : refCandidates.length === 0 ? (
+                                <p className="text-[11px] text-mute-soft px-1">No matching items.</p>
+                              ) : (
+                                refCandidates.map((c) => (
+                                  <button
+                                    key={c.id}
+                                    type="button"
+                                    onClick={() => setPicked(c)}
+                                    className="flex items-center gap-1.5 w-full text-left px-1.5 py-1 rounded hover:bg-line/50 min-w-0"
+                                  >
+                                    <span className="text-xs text-ink truncate">{c.title}</span>
+                                    <span className="text-[10px] text-mute-soft font-mono-ui truncate shrink-0">· {c.folderName}</span>
+                                  </button>
+                                ))
+                              )}
+                            </>
+                          ) : (
+                            <>
+                              <p className="text-xs text-ink px-1">
+                                <ArrowUpRight className="inline h-3 w-3 text-accent mr-1" />
+                                {picked.title}
+                                <span className="text-[10px] text-mute-soft font-mono-ui"> · {picked.folderName}</span>
+                                <button type="button" onClick={() => setPicked(null)} className="ml-2 text-[11px] text-mute underline hover:text-ink">
+                                  change
+                                </button>
+                              </p>
+                              <Input
+                                value={refNote}
+                                onChange={(e) => setRefNote(e.target.value)}
+                                placeholder="Why is this related? (optional)"
+                                maxLength={300}
+                                className="h-8 text-xs"
+                                autoFocus
+                              />
+                              <div className="flex gap-1.5">
+                                <Button type="button" variant="outline" size="sm" className="flex-1" onClick={() => { setAddRefOpen(false); setPicked(null); setRefNote(""); }}>
+                                  Cancel
+                                </Button>
+                                <Button type="button" variant="accent" size="sm" className="flex-1" onClick={addReference} disabled={savingRef}>
+                                  {savingRef ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Add reference"}
+                                </Button>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      ) : (
+                        <button type="button" onClick={openAddRef} className="inline-flex items-center gap-1 text-xs text-accent hover:text-accent-hover">
+                          <Plus className="h-3.5 w-3.5" /> Add a reference
+                        </button>
+                      ))}
+
+                    {inRefs.length > 0 && (
+                      <div className="pt-1.5 space-y-1">
+                        <p className="font-mono-ui text-[10px] uppercase tracking-wider text-mute-soft">Referenced by</p>
+                        {inRefs.map((r) => (
+                          <button
+                            key={r.id}
+                            type="button"
+                            onClick={() => onNavigate?.(r.folderId, r.targetId)}
+                            className="flex items-center gap-1.5 w-full text-left px-1 py-0.5 rounded hover:bg-line/40 min-w-0"
+                            title={`Open "${r.title}"`}
+                          >
+                            <ArrowDownLeft className="h-3 w-3 text-mute-soft shrink-0" />
+                            <span className="text-xs text-ink truncate">{r.title}</span>
+                            <span className="text-[10px] text-mute-soft font-mono-ui truncate shrink-0">· {r.folderName}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </Field>
+              )}
             </div>
 
             {/* Right column — metadata */}

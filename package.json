@@ -17,7 +17,8 @@
     "db:add-item-links": "npx tsx db/add-item-links.ts",
     "db:add-ordering-and-search": "npx tsx db/add-ordering-and-search.ts",
     "db:add-company-branding": "npx tsx db/add-company-branding.ts",
-    "db:add-file-url": "npx tsx db/add-file-url.ts"
+    "db:add-file-url": "npx tsx db/add-file-url.ts",
+    "db:add-item-references": "npx tsx db/add-item-references.ts"
   },
   "dependencies": {
     "@auth/drizzle-adapter": "^1.11.2",

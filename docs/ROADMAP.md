@@ -66,6 +66,8 @@ Last updated: **May 28, 2026**
 - **Link + file together** — an item can now hold both a link and an attached file (new `file_url` column; the user's link stays in `url`). Files are downloadable from the grid, the item modal, and the client view.
 - **Reordered register** — columns now read Name · Description · Note (renamed from Remark) · Link · Date · Status; the same order applies to the add form, the item modal, and the client table. Row actions collapsed to copy + a ⋯ menu (open, pin, color, short link, delete) so rows breathe.
 - **Feel pass** — modals get a subtle backdrop blur; dark-mode secondary text and dates lifted for clarity; roomier table rows.
+- **Default-on history logging** — edits made in the item modal prompt for a history note on close (checked by default, note required); untick "Log this update" for a silent edit. Inline cell edits stay silent by design.
+- **Item references** — link any item to any other (cross-folder), each with an optional note. Shown in the item modal with backlinks ("Referenced by"); clicking jumps to that item's register and a floating "← Back to …" chip returns you. New `item_references` table with cascade cleanup.
 - **Item description** field — short subtitle, shown on compact cards and as the Register Description column
 - **Compact item cards** — denser two-line rows, domain instead of full URL, inline tags
 - **Stronger search** — now also matches description, fileName, and space-stripped tags ("data sheet" ↔ "datasheet")

@@ -111,6 +111,9 @@ export default function RegisterGrid({
   showFolder = false,
   canAdd = true,
   folderMeta,
+  onNavigateToItem,
+  openItemOnLoad,
+  onOpenConsumed,
 }: {
   slug: string;
   folder: Folder;
@@ -124,6 +127,14 @@ export default function RegisterGrid({
   canAdd?: boolean;
   /** Sidebar-ordered folders — drives group order + colors in all-items mode. */
   folderMeta?: { id: string; name: string; color: string }[];
+  /** Jump to a referenced item, telling the shell where we came from. */
+  onNavigateToItem?: (
+    target: { folderId: string; itemId: string },
+    source: { folderId: string; itemId: string; title: string }
+  ) => void;
+  /** Open this item's panel once rows are loaded (set after a jump). */
+  openItemOnLoad?: string | null;
+  onOpenConsumed?: () => void;
 }) {
   const confirm = useConfirm();
   const [items, setItems] = useState<RegisterItem[]>(initialItems ?? []);
@@ -149,6 +160,15 @@ export default function RegisterGrid({
     }
     load();
   }, [load, refreshKey]);
+
+  // After a reference jump, open the target item's panel once rows arrive.
+  useEffect(() => {
+    if (loading || !openItemOnLoad) return;
+    if (items.some((i) => i.id === openItemOnLoad)) {
+      setOpenItemId(openItemOnLoad);
+      onOpenConsumed?.();
+    }
+  }, [loading, openItemOnLoad, items, onOpenConsumed]);
 
   // ── Mutations (optimistic) ──────────────────────────────────────
   const patchItem = useCallback(
@@ -755,6 +775,17 @@ export default function RegisterGrid({
             const ok = await handleDelete(openItem.id);
             if (ok) setOpenItemId(null);
           }}
+          onNavigate={
+            onNavigateToItem
+              ? (folderId, itemId) => {
+                  setOpenItemId(null);
+                  onNavigateToItem(
+                    { folderId, itemId },
+                    { folderId: openItem.folderId, itemId: openItem.id, title: openItem.title }
+                  );
+                }
+              : undefined
+          }
         />
       )}
     </div>

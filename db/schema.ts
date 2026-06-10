@@ -184,6 +184,31 @@ export const clientShares = pgTable(
   ]
 );
 
+// Item-to-item references (cross-folder allowed), each with an optional note.
+export const itemReferences = pgTable(
+  "item_references",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    itemId: text("item_id")
+      .notNull()
+      .references(() => items.id, { onDelete: "cascade" }),
+    refItemId: text("ref_item_id")
+      .notNull()
+      .references(() => items.id, { onDelete: "cascade" }),
+    note: varchar("note", { length: 300 }),
+    createdBy: text("created_by")
+      .notNull()
+      .references(() => users.id),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => [
+    index("item_refs_item_idx").on(t.itemId),
+    index("item_refs_ref_idx").on(t.refItemId),
+  ]
+);
+
 export const itemHistory = pgTable(
   "item_history",
   {

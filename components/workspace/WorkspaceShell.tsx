@@ -33,6 +33,7 @@ import {
   Loader2,
   Settings,
   Trash2,
+  ArrowLeft,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import {
@@ -250,6 +251,26 @@ export default function WorkspaceShell({
     setSelectedFolder(f);
     persistSelection(f?.id ?? null);
     setMobileSidebarOpen(false);
+    setRefBack(null); // manual navigation drops the reference back-trail
+  }
+
+  // ── Reference jumps: open another item (any folder) + a way back ──
+  const [jumpOpenItemId, setJumpOpenItemId] = useState<string | null>(null);
+  const [refBack, setRefBack] = useState<{ folderId: string; itemId: string; title: string } | null>(null);
+
+  function jumpToItem(target: { folderId: string; itemId: string }) {
+    const f = folders.find((x) => x.id === target.folderId) ?? null;
+    setSelectedFolder(f);
+    persistSelection(f?.id ?? null);
+    setJumpOpenItemId(target.itemId);
+  }
+
+  function handleNavigateToItem(
+    target: { folderId: string; itemId: string },
+    source: { folderId: string; itemId: string; title: string }
+  ) {
+    setRefBack(source);
+    jumpToItem(target);
   }
 
   async function handleCreateWorkspace(e: React.FormEvent) {
@@ -746,12 +767,31 @@ export default function WorkspaceShell({
                         ? undefined
                         : folders.map((f) => ({ id: f.id, name: f.name, color: f.color }))
                     }
+                    onNavigateToItem={handleNavigateToItem}
+                    openItemOnLoad={jumpOpenItemId}
+                    onOpenConsumed={() => setJumpOpenItemId(null)}
                   />
                 </>
               )}
             </div>
           </div>
         </div>
+
+        {/* Back-trail after a reference jump */}
+        {refBack && (
+          <button
+            onClick={() => {
+              const back = refBack;
+              setRefBack(null);
+              jumpToItem({ folderId: back.folderId, itemId: back.itemId });
+            }}
+            className="fixed bottom-5 left-1/2 -translate-x-1/2 z-40 inline-flex items-center gap-1.5 rounded-full bg-ink text-paper text-xs font-medium pl-3 pr-4 py-2 shadow-lg hover:opacity-90 transition-opacity max-w-[80vw]"
+            title="Return to the item you came from"
+          >
+            <ArrowLeft className="h-3.5 w-3.5 shrink-0" />
+            <span className="truncate">Back to &ldquo;{refBack.title}&rdquo;</span>
+          </button>
+        )}
 
         {/* Modals */}
         {isManager && (
