@@ -29,6 +29,8 @@ export default async function SharePage({
       expiresAt: clientShares.expiresAt,
       companyName: companies.name,
       companySlug: companies.slug,
+      companyAccent: companies.accentColor,
+      companyNote: companies.clientNote,
     })
     .from(clientShares)
     .innerJoin(companies, eq(companies.id, clientShares.companyId))
@@ -96,7 +98,12 @@ export default async function SharePage({
 
   return (
     <ShareView
-      company={{ name: share.companyName, slug: share.companySlug }}
+      company={{
+        name: share.companyName,
+        slug: share.companySlug,
+        accentColor: share.companyAccent,
+        clientNote: share.companyNote,
+      }}
       label={share.label ?? null}
       folders={allFolders.map((f) => ({
         ...f,

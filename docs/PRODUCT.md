@@ -80,8 +80,10 @@ Total time from sign-up to first shared workspace: **~60 seconds.**
 - Items: links (any URL) or files (up to 20 MB)
 - Tags, notes, custom dates per item
 - Pin important items to the top
-- Full-text search (⌘K, eventually) across titles, tags, notes, URLs
+- Typo-tolerant search across titles, descriptions, tags, notes, URLs, and dates
 - Duplicate-link detection — flags if a URL already exists, offers to add a note
+- Quick-add row — type a title, paste a link, Enter; the full form is one click away
+- Per-workspace branding — accent color + a welcome note shown on the client's view
 
 ### Sharing
 - Generate share links per workspace

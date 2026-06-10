@@ -86,6 +86,31 @@ export function normalizeUrl(raw: string): string {
   }
 }
 
+/**
+ * Format a date for <input type="datetime-local"> in the user's local zone.
+ * (toISOString() alone is UTC, which shifts the shown time by the timezone
+ * offset — e.g. -5:30 for IST.)
+ */
+export function toDatetimeLocal(date: Date | string = new Date()): string {
+  const d = new Date(date);
+  return new Date(d.getTime() - d.getTimezoneOffset() * 60_000)
+    .toISOString()
+    .slice(0, 16);
+}
+
+/** Compact relative time: "just now", "5m ago", "2h ago", "3d ago", else a date. */
+export function timeAgo(date: Date | string): string {
+  const ms = Date.now() - new Date(date).getTime();
+  const mins = Math.floor(ms / 60_000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days}d ago`;
+  return formatDate(date);
+}
+
 export function formatDate(date: Date | string) {
   return new Date(date).toLocaleDateString("en-IN", {
     day: "numeric",

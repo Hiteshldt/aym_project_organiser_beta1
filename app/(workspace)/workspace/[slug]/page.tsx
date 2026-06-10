@@ -21,6 +21,8 @@ export default async function WorkspaceSlugPage({
       id: companies.id,
       name: companies.name,
       slug: companies.slug,
+      accentColor: companies.accentColor,
+      clientNote: companies.clientNote,
       role: companyMembers.role,
     })
     .from(companies)
@@ -39,7 +41,13 @@ export default async function WorkspaceSlugPage({
   const isAdmin = session.user.role === "admin";
   if (!rows[0].role && !isAdmin) redirect("/workspace");
 
-  const company = { id: rows[0].id, name: rows[0].name, slug: rows[0].slug };
+  const company = {
+    id: rows[0].id,
+    name: rows[0].name,
+    slug: rows[0].slug,
+    accentColor: rows[0].accentColor,
+    clientNote: rows[0].clientNote,
+  };
   const userRole = isAdmin ? "admin" : rows[0].role || "reader";
 
   // Seed the shell with everything the first screen needs, fetched in parallel

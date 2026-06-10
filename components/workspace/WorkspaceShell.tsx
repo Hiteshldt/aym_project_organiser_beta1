@@ -8,10 +8,12 @@ import { useConfirm } from "@/components/ui/confirm";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { ThemeController, ThemeToggle } from "@/components/theme";
-import { DEFAULT_STATUS_OPTIONS, type StatusOption } from "@/lib/register";
+import { DEFAULT_STATUS_OPTIONS, REGISTER_COLORS, COLOR_DOT, type StatusOption } from "@/lib/register";
+import { Textarea } from "@/components/ui/textarea";
 import FolderTree from "./FolderTree";
 import RegisterGrid, { type RegisterItem } from "./RegisterGrid";
 import FolderOverview from "./FolderOverview";
+import WelcomeSetup from "./WelcomeSetup";
 import SearchResults from "./SearchResults";
 import AddItemModal from "./AddItemModal";
 import CreateFolderModal from "./CreateFolderModal";
@@ -43,7 +45,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-type Company = { id: string; name: string; slug: string };
+type Company = {
+  id: string;
+  name: string;
+  slug: string;
+  accentColor?: string | null;
+  clientNote?: string | null;
+};
 type Folder = {
   id: string;
   name: string;
@@ -111,6 +119,8 @@ export default function WorkspaceShell({
   const [creatingWorkspace, setCreatingWorkspace] = useState(false);
   const [wsSettingsOpen, setWsSettingsOpen] = useState(false);
   const [wsName, setWsName] = useState(company.name);
+  const [wsAccent, setWsAccent] = useState<string | null>(company.accentColor ?? null);
+  const [wsNote, setWsNote] = useState(company.clientNote ?? "");
   const [savingWs, setSavingWs] = useState(false);
 
   const loadFolders = useCallback(async (silent = false) => {
@@ -173,6 +183,24 @@ export default function WorkspaceShell({
     setCreateFolderOpen(true);
   }
 
+  // One-click folder creation from the first-run setup chips — creates,
+  // refreshes the sidebar, and drops the user straight into the new register.
+  async function handleQuickCreateFolder(name: string, color: string) {
+    const res = await fetch("/api/workspace/folders", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ slug: company.slug, name, parentId: null, color }),
+    });
+    if (!res.ok) {
+      toast.error("Could not create the folder.");
+      return;
+    }
+    const folder: Folder = await res.json();
+    toast.success(`"${name}" created — add your first row.`);
+    await loadFolders(true);
+    setSelectedFolder(folder);
+  }
+
   function handleItemAdded() {
     setAddItemOpen(false);
     setRefreshKey((k) => k + 1);
@@ -207,28 +235,30 @@ export default function WorkspaceShell({
     router.push(`/workspace/${created.slug}`);
   }
 
-  async function handleRenameWorkspace(e: React.FormEvent) {
+  async function handleSaveWorkspace(e: React.FormEvent) {
     e.preventDefault();
     const name = wsName.trim();
-    if (!name || name === company.name) {
-      setWsSettingsOpen(false);
-      return;
-    }
+    if (!name) return;
     setSavingWs(true);
     const res = await fetch("/api/workspace/companies", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ slug: company.slug, name }),
+      body: JSON.stringify({
+        slug: company.slug,
+        name,
+        accentColor: wsAccent,
+        clientNote: wsNote,
+      }),
     });
     setSavingWs(false);
     if (res.ok) {
-      toast.success("Workspace renamed.");
+      toast.success("Workspace updated.");
       setMyCompanies((cs) => cs.map((c) => (c.slug === company.slug ? { ...c, name } : c)));
       setWsSettingsOpen(false);
       router.refresh();
     } else {
       const data = await res.json().catch(() => ({}));
-      toast.error(data.error ?? "Could not rename the workspace.");
+      toast.error(data.error ?? "Could not update the workspace.");
     }
   }
 
@@ -262,6 +292,9 @@ export default function WorkspaceShell({
     ? folders.filter((f) => f.parentId === selectedFolder.id)
     : [];
   const isContainer = !!selectedFolder && childFolders.length > 0;
+  const parentFolder = selectedFolder?.parentId
+    ? folders.find((f) => f.id === selectedFolder.parentId) ?? null
+    : null;
 
   // Persist a register's customized status set (optimistic).
   const handleStatusOptionsChange = useCallback(
@@ -567,7 +600,12 @@ export default function WorkspaceShell({
             {isManager && (
               <div className="border-t border-line p-2">
                 <button
-                  onClick={() => { setWsName(company.name); setWsSettingsOpen(true); }}
+                  onClick={() => {
+                    setWsName(company.name);
+                    setWsAccent(company.accentColor ?? null);
+                    setWsNote(company.clientNote ?? "");
+                    setWsSettingsOpen(true);
+                  }}
                   title="Workspace settings"
                   className="flex items-center gap-2 w-full px-2 py-1.5 rounded-md text-xs text-mute hover:bg-line/50 hover:text-ink transition-colors"
                 >
@@ -587,6 +625,18 @@ export default function WorkspaceShell({
                   <Table2 className="h-4 w-4 text-accent shrink-0" />
                   <div className="min-w-0">
                     <h2 className="text-sm font-semibold text-ink truncate">
+                      {parentFolder && (
+                        <>
+                          <button
+                            onClick={() => selectFolderAndClose(parentFolder)}
+                            className="font-normal text-mute hover:text-ink transition-colors"
+                            title={`Up to ${parentFolder.name}`}
+                          >
+                            {parentFolder.name}
+                          </button>
+                          <span className="font-normal text-mute-soft"> / </span>
+                        </>
+                      )}
                       {selectedFolder ? selectedFolder.name : "All items"}
                     </h2>
                     <p className="text-xs text-mute-soft mt-0.5">
@@ -616,6 +666,12 @@ export default function WorkspaceShell({
                   isManager={isManager}
                   onClearSearch={clearSearch}
                   onRefresh={() => {}}
+                />
+              ) : !foldersLoading && folders.length === 0 && isManager ? (
+                <WelcomeSetup
+                  companyName={company.name}
+                  onCreateFolder={handleQuickCreateFolder}
+                  onCustomFolder={() => { setCreateSubfolderParent(null); setCreateFolderOpen(true); }}
                 />
               ) : (
                 <>
@@ -674,9 +730,9 @@ export default function WorkspaceShell({
           <DialogContent className="max-w-sm">
             <DialogHeader>
               <DialogTitle>Workspace settings</DialogTitle>
-              <DialogDescription>Rename this workspace, or delete it for good.</DialogDescription>
+              <DialogDescription>Name, the look of your client&apos;s view, or delete it for good.</DialogDescription>
             </DialogHeader>
-            <form onSubmit={handleRenameWorkspace} className="px-6 pb-6 space-y-4">
+            <form onSubmit={handleSaveWorkspace} className="px-6 pb-6 space-y-4">
               <div className="space-y-1.5">
                 <Label>Workspace name</Label>
                 <Input
@@ -687,6 +743,39 @@ export default function WorkspaceShell({
                 />
                 <p className="text-[11px] text-mute-soft">The link stays the same — only the name changes.</p>
               </div>
+
+              <div className="space-y-1.5">
+                <Label>Accent color</Label>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {REGISTER_COLORS.map((c) => (
+                    <button
+                      key={c}
+                      type="button"
+                      onClick={() => setWsAccent(wsAccent === c ? null : c)}
+                      title={c}
+                      className={cn(
+                        "h-6 w-6 rounded-full transition-transform hover:scale-110",
+                        COLOR_DOT[c],
+                        wsAccent === c && "ring-2 ring-offset-1 ring-ink ring-offset-paper-elevated"
+                      )}
+                    />
+                  ))}
+                </div>
+                <p className="text-[11px] text-mute-soft">Shown on your client&apos;s share view, next to the workspace name.</p>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label>Note to your client</Label>
+                <Textarea
+                  value={wsNote}
+                  onChange={(e) => setWsNote(e.target.value)}
+                  maxLength={500}
+                  placeholder="e.g. Here's everything for the Q3 launch — newest at the top."
+                  className="min-h-[60px] text-sm"
+                />
+                <p className="text-[11px] text-mute-soft">Optional. Appears at the top of the share view.</p>
+              </div>
+
               <div className="flex gap-2">
                 <Button type="button" variant="outline" className="flex-1" onClick={() => setWsSettingsOpen(false)}>
                   Cancel
@@ -695,7 +784,7 @@ export default function WorkspaceShell({
                   type="submit"
                   variant="accent"
                   className="flex-1"
-                  disabled={savingWs || !wsName.trim() || wsName.trim() === company.name}
+                  disabled={savingWs || !wsName.trim()}
                 >
                   {savingWs ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save"}
                 </Button>

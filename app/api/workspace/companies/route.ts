@@ -87,17 +87,23 @@ export async function POST(req: NextRequest) {
   return NextResponse.json(company, { status: 201 });
 }
 
-/** Rename a workspace. Slug stays stable so share links / bookmarks don't break. */
+/**
+ * Update a workspace: rename and/or client-facing branding (accent color,
+ * welcome note). Slug stays stable so share links / bookmarks don't break.
+ */
 export async function PATCH(req: NextRequest) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { slug, name } = await req.json();
+  const { slug, name, accentColor, clientNote } = await req.json();
   if (!slug) return NextResponse.json({ error: "slug required" }, { status: 400 });
-  const trimmed = (name ?? "").trim();
-  if (!trimmed) return NextResponse.json({ error: "Name required" }, { status: 400 });
-  if (trimmed.length > 60) {
-    return NextResponse.json({ error: "Name must be 60 characters or fewer" }, { status: 400 });
+
+  const trimmed = name !== undefined ? (name ?? "").trim() : undefined;
+  if (trimmed !== undefined) {
+    if (!trimmed) return NextResponse.json({ error: "Name required" }, { status: 400 });
+    if (trimmed.length > 60) {
+      return NextResponse.json({ error: "Name must be 60 characters or fewer" }, { status: 400 });
+    }
   }
 
   const access = await memberAccess(session.user.id, slug);
@@ -107,7 +113,13 @@ export async function PATCH(req: NextRequest) {
 
   const [updated] = await db
     .update(companies)
-    .set({ name: trimmed })
+    .set({
+      ...(trimmed !== undefined && { name: trimmed }),
+      ...(accentColor !== undefined && { accentColor: accentColor || null }),
+      ...(clientNote !== undefined && {
+        clientNote: (clientNote ?? "").trim().slice(0, 500) || null,
+      }),
+    })
     .where(eq(companies.id, access.id))
     .returning();
 

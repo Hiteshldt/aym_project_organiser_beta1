@@ -15,7 +15,8 @@
     "db:add-indexes": "npx tsx db/add-indexes.ts",
     "db:add-register-fields": "npx tsx db/add-register-fields.ts",
     "db:add-item-links": "npx tsx db/add-item-links.ts",
-    "db:add-ordering-and-search": "npx tsx db/add-ordering-and-search.ts"
+    "db:add-ordering-and-search": "npx tsx db/add-ordering-and-search.ts",
+    "db:add-company-branding": "npx tsx db/add-company-branding.ts"
   },
   "dependencies": {
     "@auth/drizzle-adapter": "^1.11.2",

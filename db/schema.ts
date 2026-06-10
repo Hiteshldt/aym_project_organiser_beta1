@@ -49,6 +49,9 @@ export const companies = pgTable("companies", {
     .$defaultFn(() => crypto.randomUUID()),
   name: varchar("name", { length: 255 }).notNull(),
   slug: varchar("slug", { length: 255 }).notNull().unique(),
+  // Client-facing branding for the share view: accent color key + welcome note.
+  accentColor: varchar("accent_color", { length: 20 }),
+  clientNote: varchar("client_note", { length: 500 }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   createdBy: text("created_by")
     .notNull()

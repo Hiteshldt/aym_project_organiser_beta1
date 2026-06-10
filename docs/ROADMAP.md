@@ -55,6 +55,11 @@ Last updated: **May 28, 2026**
 - **Drag-to-reorder** — a grip handle (⋮⋮) on each register row and each folder/sub-folder; drag to set a manual order that persists (per-folder for rows, per-parent for folders). Native drag with a live drop indicator; order flows through to the client share view.
 - **Typo-tolerant search** — when an exact search finds nothing, a `pg_trgm` similarity fallback returns the closest titles/descriptions, so small misspellings still surface the right item.
 - **UX refinements** — Title is the only required field when adding (link/file are optional, add them later); the item editor is now a centered, two-column modal (was a side panel); Workspace settings live behind a gear at the sidebar's bottom; "Back to workspace" from Settings returns to the workspace you were in (remembered) instead of the selector.
+- **Quick-add row** — spreadsheet-style ghost row at the bottom of every register: type a title, paste a link, Enter; focus stays put for rapid entry. "Add with details…" opens the full form.
+- **First-run setup** — empty workspaces show a guided 3-step panel with one-click suggested folders (Proposals, Deliverables, Designs, Contracts) instead of a blank screen.
+- **Share confidence** — each share link shows a green "Viewed 2h ago" / grey "Not opened yet" status and a labeled Preview button to see exactly what the client sees.
+- **Client-facing branding** — per-workspace accent color + welcome note ("Here's everything for the Q3 launch—"), set in Workspace settings, rendered on the share view.
+- **Fixes & polish** — datetime inputs no longer shift by the timezone offset (UTC bug); denser-but-larger register typography (13px descriptions/remarks, roomier rows); clickable parent breadcrumb when inside a sub-folder.
 - **Item description** field — short subtitle, shown on compact cards and as the Register Description column
 - **Compact item cards** — denser two-line rows, domain instead of full URL, inline tags
 - **Stronger search** — now also matches description, fileName, and space-stripped tags ("data sheet" ↔ "datasheet")

@@ -9,7 +9,8 @@
       "Bash(grep -nE \"bg-white|#[0-9a-fA-F]{3,6}|text-gray|bg-gray\" components/ui/confirm.tsx components/ui/toaster.tsx)",
       "Bash(npm run *)",
       "Bash(grep -rnoE \"\\(border|bg|ring|divide\\)-\\\\[#[0-9a-fA-F]{3,6}\\\\]\" components/workspace components/share components/ui)",
-      "Bash(node -e \"const p=require\\('./package.json'\\); console.log\\(Object.keys\\(p.dependencies\\).join\\(', '\\)\\)\")"
+      "Bash(node -e \"const p=require\\('./package.json'\\); console.log\\(Object.keys\\(p.dependencies\\).join\\(', '\\)\\)\")",
+      "Bash(perl -pi -e 's/company: \\\\{ name: string; slug: string \\\\};/company: { name: string; slug: string; accentColor?: string | null; clientNote?: string | null };/g' components/share/ShareView.tsx)"
     ],
     "additionalDirectories": [
       "/Users/hiteshgupta/Vs Code/hitesh/files-organiser/app/api/auth"

@@ -18,7 +18,7 @@ import {
   AlertTriangle,
   Upload,
 } from "lucide-react";
-import { MAX_FILE_SIZE, formatDateTime, cn } from "@/lib/utils";
+import { MAX_FILE_SIZE, formatDateTime, toDatetimeLocal, cn } from "@/lib/utils";
 import {
   type StatusOption,
   STATUS_CHIP,
@@ -67,7 +67,7 @@ export default function AddItemModal({
   const [allTags, setAllTags] = useState<string[]>([]);
   const [tagHintDismissed, setTagHintDismissed] = useState(false);
   const [notes, setNotes] = useState("");
-  const [itemDate, setItemDate] = useState(new Date().toISOString().slice(0, 16));
+  const [itemDate, setItemDate] = useState(toDatetimeLocal());
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [duplicate, setDuplicate] = useState<DuplicateInfo | null>(null);
@@ -86,7 +86,7 @@ export default function AddItemModal({
     setTags([]);
     setTagInput("");
     setNotes("");
-    setItemDate(new Date().toISOString().slice(0, 16));
+    setItemDate(toDatetimeLocal());
     setSaving(false);
     setError("");
     setDuplicate(null);

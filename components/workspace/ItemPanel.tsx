@@ -25,7 +25,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { formatDate, formatDateTime, formatBytes, cn } from "@/lib/utils";
+import { formatDate, formatDateTime, formatBytes, toDatetimeLocal, cn } from "@/lib/utils";
 import { buildShortLinkUrl } from "@/lib/shortcode";
 import {
   type StatusOption,
@@ -403,7 +403,7 @@ export default function ItemPanel({
                 {isManager ? (
                   <Input
                     type="datetime-local"
-                    defaultValue={new Date(item.itemDate).toISOString().slice(0, 16)}
+                    defaultValue={toDatetimeLocal(item.itemDate)}
                     onChange={(e) => e.target.value && onPatch({ itemDate: new Date(e.target.value).toISOString() })}
                     className="text-sm h-8"
                   />

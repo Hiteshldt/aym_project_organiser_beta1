@@ -17,6 +17,7 @@ import {
   type StatusOption,
   DEFAULT_STATUS_OPTIONS,
   STATUS_CHIP,
+  COLOR_DOT,
   ROW_TINT,
   findStatus,
   isRegisterColor,
@@ -61,7 +62,7 @@ export default function ShareView({
   folders,
   items,
 }: {
-  company: { name: string; slug: string };
+  company: { name: string; slug: string; accentColor?: string | null; clientNote?: string | null };
   label: string | null;
   folders: Folder[];
   items: Item[];
@@ -79,7 +80,7 @@ function ShareInner({
   folders,
   items,
 }: {
-  company: { name: string; slug: string };
+  company: { name: string; slug: string; accentColor?: string | null; clientNote?: string | null };
   label: string | null;
   folders: Folder[];
   items: Item[];
@@ -134,7 +135,12 @@ function ShareInner({
               Shared workspace
             </span>
             <span className="text-mute-soft">·</span>
-            <span className="text-sm font-medium text-ink truncate">{company.name}</span>
+            <span className="inline-flex items-center gap-1.5 text-sm font-medium text-ink truncate">
+              {isRegisterColor(company.accentColor) && (
+                <span className={cn("h-2 w-2 rounded-full shrink-0", COLOR_DOT[company.accentColor])} />
+              )}
+              {company.name}
+            </span>
             {label && (
               <>
                 <span className="text-mute-soft hidden lg:inline">·</span>
@@ -195,9 +201,17 @@ function ShareInner({
               <p className="font-mono-ui text-[11px] uppercase tracking-wider text-mute-soft">
                 {selectedFolder ? "Folder" : "Overview"}
               </p>
-              <h1 className="mt-1 font-display text-[28px] sm:text-3xl md:text-4xl text-ink leading-[1.1] tracking-[-0.02em] break-words">
+              <h1 className="mt-1 font-display text-[28px] sm:text-3xl md:text-4xl text-ink leading-[1.1] tracking-[-0.02em] break-words flex items-center gap-2.5">
+                {!selectedFolder && isRegisterColor(company.accentColor) && (
+                  <span className={cn("h-3 w-3 rounded-full shrink-0", COLOR_DOT[company.accentColor])} />
+                )}
                 {selectedFolder ? selectedFolder.name : company.name}
               </h1>
+              {!selectedFolder && company.clientNote && (
+                <p className="mt-2 text-sm text-mute leading-relaxed max-w-xl italic">
+                  &ldquo;{company.clientNote}&rdquo;
+                </p>
+              )}
               <p className="mt-1 text-sm text-mute">
                 {filteredItems.length} item{filteredItems.length !== 1 ? "s" : ""}
                 {query && ` matching "${query}"`}
@@ -308,7 +322,7 @@ function RegisterTable({
                     </span>
                   </div>
                 </td>
-                <td className={cn(CELL, "hidden md:table-cell text-xs text-mute leading-snug max-w-[240px]")}>
+                <td className={cn(CELL, "hidden md:table-cell text-[13px] text-mute leading-relaxed max-w-[240px]")}>
                   {item.description || <span className="text-mute-soft">—</span>}
                 </td>
                 <td className={CELL}>
@@ -349,7 +363,7 @@ function RegisterTable({
                     )}
                   </div>
                 </td>
-                <td className={cn(CELL, "hidden lg:table-cell text-xs text-mute leading-snug max-w-[320px] whitespace-pre-wrap")}>
+                <td className={cn(CELL, "hidden lg:table-cell text-[13px] text-mute leading-relaxed max-w-[320px] whitespace-pre-wrap")}>
                   {item.notes || <span className="text-mute-soft">—</span>}
                 </td>
                 {showFolder && (

@@ -22,7 +22,7 @@ import {
   Mail,
   AlertTriangle,
 } from "lucide-react";
-import { formatDate } from "@/lib/utils";
+import { formatDate, timeAgo } from "@/lib/utils";
 import { useConfirm } from "@/components/ui/confirm";
 import { toast } from "sonner";
 
@@ -218,11 +218,20 @@ export default function ShareWithClientModal({
                       <p className="text-[11px] text-mute font-mono-ui mt-0.5">
                         {s.clientEmail && <span>{s.clientEmail} · </span>}
                         created {formatDate(s.createdAt)}
-                        {s.lastAccessedAt && (
-                          <span className="text-accent">
-                            {" "}
-                            · last opened {formatDate(s.lastAccessedAt)}
-                          </span>
+                      </p>
+                      <p className="mt-1 inline-flex items-center gap-1.5 text-[11px]">
+                        {s.lastAccessedAt ? (
+                          <>
+                            <span className="h-1.5 w-1.5 rounded-full bg-success" />
+                            <span className="text-success font-medium">
+                              Viewed {timeAgo(s.lastAccessedAt)}
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            <span className="h-1.5 w-1.5 rounded-full bg-mute-soft" />
+                            <span className="text-mute-soft">Not opened yet</span>
+                          </>
                         )}
                       </p>
                     </div>
@@ -259,10 +268,11 @@ export default function ShareWithClientModal({
                       href={getShareUrl(s.token)}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="shrink-0 rounded-md border border-line bg-paper-elevated p-1.5 hover:border-line-strong transition-colors"
-                      title="Open in new tab"
+                      className="shrink-0 rounded-md border border-line bg-paper-elevated px-2 py-1.5 text-[11px] hover:border-line-strong transition-colors inline-flex items-center gap-1 text-mute hover:text-ink"
+                      title="See exactly what your client sees"
                     >
-                      <ExternalLink className="h-3 w-3 text-mute" />
+                      <Eye className="h-3 w-3" />
+                      Preview
                     </a>
                   </div>
                 </div>

@@ -20,6 +20,7 @@ import {
   Palette,
   PanelRight,
   GripVertical,
+  Loader2,
   Folder as FolderIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -75,7 +76,7 @@ export type RegisterItem = {
 };
 
 // Shared cell styling — thin grid lines on every side give the spreadsheet feel.
-const CELL = "border-r border-line px-3 py-2 align-top";
+const CELL = "border-r border-line px-3 py-2.5 align-top";
 const HEAD =
   "border-r border-line px-3 py-2 text-left text-[11px] font-medium text-mute uppercase tracking-wide bg-paper";
 
@@ -182,6 +183,49 @@ export default function RegisterGrid({
     setItems(prev);
     toast.error("Could not delete row.");
     return false;
+  }
+
+  // ── Quick-add: spreadsheet-style ghost row at the bottom ────────
+  const [qaTitle, setQaTitle] = useState("");
+  const [qaUrl, setQaUrl] = useState("");
+  const [qaSaving, setQaSaving] = useState(false);
+  const qaTitleRef = useRef<HTMLInputElement>(null);
+
+  async function quickAdd() {
+    const t = qaTitle.trim();
+    if (!t || !folder || qaSaving) return;
+    setQaSaving(true);
+    const res = await fetch("/api/workspace/items", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        slug,
+        folderId: folder.id,
+        title: t,
+        type: "link",
+        url: qaUrl.trim() || null,
+        tags: [],
+        overrideDuplicate: true, // quick capture never blocks; dedupe via the full form
+      }),
+    });
+    setQaSaving(false);
+    if (!res.ok) {
+      toast.error("Could not add the row.");
+      return;
+    }
+    const created = await res.json();
+    setItems((list) => [
+      ...list,
+      {
+        ...created,
+        folderName: folder.name,
+        createdByName: "You",
+        historyCount: 0,
+      },
+    ]);
+    setQaTitle("");
+    setQaUrl("");
+    qaTitleRef.current?.focus(); // straight into the next entry
   }
 
   // ── Drag-to-reorder (manager, leaf folder only) ─────────────────
@@ -363,7 +407,7 @@ export default function RegisterGrid({
                     </td>
 
                     {/* Description */}
-                    <td className={cn(CELL, "hidden md:table-cell text-xs text-mute leading-snug max-w-[240px]")}>
+                    <td className={cn(CELL, "hidden md:table-cell text-[13px] text-mute leading-relaxed max-w-[240px]")}>
                       <InlineText
                         value={item.description}
                         editable={isManager}
@@ -438,7 +482,7 @@ export default function RegisterGrid({
                     </td>
 
                     {/* Remark */}
-                    <td className={cn(CELL, "hidden lg:table-cell text-xs text-mute leading-snug max-w-[320px] whitespace-pre-wrap")}>
+                    <td className={cn(CELL, "hidden lg:table-cell text-[13px] text-mute leading-relaxed max-w-[320px] whitespace-pre-wrap")}>
                       <InlineText
                         value={item.notes}
                         editable={isManager}
@@ -486,6 +530,50 @@ export default function RegisterGrid({
                 );
               })
             )}
+
+            {/* Quick-add ghost row — type a title, paste a link, Enter. */}
+            {!loading && isManager && folder && canAdd && (
+              <tr className="border-t border-line bg-paper/50">
+                {reorderable && <td className="border-r border-line" />}
+                <td className="border-r border-line px-3 py-2 text-mute-soft">
+                  <Plus className="h-3 w-3" />
+                </td>
+                <td className="border-r border-line px-2 py-1">
+                  <input
+                    ref={qaTitleRef}
+                    value={qaTitle}
+                    onChange={(e) => setQaTitle(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && quickAdd()}
+                    placeholder="Add a row — type a title…"
+                    disabled={qaSaving}
+                    className="w-full bg-transparent text-sm text-ink placeholder:text-mute-soft outline-none py-1 px-1 rounded focus:bg-paper-elevated"
+                  />
+                </td>
+                <td className="hidden md:table-cell border-r border-line" />
+                <td className="border-r border-line" />
+                <td className="border-r border-line px-2 py-1">
+                  <input
+                    value={qaUrl}
+                    onChange={(e) => setQaUrl(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && quickAdd()}
+                    placeholder="Paste link (optional)"
+                    disabled={qaSaving}
+                    className="w-full bg-transparent text-xs font-mono-ui text-ink placeholder:text-mute-soft outline-none py-1 px-1 rounded focus:bg-paper-elevated"
+                  />
+                </td>
+                <td className="hidden lg:table-cell border-r border-line" />
+                <td className="border-r border-line px-3 py-2">
+                  {qaSaving ? (
+                    <Loader2 className="h-3 w-3 animate-spin text-mute-soft" />
+                  ) : qaTitle.trim() ? (
+                    <button onClick={quickAdd} className="text-[11px] text-accent hover:text-accent-hover font-medium">
+                      ↵ Add
+                    </button>
+                  ) : null}
+                </td>
+                {isManager && <td />}
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
@@ -494,7 +582,7 @@ export default function RegisterGrid({
         <div className="flex items-center justify-between mt-2">
           {isManager && folder && canAdd && (
             <button onClick={onAddItem} className="inline-flex items-center gap-1 text-xs text-accent hover:text-accent-hover">
-              <Plus className="h-3.5 w-3.5" /> Add row
+              <Plus className="h-3.5 w-3.5" /> Add with details…
             </button>
           )}
           <p className="text-xs text-mute-soft ml-auto">
