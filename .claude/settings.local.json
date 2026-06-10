@@ -10,7 +10,11 @@
       "Bash(npm run *)",
       "Bash(grep -rnoE \"\\(border|bg|ring|divide\\)-\\\\[#[0-9a-fA-F]{3,6}\\\\]\" components/workspace components/share components/ui)",
       "Bash(node -e \"const p=require\\('./package.json'\\); console.log\\(Object.keys\\(p.dependencies\\).join\\(', '\\)\\)\")",
-      "Bash(perl -pi -e 's/company: \\\\{ name: string; slug: string \\\\};/company: { name: string; slug: string; accentColor?: string | null; clientNote?: string | null };/g' components/share/ShareView.tsx)"
+      "Bash(perl -pi -e 's/company: \\\\{ name: string; slug: string \\\\};/company: { name: string; slug: string; accentColor?: string | null; clientNote?: string | null };/g' components/share/ShareView.tsx)",
+      "Bash(sed -n '355,366p' components/workspace/RegisterGrid.tsx)",
+      "Bash(sed -n '560,572p' components/workspace/RegisterGrid.tsx)",
+      "Bash(perl -pi -e 's/text-\\\\[11px\\\\] font-medium text-mute uppercase tracking-wide bg-paper/text-[11px] font-semibold text-mute uppercase tracking-wide bg-paper/g' components/workspace/RegisterGrid.tsx components/workspace/SearchResults.tsx components/share/ShareView.tsx)",
+      "Bash(perl -pi -e 's/const CELL = \"border-r border-line px-3 py-2\\\\.5 align-top\";/const CELL = \"border-r border-line px-3 py-3 align-top\";/; s/const CELL = \"border-r border-line px-3 py-2 align-top\";/const CELL = \"border-r border-line px-3 py-3 align-top\";/' components/workspace/RegisterGrid.tsx components/workspace/SearchResults.tsx components/share/ShareView.tsx)"
     ],
     "additionalDirectories": [
       "/Users/hiteshgupta/Vs Code/hitesh/files-organiser/app/api/auth"

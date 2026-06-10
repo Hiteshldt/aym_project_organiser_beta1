@@ -202,10 +202,11 @@ export default function AddItemModal({
         return;
       }
 
-      // A file (if attached) makes it a file item; otherwise it's a link item
-      // whose URL is optional — you can add the link later from the panel.
+      // An item can hold a link AND a file — the link stays in `url`, the
+      // uploaded blob goes to `fileUrl`. Type just drives the row icon.
       let type: "link" | "file" = "link";
-      let finalUrl: string | null = url.trim() || null;
+      const finalUrl: string | null = url.trim() || null;
+      let fileUrl: string | null = null;
       let fileKey: string | null = null;
       let fileName: string | null = null;
       let fileSize: number | null = null;
@@ -224,7 +225,7 @@ export default function AddItemModal({
         }
         const uploaded = await uploadRes.json();
         type = "file";
-        finalUrl = uploaded.url;
+        fileUrl = uploaded.url;
         fileKey = uploaded.key;
         fileName = uploaded.name;
         fileSize = uploaded.size;
@@ -242,6 +243,7 @@ export default function AddItemModal({
           rowColor,
           type,
           url: finalUrl,
+          fileUrl,
           fileKey,
           fileName,
           fileSize,
@@ -314,6 +316,17 @@ export default function AddItemModal({
             />
           </div>
 
+          {/* Note */}
+          <div className="space-y-1.5">
+            <Label>Note</Label>
+            <Textarea
+              placeholder="Any context that will help find this later…"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              className="min-h-[60px]"
+            />
+          </div>
+
           {/* Link — optional */}
           <div className="space-y-1.5">
             <Label>Link <span className="text-mute-soft font-normal">· optional, add later anytime</span></Label>
@@ -323,7 +336,6 @@ export default function AddItemModal({
               value={url}
               onChange={(e) => { setUrl(e.target.value); setDuplicate(null); }}
               onBlur={checkDuplicate}
-              disabled={!!file}
             />
             {checkingDup && (
               <p className="text-xs text-mute-soft flex items-center gap-1">
@@ -334,7 +346,7 @@ export default function AddItemModal({
 
           {/* File — optional alternative to a link */}
           <div className="space-y-1.5">
-            <Label>Or attach a file <span className="text-mute-soft font-normal">· optional, max 20MB</span></Label>
+            <Label>File <span className="text-mute-soft font-normal">· optional, works alongside the link · max 20MB</span></Label>
             {file ? (
               <div className="flex items-center gap-2 rounded-lg border border-line bg-paper p-2.5 text-sm">
                 <FileText className="h-4 w-4 text-warning shrink-0" />
@@ -389,6 +401,12 @@ export default function AddItemModal({
             </div>
           )}
 
+          {/* Date */}
+          <div className="space-y-1.5">
+            <Label>Date &amp; time</Label>
+            <Input type="datetime-local" value={itemDate} onChange={(e) => setItemDate(e.target.value)} />
+          </div>
+
           {/* Status */}
           {statusOptions.length > 0 && (
             <div className="space-y-1.5">
@@ -438,12 +456,6 @@ export default function AddItemModal({
             </div>
           </div>
 
-          {/* Date */}
-          <div className="space-y-1.5">
-            <Label>Date &amp; time</Label>
-            <Input type="datetime-local" value={itemDate} onChange={(e) => setItemDate(e.target.value)} />
-          </div>
-
           {/* Tags */}
           <div className="space-y-1.5">
             <Label>Tags</Label>
@@ -485,17 +497,6 @@ export default function AddItemModal({
             ) : (
               <p className="text-[11px] text-mute-soft">Press Enter or comma to add. Spaces become hyphens.</p>
             )}
-          </div>
-
-          {/* Notes */}
-          <div className="space-y-1.5">
-            <Label>Remark</Label>
-            <Textarea
-              placeholder="Any context that will help find this later…"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              className="min-h-[70px]"
-            />
           </div>
 
           {error && <p className="text-xs text-danger">{error}</p>}

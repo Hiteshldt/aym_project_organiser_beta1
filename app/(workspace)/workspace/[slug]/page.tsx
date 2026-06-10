@@ -69,6 +69,7 @@ export default async function WorkspaceSlugPage({
         type: items.type,
         url: items.url,
         links: items.links,
+        fileUrl: items.fileUrl,
         fileKey: items.fileKey,
         fileName: items.fileName,
         fileSize: items.fileSize,

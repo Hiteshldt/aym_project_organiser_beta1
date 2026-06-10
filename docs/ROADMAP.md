@@ -60,6 +60,12 @@ Last updated: **May 28, 2026**
 - **Share confidence** — each share link shows a green "Viewed 2h ago" / grey "Not opened yet" status and a labeled Preview button to see exactly what the client sees.
 - **Client-facing branding** — per-workspace accent color + welcome note ("Here's everything for the Q3 launch—"), set in Workspace settings, rendered on the share view.
 - **Fixes & polish** — datetime inputs no longer shift by the timezone offset (UTC bug); denser-but-larger register typography (13px descriptions/remarks, roomier rows); clickable parent breadcrumb when inside a sub-folder.
+- **View persistence** — a refresh keeps you in the folder you were viewing (per workspace); folder-tree dropdowns are open by default and remember manual collapses for the session.
+- **Grouped "All items"** — rows are grouped under soft folder headers (color dot + name + count, sidebar order) instead of a tiny per-row folder chip, so same-named items in different folders read clearly.
+- **QoL** — press "/" anywhere to jump to search, Esc clears it; stronger table-header contrast; larger view titles.
+- **Link + file together** — an item can now hold both a link and an attached file (new `file_url` column; the user's link stays in `url`). Files are downloadable from the grid, the item modal, and the client view.
+- **Reordered register** — columns now read Name · Description · Note (renamed from Remark) · Link · Date · Status; the same order applies to the add form, the item modal, and the client table. Row actions collapsed to copy + a ⋯ menu (open, pin, color, short link, delete) so rows breathe.
+- **Feel pass** — modals get a subtle backdrop blur; dark-mode secondary text and dates lifted for clarity; roomier table rows.
 - **Item description** field — short subtitle, shown on compact cards and as the Register Description column
 - **Compact item cards** — denser two-line rows, domain instead of full URL, inline tags
 - **Stronger search** — now also matches description, fileName, and space-stripped tags ("data sheet" ↔ "datasheet")

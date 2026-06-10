@@ -120,6 +120,9 @@ export const items = pgTable(
     url: text("url"),
     // Extra labeled links beyond the primary `url` (e.g. Raw / Final / Source).
     links: jsonb("links").$type<{ label: string; url: string }[]>(),
+    // Uploaded blob URL — separate from `url` so an item can hold a link AND a
+    // file. (Legacy file items still carry their blob URL in `url`.)
+    fileUrl: text("file_url"),
     fileKey: text("file_key"),
     fileName: varchar("file_name", { length: 500 }),
     fileSize: integer("file_size"),

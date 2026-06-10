@@ -154,6 +154,45 @@ export default function WorkspaceShell({
     try { localStorage.setItem("ayuvam-last-workspace", company.slug); } catch {}
   }, [company.slug]);
 
+  // Restore the folder you were viewing — a refresh shouldn't dump you back
+  // on "All items". Runs once, after the folder list is available.
+  const selectionRestored = useRef(false);
+  useEffect(() => {
+    if (selectionRestored.current || foldersLoading) return;
+    selectionRestored.current = true;
+    try {
+      const saved = localStorage.getItem(`ayuvam-sel-${company.slug}`);
+      if (saved) {
+        const f = folders.find((x) => x.id === saved);
+        if (f) setSelectedFolder(f);
+      }
+    } catch {}
+  }, [folders, foldersLoading, company.slug]);
+
+  const persistSelection = useCallback(
+    (id: string | null) => {
+      try {
+        if (id) localStorage.setItem(`ayuvam-sel-${company.slug}`, id);
+        else localStorage.removeItem(`ayuvam-sel-${company.slug}`);
+      } catch {}
+    },
+    [company.slug]
+  );
+
+  // "/" focuses search from anywhere (unless already typing somewhere).
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "/" || e.metaKey || e.ctrlKey || e.altKey) return;
+      const t = e.target as HTMLElement;
+      if (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable) return;
+      e.preventDefault();
+      searchInputRef.current?.focus();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
   useEffect(() => {
     if (initialCompanies) return; // seeded from the server
     fetch("/api/workspace/my-companies")
@@ -199,6 +238,7 @@ export default function WorkspaceShell({
     toast.success(`"${name}" created — add your first row.`);
     await loadFolders(true);
     setSelectedFolder(folder);
+    persistSelection(folder.id);
   }
 
   function handleItemAdded() {
@@ -208,6 +248,7 @@ export default function WorkspaceShell({
 
   function selectFolderAndClose(f: Folder | null) {
     setSelectedFolder(f);
+    persistSelection(f?.id ?? null);
     setMobileSidebarOpen(false);
   }
 
@@ -391,10 +432,17 @@ export default function WorkspaceShell({
             <div className="search-glow relative rounded-xl border border-line bg-paper-elevated transition-all">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-mute-soft" />
               <input
+                ref={searchInputRef}
                 type="text"
-                placeholder="Search by title, tag, or note…"
+                placeholder="Search by title, tag, or note…  ( / )"
                 value={searchQuery}
                 onChange={handleSearch}
+                onKeyDown={(e) => {
+                  if (e.key === "Escape") {
+                    clearSearch();
+                    (e.target as HTMLInputElement).blur();
+                  }
+                }}
                 className="w-full pl-9 pr-8 py-2.5 text-sm bg-transparent outline-none text-ink placeholder:text-mute-soft rounded-xl"
               />
               {isSearching && (
@@ -525,7 +573,10 @@ export default function WorkspaceShell({
                       if (res.ok) {
                         toast.success("Folder deleted.");
                         loadFolders(true);
-                        if (selectedFolder?.id === id) setSelectedFolder(null);
+                        if (selectedFolder?.id === id) {
+                          setSelectedFolder(null);
+                          persistSelection(null);
+                        }
                       } else {
                         toast.error("Could not delete folder.");
                       }
@@ -624,7 +675,7 @@ export default function WorkspaceShell({
                 <div className="flex items-center gap-2 min-w-0">
                   <Table2 className="h-4 w-4 text-accent shrink-0" />
                   <div className="min-w-0">
-                    <h2 className="text-sm font-semibold text-ink truncate">
+                    <h2 className="text-base font-semibold text-ink truncate">
                       {parentFolder && (
                         <>
                           <button
@@ -690,6 +741,11 @@ export default function WorkspaceShell({
                     initialItems={selectedFolder ? undefined : initialItems}
                     showFolder={!selectedFolder}
                     canAdd={!isContainer}
+                    folderMeta={
+                      selectedFolder
+                        ? undefined
+                        : folders.map((f) => ({ id: f.id, name: f.name, color: f.color }))
+                    }
                   />
                 </>
               )}

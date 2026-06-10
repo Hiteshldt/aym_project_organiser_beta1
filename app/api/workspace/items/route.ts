@@ -56,6 +56,7 @@ export async function GET(req: NextRequest) {
       type: items.type,
       url: items.url,
       links: items.links,
+      fileUrl: items.fileUrl,
       fileKey: items.fileKey,
       fileName: items.fileName,
       fileSize: items.fileSize,
@@ -85,7 +86,7 @@ export async function POST(req: NextRequest) {
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await req.json();
-  const { slug, folderId, title, description, type, url, links, fileKey, fileName, fileSize, tags, notes, itemDate, status, rowColor, overrideDuplicate } = body;
+  const { slug, folderId, title, description, type, url, links, fileUrl, fileKey, fileName, fileSize, tags, notes, itemDate, status, rowColor, overrideDuplicate } = body;
 
   const access = await getCompanyAccess(session.user.id, slug);
   if (!access) return NextResponse.json({ error: "Not a member" }, { status: 403 });
@@ -132,6 +133,7 @@ export async function POST(req: NextRequest) {
     type,
     url: url || null,
     links: Array.isArray(links) && links.length ? links : null,
+    fileUrl: fileUrl || null,
     fileKey: fileKey || null,
     fileName: fileName || null,
     fileSize: fileSize || null,

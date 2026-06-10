@@ -71,9 +71,14 @@ export default function ItemPanel({
   onPatch: (patch: Partial<RegisterItem> & { updateNote?: string }) => void;
   onDelete: () => void;
 }) {
+  // Legacy file items carry their blob URL in `url`; treat that as the file's
+  // address, not as an editable link.
+  const isLegacyFile = item.type === "file" && !item.fileUrl && !!item.url;
+  const fileHref = item.fileUrl ?? (isLegacyFile ? item.url : null);
+
   const [title, setTitle] = useState(item.title);
   const [description, setDescription] = useState(item.description ?? "");
-  const [url, setUrl] = useState(item.url ?? "");
+  const [url, setUrl] = useState(isLegacyFile ? "" : item.url ?? "");
   const [notes, setNotes] = useState(item.notes ?? "");
   const [tagInput, setTagInput] = useState("");
   const [statusOpen, setStatusOpen] = useState(false);
@@ -200,45 +205,87 @@ export default function ItemPanel({
           <div className="grid md:grid-cols-3 gap-x-6 gap-y-5">
             {/* Left column — content */}
             <div className="md:col-span-2 space-y-5">
-              <Field label={isLink ? "Link" : "File"}>
-                {isLink ? (
-                  <div className="flex items-center gap-1">
-                    {isManager ? (
-                      <Input
-                        value={url}
-                        onChange={(e) => setUrl(e.target.value)}
-                        onBlur={() => saveIfChanged("url", url.trim())}
-                        onKeyDown={(e) => e.key === "Enter" && (e.target as HTMLInputElement).blur()}
-                        placeholder="https://… (optional)"
-                        className="font-mono-ui text-xs h-8"
-                      />
-                    ) : (
-                      <span className="flex-1 text-xs font-mono-ui text-mute truncate">{item.url || "—"}</span>
-                    )}
-                    {item.url && (
-                      <>
-                        <a href={item.url} target="_blank" rel="noopener noreferrer" title="Open">
-                          <Button variant="ghost" size="icon-sm"><ExternalLink className="h-3.5 w-3.5" /></Button>
-                        </a>
-                        <Button variant="ghost" size="icon-sm" onClick={copyLink} title="Copy link" className={copied ? "text-success" : ""}>
-                          {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-                        </Button>
-                      </>
-                    )}
-                  </div>
+              <Field label="Description">
+                {isManager ? (
+                  <Input
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    onBlur={() => saveIfChanged("description", description.trim())}
+                    onKeyDown={(e) => e.key === "Enter" && (e.target as HTMLInputElement).blur()}
+                    placeholder="A short line — what this is"
+                    maxLength={200}
+                    className="text-sm h-8"
+                  />
                 ) : (
-                  <div className="rounded-lg border border-line bg-paper p-2.5 flex items-center gap-2 text-sm">
-                    <FileText className="h-4 w-4 text-warning shrink-0" />
-                    <span className="truncate text-ink">{item.fileName}</span>
-                    {item.fileSize ? <span className="text-mute-soft text-xs ml-auto">{formatBytes(item.fileSize)}</span> : null}
-                  </div>
+                  <p className="text-sm text-mute">{item.description || "—"}</p>
                 )}
+              </Field>
+
+              <Field label="Note">
+                {isManager ? (
+                  <Textarea
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    onBlur={() => saveIfChanged("notes", notes.trim())}
+                    placeholder="Any context that helps find or explain this…"
+                    className="text-sm min-h-[70px]"
+                  />
+                ) : (
+                  <p className="text-sm text-mute whitespace-pre-wrap">{item.notes || "—"}</p>
+                )}
+              </Field>
+
+              <Field label="Link">
+                <div className="flex items-center gap-1">
+                  {isManager ? (
+                    <Input
+                      value={url}
+                      onChange={(e) => setUrl(e.target.value)}
+                      onBlur={() => saveIfChanged("url", url.trim())}
+                      onKeyDown={(e) => e.key === "Enter" && (e.target as HTMLInputElement).blur()}
+                      placeholder="https://… (optional)"
+                      className="font-mono-ui text-xs h-8"
+                    />
+                  ) : (
+                    <span className="flex-1 text-xs font-mono-ui text-mute truncate">
+                      {(isLegacyFile ? null : item.url) || "—"}
+                    </span>
+                  )}
+                  {!isLegacyFile && item.url && (
+                    <>
+                      <a href={item.url} target="_blank" rel="noopener noreferrer" title="Open">
+                        <Button variant="ghost" size="icon-sm"><ExternalLink className="h-3.5 w-3.5" /></Button>
+                      </a>
+                      <Button variant="ghost" size="icon-sm" onClick={copyLink} title="Copy link" className={copied ? "text-success" : ""}>
+                        {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                      </Button>
+                    </>
+                  )}
+                </div>
                 {item.shortCode && (
                   <button onClick={copyShort} className="inline-flex items-center gap-1 text-[11px] text-accent/80 hover:text-accent font-mono-ui mt-1">
                     <Scissors className="h-2.5 w-2.5" /> /l/{item.shortCode}
                   </button>
                 )}
               </Field>
+
+              {item.fileName && (
+                <Field label="File">
+                  <a
+                    href={fileHref ?? undefined}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={cn(
+                      "rounded-lg border border-line bg-paper p-2.5 flex items-center gap-2 text-sm",
+                      fileHref && "hover:border-line-strong transition-colors"
+                    )}
+                  >
+                    <FileText className="h-4 w-4 text-warning shrink-0" />
+                    <span className="truncate text-ink">{item.fileName}</span>
+                    {item.fileSize ? <span className="text-mute-soft text-xs ml-auto">{formatBytes(item.fileSize)}</span> : null}
+                  </a>
+                </Field>
+              )}
 
               {(isManager || links.length > 0) && (
                 <Field label="More links">
@@ -270,39 +317,23 @@ export default function ItemPanel({
                 </Field>
               )}
 
-              <Field label="Description">
-                {isManager ? (
-                  <Input
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    onBlur={() => saveIfChanged("description", description.trim())}
-                    onKeyDown={(e) => e.key === "Enter" && (e.target as HTMLInputElement).blur()}
-                    placeholder="A short line — what this is"
-                    maxLength={200}
-                    className="text-sm h-8"
-                  />
-                ) : (
-                  <p className="text-sm text-mute">{item.description || "—"}</p>
-                )}
-              </Field>
-
-              <Field label="Remark">
-                {isManager ? (
-                  <Textarea
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    onBlur={() => saveIfChanged("notes", notes.trim())}
-                    placeholder="Any context that helps find or explain this…"
-                    className="text-sm min-h-[70px]"
-                  />
-                ) : (
-                  <p className="text-sm text-mute whitespace-pre-wrap">{item.notes || "—"}</p>
-                )}
-              </Field>
             </div>
 
             {/* Right column — metadata */}
             <div className="space-y-5">
+              <Field label="Date">
+                {isManager ? (
+                  <Input
+                    type="datetime-local"
+                    defaultValue={toDatetimeLocal(item.itemDate)}
+                    onChange={(e) => e.target.value && onPatch({ itemDate: new Date(e.target.value).toISOString() })}
+                    className="text-sm h-8"
+                  />
+                ) : (
+                  <p className="text-sm text-mute">{formatDateTime(item.itemDate)}</p>
+                )}
+              </Field>
+
               <Field label="Status">
                 <div className="relative">
                   <button
@@ -346,6 +377,10 @@ export default function ItemPanel({
                 </div>
               </Field>
 
+              <div className="border-t border-line pt-4 space-y-4">
+                <p className="font-mono-ui text-[10px] uppercase tracking-wider text-mute-soft">
+                  Item settings
+                </p>
               {isManager && (
                 <Field label="Row color">
                   <div className="flex items-center gap-1.5 flex-wrap">
@@ -398,19 +433,7 @@ export default function ItemPanel({
                   {!isManager && item.tags.length === 0 && <span className="text-sm text-mute-soft">—</span>}
                 </div>
               </Field>
-
-              <Field label="Date">
-                {isManager ? (
-                  <Input
-                    type="datetime-local"
-                    defaultValue={toDatetimeLocal(item.itemDate)}
-                    onChange={(e) => e.target.value && onPatch({ itemDate: new Date(e.target.value).toISOString() })}
-                    className="text-sm h-8"
-                  />
-                ) : (
-                  <p className="text-sm text-mute">{formatDateTime(item.itemDate)}</p>
-                )}
-              </Field>
+              </div>
             </div>
 
             {/* History — full width */}

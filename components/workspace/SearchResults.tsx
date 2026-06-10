@@ -42,9 +42,9 @@ type Item = {
   historyCount: number;
 };
 
-const CELL = "border-r border-line px-3 py-2 align-top";
+const CELL = "border-r border-line px-3 py-3 align-top";
 const HEAD =
-  "border-r border-line px-3 py-2 text-left text-[11px] font-medium text-mute uppercase tracking-wide bg-paper";
+  "border-r border-line px-3 py-2 text-left text-[11px] font-semibold text-mute uppercase tracking-wide bg-paper";
 
 export default function SearchResults({
   slug,

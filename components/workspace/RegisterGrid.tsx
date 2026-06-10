@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef, type CSSProperties } from "react";
+import { Fragment, useEffect, useState, useCallback, useRef, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
 import {
   Plus,
@@ -21,7 +21,7 @@ import {
   PanelRight,
   GripVertical,
   Loader2,
-  Folder as FolderIcon,
+  MoreHorizontal,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,7 +32,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { formatDate, prettyUrl, cn } from "@/lib/utils";
+import { formatDate, prettyUrl, FOLDER_COLORS, cn } from "@/lib/utils";
 import { buildShortLinkUrl } from "@/lib/shortcode";
 import {
   type RegisterColor,
@@ -60,6 +60,7 @@ export type RegisterItem = {
   type: "link" | "file";
   url: string | null;
   links?: { label: string; url: string }[] | null;
+  fileUrl?: string | null;
   fileKey: string | null;
   fileName: string | null;
   fileSize: number | null;
@@ -76,9 +77,9 @@ export type RegisterItem = {
 };
 
 // Shared cell styling — thin grid lines on every side give the spreadsheet feel.
-const CELL = "border-r border-line px-3 py-2.5 align-top";
+const CELL = "border-r border-line px-3 py-3 align-top";
 const HEAD =
-  "border-r border-line px-3 py-2 text-left text-[11px] font-medium text-mute uppercase tracking-wide bg-paper";
+  "border-r border-line px-3 py-2 text-left text-[11px] font-semibold text-mute uppercase tracking-wide bg-paper";
 
 function GridSkeleton({ cols }: { cols: number }) {
   return (
@@ -96,7 +97,7 @@ function GridSkeleton({ cols }: { cols: number }) {
   );
 }
 
-type MenuState = { id: string; kind: "status" | "color"; rect: DOMRect };
+type MenuState = { id: string; kind: "status" | "color" | "actions"; rect: DOMRect };
 
 export default function RegisterGrid({
   slug,
@@ -109,6 +110,7 @@ export default function RegisterGrid({
   initialItems,
   showFolder = false,
   canAdd = true,
+  folderMeta,
 }: {
   slug: string;
   folder: Folder;
@@ -120,6 +122,8 @@ export default function RegisterGrid({
   initialItems?: RegisterItem[];
   showFolder?: boolean;
   canAdd?: boolean;
+  /** Sidebar-ordered folders — drives group order + colors in all-items mode. */
+  folderMeta?: { id: string; name: string; color: string }[];
 }) {
   const confirm = useConfirm();
   const [items, setItems] = useState<RegisterItem[]>(initialItems ?? []);
@@ -269,11 +273,31 @@ export default function RegisterGrid({
     toast.success("Short link copied.");
   }
 
-  function openMenuFor(e: React.MouseEvent, id: string, kind: "status" | "color") {
+  function openMenuFor(e: React.MouseEvent, id: string, kind: "status" | "color" | "actions") {
     setMenu({ id, kind, rect: (e.currentTarget as HTMLElement).getBoundingClientRect() });
   }
 
-  const colCount = 6 + (isManager ? 1 : 0) + (reorderable ? 1 : 0);
+  const colCount = 7 + (isManager ? 1 : 0) + (reorderable ? 1 : 0);
+
+  // All-items mode: group rows by folder (sidebar order) so same-named items
+  // in different folders read as separate families, not duplicates.
+  const groups = (() => {
+    if (!showFolder) return null;
+    const byFolder = new Map<string, { name: string; color: string; rows: RegisterItem[] }>();
+    for (const f of folderMeta ?? []) {
+      byFolder.set(f.id, { name: f.name, color: f.color, rows: [] });
+    }
+    for (const i of items) {
+      if (!byFolder.has(i.folderId)) {
+        byFolder.set(i.folderId, { name: i.folderName, color: "slate", rows: [] });
+      }
+      byFolder.get(i.folderId)!.rows.push(i);
+    }
+    return [...byFolder.entries()]
+      .map(([id, g]) => ({ id, ...g }))
+      .filter((g) => g.rows.length > 0);
+  })();
+
   const openItem = openItemId ? items.find((i) => i.id === openItemId) ?? null : null;
   const menuItem = menu ? items.find((i) => i.id === menu.id) ?? null : null;
 
@@ -325,20 +349,43 @@ export default function RegisterGrid({
               <th className={cn(HEAD, "w-10")}>#</th>
               <th className={HEAD}>Name</th>
               <th className={cn(HEAD, "hidden md:table-cell")}>Description</th>
-              <th className={cn(HEAD, "w-32")}>Status</th>
+              <th className={cn(HEAD, "hidden lg:table-cell")}>Note</th>
               <th className={cn(HEAD, "w-40")}>Link</th>
-              <th className={cn(HEAD, "hidden lg:table-cell")}>Remark</th>
-              <th className={cn(HEAD, "w-24")}>Updated</th>
-              {isManager && <th className="px-3 py-2 w-32 bg-paper" />}
+              <th className={cn(HEAD, "w-24")}>Date</th>
+              <th className={cn(HEAD, "w-28")}>Status</th>
+              {isManager && <th className="px-3 py-2 w-16 bg-paper" />}
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <GridSkeleton cols={colCount} />
             ) : (
-              items.map((item, idx) => {
+              (groups ?? [{ id: "all", name: "", color: "slate", rows: items }]).map((group) => (
+                <Fragment key={group.id}>
+                  {groups && (
+                    <tr className="border-b border-line bg-paper">
+                      <td colSpan={colCount} className="px-3 py-2">
+                        <span className="inline-flex items-center gap-2">
+                          <span
+                            className={cn(
+                              "h-2 w-2 rounded-full shrink-0",
+                              (FOLDER_COLORS[group.color as keyof typeof FOLDER_COLORS] ?? FOLDER_COLORS.slate).dot
+                            )}
+                          />
+                          <span className="text-xs font-semibold text-ink">{group.name}</span>
+                          <span className="font-mono-ui text-[10px] text-mute-soft">{group.rows.length}</span>
+                        </span>
+                      </td>
+                    </tr>
+                  )}
+                  {group.rows.map((item, idx) => {
                 const tint = isRegisterColor(item.rowColor) ? ROW_TINT[item.rowColor] : "";
                 const status = findStatus(statusOptions, item.status);
+                // Legacy file items carry their blob URL in `url`; newer ones
+                // keep the user's link in `url` and the blob in `fileUrl`.
+                const isLegacyFile = item.type === "file" && !item.fileUrl && !!item.url;
+                const linkHref = isLegacyFile ? null : item.url;
+                const fileHref = item.fileUrl ?? (isLegacyFile ? item.url : null);
                 return (
                   <tr
                     key={item.id}
@@ -396,12 +443,6 @@ export default function RegisterGrid({
                             {item.title}
                             {item.isPinned && <Pin className="inline h-2.5 w-2.5 text-accent ml-1" fill="currentColor" />}
                           </button>
-                          {showFolder && (
-                            <span className="mt-0.5 inline-flex items-center gap-1 text-[10px] text-mute-soft font-mono-ui">
-                              <FolderIcon className="h-2.5 w-2.5" />
-                              {item.folderName}
-                            </span>
-                          )}
                         </div>
                       </div>
                     </td>
@@ -414,6 +455,92 @@ export default function RegisterGrid({
                         placeholder="—"
                         onSave={(v) => patchItem(item.id, { description: v || null })}
                       />
+                    </td>
+
+                    {/* Note */}
+                    <td className={cn(CELL, "hidden lg:table-cell text-[13px] text-mute leading-relaxed max-w-[320px] whitespace-pre-wrap")}>
+                      <InlineText
+                        value={item.notes}
+                        editable={isManager}
+                        placeholder="—"
+                        multiline
+                        onSave={(v) => patchItem(item.id, { notes: v || null })}
+                      />
+                    </td>
+
+                    {/* Link (+ file) */}
+                    <td className={CELL}>
+                      {isManager ? (
+                        <InlineText
+                          value={isLegacyFile ? null : item.url}
+                          editable={!isLegacyFile}
+                          placeholder="—"
+                          mono
+                          display={
+                            <span className="flex flex-col gap-0.5 max-w-full">
+                              {linkHref ? (
+                                <span className="inline-flex items-center gap-1">
+                                  <a
+                                    href={linkHref}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-1 text-xs text-accent hover:text-accent-hover font-mono-ui truncate max-w-[130px] group/link"
+                                  >
+                                    <span className="truncate">{prettyUrl(linkHref)}</span>
+                                    <ExternalLink className="h-2.5 w-2.5 shrink-0 opacity-0 group-hover/link:opacity-100" />
+                                  </a>
+                                  {item.links && item.links.length > 0 && (
+                                    <span className="shrink-0 text-[10px] text-mute-soft font-mono-ui" title={`${item.links.length} more link${item.links.length !== 1 ? "s" : ""}`}>
+                                      +{item.links.length}
+                                    </span>
+                                  )}
+                                </span>
+                              ) : !item.fileName ? (
+                                <span className="text-mute-soft">—</span>
+                              ) : null}
+                              {item.fileName &&
+                                (fileHref ? (
+                                  <a
+                                    href={fileHref}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-1 text-[11px] text-mute hover:text-ink font-mono-ui truncate max-w-[140px]"
+                                  >
+                                    <FileText className="h-2.5 w-2.5 shrink-0 text-warning" />
+                                    <span className="truncate">{item.fileName}</span>
+                                  </a>
+                                ) : (
+                                  <span className="inline-flex items-center gap-1 text-[11px] text-mute font-mono-ui truncate max-w-[140px]">
+                                    <FileText className="h-2.5 w-2.5 shrink-0 text-warning" />
+                                    <span className="truncate">{item.fileName}</span>
+                                  </span>
+                                ))}
+                            </span>
+                          }
+                          onSave={(v) => patchItem(item.id, { url: v || null })}
+                        />
+                      ) : (
+                        <span className="flex flex-col gap-0.5 max-w-full">
+                          {linkHref ? (
+                            <a href={linkHref} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-accent hover:text-accent-hover font-mono-ui truncate max-w-[150px]">
+                              <span className="truncate">{prettyUrl(linkHref)}</span>
+                            </a>
+                          ) : !item.fileName ? (
+                            <span className="text-mute-soft">—</span>
+                          ) : null}
+                          {item.fileName && (
+                            <span className="inline-flex items-center gap-1 text-[11px] text-mute font-mono-ui truncate max-w-[150px]">
+                              <FileText className="h-2.5 w-2.5 shrink-0 text-warning" />
+                              <span className="truncate">{item.fileName}</span>
+                            </span>
+                          )}
+                        </span>
+                      )}
+                    </td>
+
+                    {/* Date */}
+                    <td className={cn(CELL, "text-xs text-mute whitespace-nowrap")}>
+                      {formatDate(item.itemDate)}
                     </td>
 
                     {/* Status */}
@@ -438,97 +565,26 @@ export default function RegisterGrid({
                       )}
                     </td>
 
-                    {/* Link */}
-                    <td className={CELL}>
-                      {isManager ? (
-                        <InlineText
-                          value={item.url}
-                          editable={item.type === "link"}
-                          placeholder={item.type === "file" ? item.fileName ?? "—" : "—"}
-                          mono
-                          display={
-                            <span className="inline-flex items-center gap-1 max-w-full">
-                              {item.type === "link" && item.url ? (
-                                <a
-                                  href={item.url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="inline-flex items-center gap-1 text-xs text-accent hover:text-accent-hover font-mono-ui truncate max-w-[130px] group/link"
-                                >
-                                  <span className="truncate">{prettyUrl(item.url)}</span>
-                                  <ExternalLink className="h-2.5 w-2.5 shrink-0 opacity-0 group-hover/link:opacity-100" />
-                                </a>
-                              ) : item.fileName ? (
-                                <span className="text-xs text-mute font-mono-ui truncate block max-w-[130px]">{item.fileName}</span>
-                              ) : (
-                                <span className="text-mute-soft">—</span>
-                              )}
-                              {item.links && item.links.length > 0 && (
-                                <span className="shrink-0 text-[10px] text-mute-soft font-mono-ui" title={`${item.links.length} more link${item.links.length !== 1 ? "s" : ""}`}>
-                                  +{item.links.length}
-                                </span>
-                              )}
-                            </span>
-                          }
-                          onSave={(v) => patchItem(item.id, { url: v || null })}
-                        />
-                      ) : item.type === "link" && item.url ? (
-                        <a href={item.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-accent hover:text-accent-hover font-mono-ui truncate max-w-[150px]">
-                          <span className="truncate">{prettyUrl(item.url)}</span>
-                        </a>
-                      ) : (
-                        <span className="text-xs text-mute font-mono-ui truncate block max-w-[150px]">{item.fileName ?? "—"}</span>
-                      )}
-                    </td>
-
-                    {/* Remark */}
-                    <td className={cn(CELL, "hidden lg:table-cell text-[13px] text-mute leading-relaxed max-w-[320px] whitespace-pre-wrap")}>
-                      <InlineText
-                        value={item.notes}
-                        editable={isManager}
-                        placeholder="—"
-                        multiline
-                        onSave={(v) => patchItem(item.id, { notes: v || null })}
-                      />
-                    </td>
-
-                    {/* Updated */}
-                    <td className={cn(CELL, "text-[11px] text-mute-soft whitespace-nowrap")}>
-                      {formatDate(item.itemDate)}
-                    </td>
-
-                    {/* Actions */}
+                    {/* Actions — copy + everything else behind ⋯ */}
                     {isManager && (
-                      <td className="px-2 py-2 align-top">
+                      <td className="px-2 py-2.5 align-top">
                         <div className="flex items-center gap-0.5 justify-end opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
-                          <Button variant="ghost" size="icon-sm" onClick={() => setOpenItemId(item.id)} title="Open details">
-                            <PanelRight className="h-3 w-3" />
-                          </Button>
-                          <Button variant="ghost" size="icon-sm" onClick={(e) => openMenuFor(e, item.id, "color")} title="Row color">
-                            <Palette className="h-3 w-3" />
-                          </Button>
-                          {item.type === "link" && item.url && (
+                          {linkHref && (
                             <Button variant="ghost" size="icon-sm" onClick={() => copyUrl(item)} title={copiedId === item.id ? "Copied!" : "Copy link"} className={copiedId === item.id ? "text-success" : ""}>
                               {copiedId === item.id ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
                             </Button>
                           )}
-                          {item.url && item.shortCode && (
-                            <Button variant="ghost" size="icon-sm" onClick={() => copyShort(item)} title="Copy short link">
-                              <Scissors className="h-3 w-3" />
-                            </Button>
-                          )}
-                          <Button variant="ghost" size="icon-sm" onClick={() => patchItem(item.id, { isPinned: !item.isPinned })} title={item.isPinned ? "Unpin" : "Pin"}>
-                            {item.isPinned ? <PinOff className="h-3 w-3 text-accent" /> : <Pin className="h-3 w-3" />}
-                          </Button>
-                          <Button variant="ghost" size="icon-sm" onClick={() => handleDelete(item.id)} title="Delete">
-                            <Trash2 className="h-3 w-3 text-mute-soft hover:text-danger" />
+                          <Button variant="ghost" size="icon-sm" onClick={(e) => openMenuFor(e, item.id, "actions")} title="More actions">
+                            <MoreHorizontal className="h-3 w-3" />
                           </Button>
                         </div>
                       </td>
                     )}
                   </tr>
                 );
-              })
+              })}
+                </Fragment>
+              ))
             )}
 
             {/* Quick-add ghost row — type a title, paste a link, Enter. */}
@@ -550,7 +606,7 @@ export default function RegisterGrid({
                   />
                 </td>
                 <td className="hidden md:table-cell border-r border-line" />
-                <td className="border-r border-line" />
+                <td className="hidden lg:table-cell border-r border-line" />
                 <td className="border-r border-line px-2 py-1">
                   <input
                     value={qaUrl}
@@ -561,7 +617,6 @@ export default function RegisterGrid({
                     className="w-full bg-transparent text-xs font-mono-ui text-ink placeholder:text-mute-soft outline-none py-1 px-1 rounded focus:bg-paper-elevated"
                   />
                 </td>
-                <td className="hidden lg:table-cell border-r border-line" />
                 <td className="border-r border-line px-3 py-2">
                   {qaSaving ? (
                     <Loader2 className="h-3 w-3 animate-spin text-mute-soft" />
@@ -571,6 +626,7 @@ export default function RegisterGrid({
                     </button>
                   ) : null}
                 </td>
+                <td className="border-r border-line" />
                 {isManager && <td />}
               </tr>
             )}
@@ -615,6 +671,43 @@ export default function RegisterGrid({
                   </button>
                 </>
               )}
+            </>
+          ) : menu.kind === "actions" ? (
+            <>
+              <button
+                onClick={() => { setOpenItemId(menuItem.id); setMenu(null); }}
+                className="flex items-center gap-2 w-full px-3 py-1.5 text-xs text-ink hover:bg-line/50 text-left"
+              >
+                <PanelRight className="h-3 w-3" /> Open details
+              </button>
+              <button
+                onClick={() => { patchItem(menuItem.id, { isPinned: !menuItem.isPinned }); setMenu(null); }}
+                className="flex items-center gap-2 w-full px-3 py-1.5 text-xs text-ink hover:bg-line/50 text-left"
+              >
+                {menuItem.isPinned ? <PinOff className="h-3 w-3" /> : <Pin className="h-3 w-3" />}
+                {menuItem.isPinned ? "Unpin" : "Pin to top"}
+              </button>
+              <button
+                onClick={() => setMenu({ ...menu, kind: "color" })}
+                className="flex items-center gap-2 w-full px-3 py-1.5 text-xs text-ink hover:bg-line/50 text-left"
+              >
+                <Palette className="h-3 w-3" /> Row color…
+              </button>
+              {menuItem.url && menuItem.shortCode && (
+                <button
+                  onClick={() => { copyShort(menuItem); setMenu(null); }}
+                  className="flex items-center gap-2 w-full px-3 py-1.5 text-xs text-ink hover:bg-line/50 text-left"
+                >
+                  <Scissors className="h-3 w-3" /> Copy short link
+                </button>
+              )}
+              <div className="my-1 border-t border-line" />
+              <button
+                onClick={() => { setMenu(null); handleDelete(menuItem.id); }}
+                className="flex items-center gap-2 w-full px-3 py-1.5 text-xs text-danger hover:bg-danger/10 text-left"
+              >
+                <Trash2 className="h-3 w-3" /> Delete
+              </button>
             </>
           ) : (
             <div className="p-2">

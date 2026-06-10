@@ -66,7 +66,25 @@ function FolderNode({
   onChangeColor?: (id: string, color: string) => Promise<void> | void;
   isManager: boolean;
 }) {
-  const [open, setOpen] = useState(false);
+  // Sub-folders are visible by default; a manual collapse is remembered for
+  // the rest of the session (sessionStorage survives refreshes in this tab).
+  const [open, setOpen] = useState<boolean>(() => {
+    if (typeof window === "undefined") return true;
+    try {
+      return sessionStorage.getItem(`ayuvam-tree-${folder.id}`) !== "0";
+    } catch {
+      return true;
+    }
+  });
+  function toggleOpen() {
+    setOpen((o) => {
+      const next = !o;
+      try {
+        sessionStorage.setItem(`ayuvam-tree-${folder.id}`, next ? "1" : "0");
+      } catch {}
+      return next;
+    });
+  }
   const [menuOpen, setMenuOpen] = useState(false);
   const [colorPickerOpen, setColorPickerOpen] = useState(false);
   const [renaming, setRenaming] = useState(false);
@@ -130,7 +148,7 @@ function FolderNode({
           </button>
         )}
         <button
-          onClick={() => { if (hasChildren) setOpen(!open); }}
+          onClick={() => { if (hasChildren) toggleOpen(); }}
           className="shrink-0 text-mute-soft hover:text-mute transition-colors w-4"
         >
           {hasChildren ? (

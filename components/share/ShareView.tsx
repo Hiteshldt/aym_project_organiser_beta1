@@ -44,6 +44,7 @@ type Item = {
   type: "link" | "file";
   url: string | null;
   links?: { label: string; url: string }[] | null;
+  fileUrl?: string | null;
   fileName: string | null;
   fileSize: number | null;
   folderId: string;
@@ -276,8 +277,8 @@ function ShareInner({
   );
 }
 
-const CELL = "border-r border-line px-3 py-2.5 align-top";
-const HEAD = "border-r border-line px-3 py-2.5 text-left text-[11px] font-medium text-mute uppercase tracking-wide bg-paper";
+const CELL = "border-r border-line px-3 py-3 align-top";
+const HEAD = "border-r border-line px-3 py-2.5 text-left text-[11px] font-semibold text-mute uppercase tracking-wide bg-paper";
 
 function RegisterTable({
   items,
@@ -296,11 +297,11 @@ function RegisterTable({
             <th className={cn(HEAD, "w-10")}>#</th>
             <th className={HEAD}>Name</th>
             <th className={cn(HEAD, "hidden md:table-cell")}>Description</th>
-            <th className={cn(HEAD, "w-32")}>Status</th>
+            <th className={cn(HEAD, "hidden lg:table-cell")}>Note</th>
             <th className={cn(HEAD, "w-40")}>Link</th>
-            <th className={cn(HEAD, "hidden lg:table-cell")}>Remark</th>
             {showFolder && <th className={cn(HEAD, "hidden sm:table-cell w-32")}>Folder</th>}
-            <th className={cn(HEAD, "w-24")}>Updated</th>
+            <th className={cn(HEAD, "w-24")}>Date</th>
+            <th className={cn(HEAD, "w-28")}>Status</th>
           </tr>
         </thead>
         <tbody>
@@ -325,27 +326,40 @@ function RegisterTable({
                 <td className={cn(CELL, "hidden md:table-cell text-[13px] text-mute leading-relaxed max-w-[240px]")}>
                   {item.description || <span className="text-mute-soft">—</span>}
                 </td>
-                <td className={CELL}>
-                  {status ? (
-                    <span className={cn("inline-flex rounded-full px-2 py-0.5 text-[11px] font-medium", STATUS_CHIP[status.color])}>
-                      {status.label}
-                    </span>
-                  ) : (
-                    <span className="text-mute-soft">—</span>
-                  )}
+                <td className={cn(CELL, "hidden lg:table-cell text-[13px] text-mute leading-relaxed max-w-[320px] whitespace-pre-wrap")}>
+                  {item.notes || <span className="text-mute-soft">—</span>}
                 </td>
                 <td className={CELL}>
                   <div className="space-y-1">
-                    {item.type === "link" && item.url ? (
-                      <a href={item.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-accent hover:text-accent-hover font-mono-ui truncate max-w-[150px] group/link">
-                        <span className="truncate">{prettyUrl(item.url)}</span>
-                        <ExternalLink className="h-2.5 w-2.5 shrink-0 opacity-0 group-hover/link:opacity-100" />
-                      </a>
-                    ) : item.fileName ? (
-                      <span className="text-xs text-mute font-mono-ui truncate block max-w-[150px]">{item.fileName}</span>
-                    ) : (
-                      <span className="text-mute-soft">—</span>
-                    )}
+                    {(() => {
+                      const isLegacyFile = item.type === "file" && !item.fileUrl && !!item.url;
+                      const linkHref = isLegacyFile ? null : item.url;
+                      const fileHref = item.fileUrl ?? (isLegacyFile ? item.url : null);
+                      return (
+                        <>
+                          {linkHref ? (
+                            <a href={linkHref} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-accent hover:text-accent-hover font-mono-ui truncate max-w-[150px] group/link">
+                              <span className="truncate">{prettyUrl(linkHref)}</span>
+                              <ExternalLink className="h-2.5 w-2.5 shrink-0 opacity-0 group-hover/link:opacity-100" />
+                            </a>
+                          ) : !item.fileName ? (
+                            <span className="text-mute-soft">—</span>
+                          ) : null}
+                          {item.fileName &&
+                            (fileHref ? (
+                              <a href={fileHref} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[11px] text-mute hover:text-ink font-mono-ui truncate max-w-[150px]">
+                                <FileText className="h-2.5 w-2.5 shrink-0 text-warning" />
+                                <span className="truncate">{item.fileName}</span>
+                              </a>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 text-[11px] text-mute font-mono-ui truncate max-w-[150px]">
+                                <FileText className="h-2.5 w-2.5 shrink-0 text-warning" />
+                                <span className="truncate">{item.fileName}</span>
+                              </span>
+                            ))}
+                        </>
+                      );
+                    })()}
                     {item.links && item.links.length > 0 && (
                       <div className="flex flex-wrap gap-1">
                         {item.links.map((l, i) => (
@@ -363,15 +377,21 @@ function RegisterTable({
                     )}
                   </div>
                 </td>
-                <td className={cn(CELL, "hidden lg:table-cell text-[13px] text-mute leading-relaxed max-w-[320px] whitespace-pre-wrap")}>
-                  {item.notes || <span className="text-mute-soft">—</span>}
-                </td>
                 {showFolder && (
                   <td className={cn(CELL, "hidden sm:table-cell text-xs text-mute")}>
                     <span className="truncate block max-w-[120px]">{item.folderName}</span>
                   </td>
                 )}
-                <td className={cn(CELL, "text-[11px] text-mute-soft whitespace-nowrap")}>{formatDate(item.itemDate)}</td>
+                <td className={cn(CELL, "text-xs text-mute whitespace-nowrap")}>{formatDate(item.itemDate)}</td>
+                <td className={CELL}>
+                  {status ? (
+                    <span className={cn("inline-flex rounded-full px-2 py-0.5 text-[11px] font-medium", STATUS_CHIP[status.color])}>
+                      {status.label}
+                    </span>
+                  ) : (
+                    <span className="text-mute-soft">—</span>
+                  )}
+                </td>
               </tr>
             );
           })}
