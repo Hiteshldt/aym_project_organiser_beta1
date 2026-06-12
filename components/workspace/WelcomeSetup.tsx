@@ -35,7 +35,7 @@ export default function WelcomeSetup({
   }
 
   return (
-    <div className="flex justify-center px-6 py-12">
+    <div className="flex-1 min-h-0 overflow-y-auto flex justify-center px-6 py-12">
       <div className="w-full max-w-lg">
         <p className="font-mono-ui text-[11px] uppercase tracking-[0.2em] text-mute-soft">
           Getting started

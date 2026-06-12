@@ -78,8 +78,9 @@ export type RegisterItem = {
 
 // Shared cell styling — thin grid lines on every side give the spreadsheet feel.
 const CELL = "border-r border-line px-3 py-3 align-top";
+// shadow = the header's bottom hairline; real borders don't stick with the thead.
 const HEAD =
-  "border-r border-line px-3 py-2 text-left text-[11px] font-semibold text-mute uppercase tracking-wide bg-paper";
+  "border-r border-line px-3 py-2 text-left text-[11px] font-semibold text-mute uppercase tracking-wide bg-paper shadow-[0_1px_0_0_var(--line)]";
 
 function GridSkeleton({ cols }: { cols: number }) {
   return (
@@ -324,7 +325,7 @@ export default function RegisterGrid({
   if (!loading && items.length === 0) {
     if (!canAdd) return null; // container folder — the sub-folder overview is the content
     return (
-      <div className="flex flex-col items-center justify-center py-20 text-center px-6">
+      <div className="flex-1 flex flex-col items-center justify-center py-20 text-center px-6">
         <div className="h-12 w-12 rounded-xl bg-accent-soft flex items-center justify-center mb-3">
           <Table2 className="h-5 w-5 text-accent" />
         </div>
@@ -346,10 +347,10 @@ export default function RegisterGrid({
   }
 
   return (
-    <div className="px-4 sm:px-6 py-4">
+    <div className="flex-1 min-h-0 flex flex-col px-4 sm:px-6 py-4">
       {/* Toolbar */}
       {isManager && folder && canAdd && (
-        <div className="flex items-center justify-end mb-2">
+        <div className="shrink-0 flex items-center justify-end mb-2">
           <button
             onClick={() => setStatusMgrOpen(true)}
             className="inline-flex items-center gap-1.5 text-[11px] text-mute hover:text-ink transition-colors"
@@ -361,11 +362,11 @@ export default function RegisterGrid({
         </div>
       )}
 
-      <div className="border border-line rounded-xl overflow-x-auto bg-paper-elevated">
+      <div className="border border-line rounded-xl overflow-auto bg-paper-elevated min-h-0">
         <table className="w-full min-w-[720px] text-sm border-collapse">
-          <thead>
+          <thead className="sticky top-0 z-10">
             <tr className="border-b border-line">
-              {reorderable && <th className="w-6 bg-paper border-r border-line" />}
+              {reorderable && <th className="w-6 bg-paper border-r border-line shadow-[0_1px_0_0_var(--line)]" />}
               <th className={cn(HEAD, "w-10")}>#</th>
               <th className={HEAD}>Name</th>
               <th className={cn(HEAD, "hidden md:table-cell")}>Description</th>
@@ -373,7 +374,7 @@ export default function RegisterGrid({
               <th className={cn(HEAD, "w-40")}>Link</th>
               <th className={cn(HEAD, "w-24")}>Date</th>
               <th className={cn(HEAD, "w-28")}>Status</th>
-              {isManager && <th className="px-3 py-2 w-16 bg-paper" />}
+              {isManager && <th className="px-3 py-2 w-16 bg-paper shadow-[0_1px_0_0_var(--line)]" />}
             </tr>
           </thead>
           <tbody>
@@ -458,7 +459,7 @@ export default function RegisterGrid({
                         <div className="min-w-0 flex-1">
                           <button
                             onClick={() => setOpenItemId(item.id)}
-                            className="text-left font-medium text-ink leading-snug hover:text-accent transition-colors"
+                            className="text-left font-medium text-ink leading-snug hover:text-accent transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
                           >
                             {item.title}
                             {item.isPinned && <Pin className="inline h-2.5 w-2.5 text-accent ml-1" fill="currentColor" />}
@@ -504,7 +505,7 @@ export default function RegisterGrid({
                                     href={linkHref}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-1 text-xs text-accent hover:text-accent-hover font-mono-ui truncate max-w-[130px] group/link"
+                                    className="inline-flex items-center gap-1 text-xs text-mute hover:text-accent transition-colors font-mono-ui truncate max-w-[130px] group/link"
                                   >
                                     <span className="truncate">{prettyUrl(linkHref)}</span>
                                     <ExternalLink className="h-2.5 w-2.5 shrink-0 opacity-0 group-hover/link:opacity-100" />
@@ -542,7 +543,7 @@ export default function RegisterGrid({
                       ) : (
                         <span className="flex flex-col gap-0.5 max-w-full">
                           {linkHref ? (
-                            <a href={linkHref} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-accent hover:text-accent-hover font-mono-ui truncate max-w-[150px]">
+                            <a href={linkHref} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-mute hover:text-accent transition-colors font-mono-ui truncate max-w-[150px]">
                               <span className="truncate">{prettyUrl(linkHref)}</span>
                             </a>
                           ) : !item.fileName ? (
@@ -559,7 +560,7 @@ export default function RegisterGrid({
                     </td>
 
                     {/* Date */}
-                    <td className={cn(CELL, "text-xs text-mute whitespace-nowrap")}>
+                    <td className={cn(CELL, "font-mono-ui text-xs text-mute whitespace-nowrap")}>
                       {formatDate(item.itemDate)}
                     </td>
 
@@ -569,7 +570,7 @@ export default function RegisterGrid({
                         <button
                           onClick={(e) => openMenuFor(e, item.id, "status")}
                           className={cn(
-                            "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium transition-colors max-w-full",
+                            "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium transition-colors max-w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40",
                             status ? STATUS_CHIP[status.color] : "text-mute-soft hover:text-mute border border-dashed border-line"
                           )}
                         >

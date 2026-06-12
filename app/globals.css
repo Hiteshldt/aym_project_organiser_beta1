@@ -91,6 +91,26 @@
   --font-serif: var(--font-instrument-serif);
 }
 
+/* ────────────────────────────────────────────────────────────────
+   Type scale — the only sizes the product uses. (See BRAND.md.)
+   display   : Instrument Serif, ≥24px only, headlines
+   title     : 16px  semibold        — view titles, modal titles
+   body      : 14px  (text-sm)       — names, inputs, primary content
+   secondary : 13px  (text-[13px])   — descriptions, notes
+   label     : 11px  mono uppercase  — table headers, field labels, eyebrows
+   micro     : 10px  mono            — counts, captions, chips
+   Dates, indexes, counts, URLs are ALWAYS Geist Mono (.font-mono-ui).
+
+   Shadows — none decorative. One pop shadow for portaled menus/modals
+   (shadow-lg/xl); marketing mockup frames may use a single soft drop.
+
+   Motion — 120–150ms ease-out on hover/menus. The marketing `reveal`
+   animation never ships inside the app.
+
+   Radius — app surfaces are rounded-lg/xl; marketing CTAs are pills
+   (rounded-full). Don't mix the two registers.
+   ──────────────────────────────────────────────────────────────── */
+
 body {
   background: var(--paper);
   color: var(--ink);

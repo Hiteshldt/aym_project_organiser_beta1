@@ -132,22 +132,16 @@ function ShareInner({
           </Link>
 
           <div className="hidden md:flex items-center gap-3 text-center min-w-0">
-            <span className="font-mono-ui text-[11px] uppercase tracking-wider text-mute-soft shrink-0">
-              Shared workspace
-            </span>
-            <span className="text-mute-soft">·</span>
             <span className="inline-flex items-center gap-1.5 text-sm font-medium text-ink truncate">
               {isRegisterColor(company.accentColor) && (
                 <span className={cn("h-2 w-2 rounded-full shrink-0", COLOR_DOT[company.accentColor])} />
               )}
               {company.name}
             </span>
-            {label && (
-              <>
-                <span className="text-mute-soft hidden lg:inline">·</span>
-                <span className="text-sm text-mute italic truncate hidden lg:inline">{label}</span>
-              </>
-            )}
+            <span className="text-mute-soft">·</span>
+            <span className="font-mono-ui text-[11px] uppercase tracking-wider text-mute-soft shrink-0">
+              Shared workspace
+            </span>
           </div>
 
           <div className="flex items-center gap-1.5 shrink-0">
@@ -197,7 +191,7 @@ function ShareInner({
 
         {/* Content */}
         <main className="flex-1 px-4 sm:px-6 py-6 sm:py-8 min-w-0">
-          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-5 sm:mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-7 sm:mb-9">
             <div className="min-w-0">
               <p className="font-mono-ui text-[11px] uppercase tracking-wider text-mute-soft">
                 {selectedFolder ? "Folder" : "Overview"}
@@ -252,8 +246,54 @@ function ShareInner({
             </div>
           )}
 
+          {/* Start here — the studio's pinned highlights */}
+          {!selectedFolder &&
+            !query.trim() &&
+            (() => {
+              const pinned = items.filter((i) => i.isPinned);
+              if (pinned.length === 0) return null;
+              return (
+                <div className="mb-8">
+                  <p className="font-mono-ui text-[10px] uppercase tracking-[0.2em] text-mute-soft mb-2.5">
+                    Start here
+                  </p>
+                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                    {pinned.slice(0, 6).map((item) => {
+                      const legacy = item.type === "file" && !item.fileUrl && !!item.url;
+                      const href = (legacy ? null : item.url) ?? item.fileUrl ?? (legacy ? item.url : null);
+                      const Wrapper: "a" | "div" = href ? "a" : "div";
+                      return (
+                        <Wrapper
+                          key={item.id}
+                          {...(href ? { href, target: "_blank", rel: "noopener noreferrer" } : {})}
+                          className={cn(
+                            "group rounded-xl border border-line bg-paper-elevated p-3.5 transition-all",
+                            href && "hover:border-line-strong cursor-pointer"
+                          )}
+                        >
+                          <span className="flex items-center gap-2 min-w-0">
+                            <Pin className="h-3 w-3 text-accent shrink-0" fill="currentColor" />
+                            <span className="text-sm font-medium text-ink truncate">{item.title}</span>
+                            {href && (
+                              <ExternalLink className="h-3 w-3 text-mute-soft ml-auto shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
+                            )}
+                          </span>
+                          {item.description && (
+                            <p className="mt-1 text-xs text-mute truncate pl-5">{item.description}</p>
+                          )}
+                          <p className="mt-1.5 font-mono-ui text-[10px] text-mute-soft pl-5 truncate">
+                            {item.folderName}
+                          </p>
+                        </Wrapper>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })()}
+
           {filteredItems.length === 0 ? (
-            <EmptyState query={query} />
+            <EmptyState query={query} companyName={company.name} />
           ) : (
             <RegisterTable
               items={filteredItems}
@@ -338,7 +378,7 @@ function RegisterTable({
                       return (
                         <>
                           {linkHref ? (
-                            <a href={linkHref} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-accent hover:text-accent-hover font-mono-ui truncate max-w-[150px] group/link">
+                            <a href={linkHref} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-ink underline decoration-line-strong underline-offset-2 hover:text-accent hover:decoration-accent/40 transition-colors font-mono-ui truncate max-w-[150px] group/link">
                               <span className="truncate">{prettyUrl(linkHref)}</span>
                               <ExternalLink className="h-2.5 w-2.5 shrink-0 opacity-0 group-hover/link:opacity-100" />
                             </a>
@@ -382,7 +422,7 @@ function RegisterTable({
                     <span className="truncate block max-w-[120px]">{item.folderName}</span>
                   </td>
                 )}
-                <td className={cn(CELL, "text-xs text-mute whitespace-nowrap")}>{formatDate(item.itemDate)}</td>
+                <td className={cn(CELL, "font-mono-ui text-xs text-mute whitespace-nowrap")}>{formatDate(item.itemDate)}</td>
                 <td className={CELL}>
                   {status ? (
                     <span className={cn("inline-flex rounded-full px-2 py-0.5 text-[11px] font-medium", STATUS_CHIP[status.color])}>
@@ -485,7 +525,7 @@ function FolderNode({
   );
 }
 
-function EmptyState({ query }: { query: string }) {
+function EmptyState({ query, companyName }: { query: string; companyName: string }) {
   return (
     <div className="flex flex-col items-center justify-center py-24 text-center px-6">
       <div className="h-12 w-12 rounded-full bg-line flex items-center justify-center mb-4">
@@ -497,7 +537,7 @@ function EmptyState({ query }: { query: string }) {
       <p className="mt-2 text-sm text-mute max-w-sm">
         {query
           ? "Try different keywords or check another folder."
-          : "Once your contact adds something to this folder, it'll show up here."}
+          : `${companyName} hasn't added anything here yet.`}
       </p>
     </div>
   );

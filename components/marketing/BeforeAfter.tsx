@@ -65,7 +65,7 @@ export default function BeforeAfter() {
         <FixCard
           number="02"
           title="Search instantly"
-          body="Titles, tags, notes. Press ⌘K and find what you delivered six months ago in two seconds."
+          body="Titles, tags, notes, dates. Type a word — even misspelled — and what you delivered six months ago is there."
         />
         <FixCard
           number="03"

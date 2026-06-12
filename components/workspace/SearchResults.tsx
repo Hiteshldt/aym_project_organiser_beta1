@@ -112,7 +112,7 @@ export default function SearchResults({
   }
 
   return (
-    <div className="px-4 sm:px-6 py-4">
+    <div className="flex-1 min-h-0 overflow-y-auto px-4 sm:px-6 py-4">
       <p className="text-xs text-mute mb-3">
         {loading ? "Searching…" : `${results.length} result${results.length !== 1 ? "s" : ""} for "${query}"`}
       </p>
@@ -169,7 +169,7 @@ export default function SearchResults({
                   </td>
                   <td className={CELL}>
                     {item.type === "link" && item.url ? (
-                      <a href={item.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-accent hover:text-accent-hover font-mono-ui truncate max-w-[150px] group/link">
+                      <a href={item.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-mute hover:text-accent transition-colors font-mono-ui truncate max-w-[150px] group/link">
                         <span className="truncate">{prettyUrl(item.url)}</span>
                         <ExternalLink className="h-2.5 w-2.5 shrink-0 opacity-0 group-hover/link:opacity-100" />
                       </a>
@@ -182,7 +182,7 @@ export default function SearchResults({
                   <td className={cn(CELL, "hidden sm:table-cell text-xs text-mute")}>
                     <span className="truncate block max-w-[120px]">{item.folderName}</span>
                   </td>
-                  <td className={cn(CELL, "text-[11px] text-mute-soft whitespace-nowrap")}>
+                  <td className={cn(CELL, "font-mono-ui text-xs text-mute whitespace-nowrap")}>
                     {formatDate(item.itemDate)}
                   </td>
                   {isManager && (

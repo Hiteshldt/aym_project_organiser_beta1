@@ -14,7 +14,11 @@
       "Bash(sed -n '355,366p' components/workspace/RegisterGrid.tsx)",
       "Bash(sed -n '560,572p' components/workspace/RegisterGrid.tsx)",
       "Bash(perl -pi -e 's/text-\\\\[11px\\\\] font-medium text-mute uppercase tracking-wide bg-paper/text-[11px] font-semibold text-mute uppercase tracking-wide bg-paper/g' components/workspace/RegisterGrid.tsx components/workspace/SearchResults.tsx components/share/ShareView.tsx)",
-      "Bash(perl -pi -e 's/const CELL = \"border-r border-line px-3 py-2\\\\.5 align-top\";/const CELL = \"border-r border-line px-3 py-3 align-top\";/; s/const CELL = \"border-r border-line px-3 py-2 align-top\";/const CELL = \"border-r border-line px-3 py-3 align-top\";/' components/workspace/RegisterGrid.tsx components/workspace/SearchResults.tsx components/share/ShareView.tsx)"
+      "Bash(perl -pi -e 's/const CELL = \"border-r border-line px-3 py-2\\\\.5 align-top\";/const CELL = \"border-r border-line px-3 py-3 align-top\";/; s/const CELL = \"border-r border-line px-3 py-2 align-top\";/const CELL = \"border-r border-line px-3 py-3 align-top\";/' components/workspace/RegisterGrid.tsx components/workspace/SearchResults.tsx components/share/ShareView.tsx)",
+      "Bash(sed -n '1,60p' components/marketing/FAQ.tsx)",
+      "Bash(sed -n '60,175p' components/marketing/Pricing.tsx)",
+      "Bash(sed -n '1,95p' components/marketing/Hero.tsx)",
+      "Bash(sed -n '1,110p' components/marketing/BeforeAfter.tsx)"
     ],
     "additionalDirectories": [
       "/Users/hiteshgupta/Vs Code/hitesh/files-organiser/app/api/auth"

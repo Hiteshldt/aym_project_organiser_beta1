@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { signOut } from "next-auth/react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useConfirm } from "@/components/ui/confirm";
@@ -19,7 +18,6 @@ import AddItemModal from "./AddItemModal";
 import CreateFolderModal from "./CreateFolderModal";
 import ShareWithClientModal from "./ShareWithClientModal";
 import {
-  LogOut,
   Search,
   Building2,
   Plus,
@@ -398,7 +396,7 @@ export default function WorkspaceShell({
 
           {/* Logo + Company */}
           <div className="flex items-center gap-2 min-w-0">
-            <span className="text-sm font-semibold text-ink shrink-0 hidden sm:inline">Ayuvam</span>
+            <span className="font-display-italic text-lg text-ink leading-none shrink-0 hidden sm:inline">Ayuvam</span>
             <span className="text-mute-soft hidden sm:inline">/</span>
             <div className="relative">
               <button
@@ -493,22 +491,14 @@ export default function WorkspaceShell({
             )}
             <Link
               href="/settings"
-              className="hidden sm:flex items-center gap-2 px-2 py-1 rounded-md text-xs text-mute hover:text-ink hover:bg-line/50 transition-colors"
+              className="flex items-center gap-2 px-2 py-1 rounded-md text-xs text-mute hover:text-ink hover:bg-line/50 transition-colors"
               title="Account settings"
             >
-              <div className="h-5 w-5 rounded-full bg-accent-soft text-accent text-[10px] font-medium flex items-center justify-center font-mono-ui">
+              <div className="h-6 w-6 sm:h-5 sm:w-5 rounded-full bg-accent-soft text-accent text-[10px] font-medium flex items-center justify-center font-mono-ui">
                 {user.name?.charAt(0)?.toUpperCase() || "?"}
               </div>
-              <span>{user.name}</span>
+              <span className="hidden sm:inline">{user.name}</span>
             </Link>
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              onClick={() => signOut({ callbackUrl: "/login" })}
-              title="Sign out"
-            >
-              <LogOut className="h-4 w-4" />
-            </Button>
           </div>
         </div>
 
@@ -729,8 +719,9 @@ export default function WorkspaceShell({
               </div>
             )}
 
-            {/* Content body */}
-            <div className="flex-1 overflow-y-auto">
+            {/* Content body — children own their scrolling so the grid's
+                header can stick while toolbar/footer stay put. */}
+            <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
               {isSearching ? (
                 <SearchResults
                   slug={company.slug}
@@ -746,7 +737,7 @@ export default function WorkspaceShell({
                   onCustomFolder={() => { setCreateSubfolderParent(null); setCreateFolderOpen(true); }}
                 />
               ) : (
-                <>
+                <div className={isContainer ? "flex-1 min-h-0 overflow-y-auto" : "flex-1 min-h-0 flex flex-col"}>
                   {isContainer && (
                     <FolderOverview folders={childFolders} onSelect={selectFolderAndClose} />
                   )}
@@ -771,7 +762,7 @@ export default function WorkspaceShell({
                     openItemOnLoad={jumpOpenItemId}
                     onOpenConsumed={() => setJumpOpenItemId(null)}
                   />
-                </>
+                </div>
               )}
             </div>
           </div>

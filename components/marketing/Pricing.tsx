@@ -132,8 +132,8 @@ export default function Pricing() {
       </div>
 
       <p className="mt-10 text-center text-xs font-mono-ui text-mute-soft">
-        All plans include unlimited folders, magic link client access, and
-        ⌘K search.
+        All plans include unlimited folders, magic-link client access, and
+        search that forgives typos.
       </p>
     </section>
   );

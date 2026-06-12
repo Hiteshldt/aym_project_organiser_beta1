@@ -1,12 +1,5 @@
 import Link from "next/link";
-import {
-  ArrowUpRight,
-  Folder,
-  FileText,
-  Link2,
-  Search,
-  Pin,
-} from "lucide-react";
+import { ArrowUpRight, Plus, Eye, Pin } from "lucide-react";
 
 export default function Hero() {
   return (
@@ -17,7 +10,7 @@ export default function Hero() {
         className="absolute inset-0 -z-10 pointer-events-none"
         style={{
           background:
-            "radial-gradient(60% 50% at 50% 0%, rgba(200, 75, 49, 0.07) 0%, rgba(200, 75, 49, 0) 70%)",
+            "radial-gradient(60% 50% at 50% 0%, rgba(200, 75, 49, 0.06) 0%, rgba(200, 75, 49, 0) 70%)",
         }}
       />
 
@@ -38,8 +31,8 @@ export default function Hero() {
 
         {/* Subhead */}
         <p className="reveal reveal-delay-2 mt-6 mx-auto max-w-2xl text-center text-base md:text-lg text-mute leading-relaxed">
-          Ayuvam gives every client their own clean space for proposals, decks,
-          files, and links. Organized by you. Beautiful for them.
+          One clean space per client — proposals, decks, files, links.
+          Organized by you. Beautiful for them.
         </p>
 
         {/* CTAs */}
@@ -59,14 +52,15 @@ export default function Hero() {
           </Link>
         </div>
 
-        {/* Tiny social proof line */}
+        {/* Proof line */}
         <p className="mt-5 text-center text-xs font-mono-ui text-mute-soft tracking-wide">
-          Built by founders, for studios — no contracts, no learning curve
+          Free for your first client · ~60 seconds to a shareable link
         </p>
 
-        {/* Product mockup */}
-        <div className="mt-16 md:mt-20 relative">
-          <MockWindow />
+        {/* Product mockup — the register + what the client opens */}
+        <div className="mt-16 md:mt-20 relative lg:pb-16">
+          <RegisterFrame />
+          <ClientFrame />
         </div>
       </div>
     </section>
@@ -74,29 +68,60 @@ export default function Hero() {
 }
 
 /* ────────────────────────────────────────────────────────────────
-   Product mockup — a static HTML representation of the app.
-   No images, fully responsive, brand-aligned.
+   The register — a faithful, static rendering of the real app.
+   No images. Brand tokens only.
    ──────────────────────────────────────────────────────────────── */
 
-function MockWindow() {
-  return (
-    <div
-      className="relative mx-auto max-w-5xl"
-      style={{ perspective: "2000px" }}
-    >
-      {/* Soft shadow plate below */}
-      <div
-        aria-hidden
-        className="absolute inset-x-8 -bottom-6 h-24 rounded-full blur-3xl opacity-50"
-        style={{ background: "rgba(200, 75, 49, 0.25)" }}
-      />
+const ROWS = [
+  {
+    n: 1,
+    name: "Launch site copy",
+    desc: "Final pass for review",
+    link: "figma.com",
+    date: "12 Jun",
+    status: { label: "In progress", cls: "bg-amber-50 text-amber-800" },
+    pinned: false,
+  },
+  {
+    n: 2,
+    name: "Brand guidelines v2",
+    desc: "Type + color rules",
+    link: "drive.google.com",
+    date: "10 Jun",
+    status: { label: "Delivered", cls: "bg-green-50 text-green-700" },
+    pinned: true,
+  },
+  {
+    n: 3,
+    name: "Hero illustration",
+    desc: "Approved by Maya",
+    link: "canva.com",
+    date: "8 Jun",
+    status: { label: "Approved", cls: "bg-violet-50 text-violet-700" },
+    pinned: false,
+  },
+  {
+    n: 4,
+    name: "Q3 campaign deck",
+    desc: "18 slides, exports inside",
+    link: "pitch.com",
+    date: "5 Jun",
+    status: { label: "To do", cls: "bg-slate-100 text-slate-600" },
+    pinned: false,
+  },
+];
 
-      <div
-        className="relative rounded-2xl border border-line-strong bg-paper-elevated shadow-[0_30px_80px_-30px_rgba(15,15,15,0.18)] overflow-hidden"
-        style={{
-          transform: "rotateX(0.5deg)",
-        }}
-      >
+const FOLDERS = [
+  { name: "Proposals", dot: "bg-indigo-400" },
+  { name: "Deliverables", dot: "bg-emerald-400", active: true },
+  { name: "Designs", dot: "bg-violet-400" },
+  { name: "Contracts", dot: "bg-amber-400" },
+];
+
+function RegisterFrame() {
+  return (
+    <div className="relative mx-auto max-w-5xl">
+      <div className="relative rounded-2xl border border-line-strong bg-paper-elevated shadow-[0_24px_70px_-45px_rgba(15,15,15,0.45)] overflow-hidden">
         {/* Browser top bar */}
         <div className="h-9 flex items-center gap-2 px-3 sm:px-4 border-b border-line bg-paper">
           <div className="flex items-center gap-1.5">
@@ -113,100 +138,94 @@ function MockWindow() {
           <div className="w-8 sm:w-12" />
         </div>
 
-        {/* App chrome — sidebar hidden on phones to give the content room */}
-        <div className="grid grid-cols-1 sm:grid-cols-[180px_1fr] min-h-[380px] sm:min-h-[420px]">
+        {/* App chrome */}
+        <div className="grid grid-cols-1 sm:grid-cols-[180px_1fr] min-h-[360px]">
           {/* Sidebar */}
           <div className="hidden sm:block border-r border-line bg-paper-elevated p-3">
-            <div className="flex items-center justify-between mb-3 px-1">
-              <span className="font-display-italic text-base text-ink">
-                Google
-              </span>
+            <div className="px-1 mb-3">
+              <span className="font-display-italic text-base text-ink">Google</span>
             </div>
-
             <div className="space-y-0.5 text-[13px]">
-              <div className="px-2 py-1.5 rounded-md text-mute text-xs uppercase tracking-wider font-medium">
-                Workspace
-              </div>
-
-              <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-accent-soft text-ink font-medium">
-                <span className="h-1.5 w-1.5 rounded-full bg-accent" />
-                <span>All items</span>
-                <span className="ml-auto font-mono-ui text-[11px] text-mute">
-                  47
-                </span>
-              </div>
-
-              <SidebarFolder name="Proposals" count={12} />
-              <SidebarFolder name="Design files" count={18} active />
-              <SidebarFolder name="Decks & slides" count={9} />
-              <SidebarFolder name="Contracts" count={4} />
-              <SidebarFolder name="Final deliverables" count={4} />
-            </div>
-
-            <div className="mt-6 px-1">
-              <button className="w-full text-left text-[11px] font-mono-ui text-mute hover:text-ink transition-colors">
-                + Invite a client
-              </button>
+              <div className="px-2 py-1.5 text-mute text-xs">All items</div>
+              {FOLDERS.map((f) => (
+                <div
+                  key={f.name}
+                  className={`flex items-center gap-2 px-2 py-1.5 rounded-md ${
+                    f.active ? "bg-accent-soft text-ink font-medium" : "text-mute"
+                  }`}
+                >
+                  <span className={`h-1.5 w-1.5 rounded-full ${f.dot}`} />
+                  <span>{f.name}</span>
+                </div>
+              ))}
             </div>
           </div>
 
           {/* Content */}
           <div className="bg-paper p-3 sm:p-4">
             {/* Content header */}
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-3">
               <div>
-                <h3 className="text-sm font-semibold text-ink">
-                  Design files
-                </h3>
-                <p className="text-xs text-mute mt-0.5">18 items</p>
+                <h3 className="text-sm font-semibold text-ink">Deliverables</h3>
+                <p className="text-[11px] text-mute-soft mt-0.5">
+                  Register · a row per deliverable
+                </p>
               </div>
-              <div className="flex items-center gap-1.5">
-                <div className="flex items-center gap-1.5 rounded-md border border-line bg-paper-elevated px-2.5 py-1.5">
-                  <Search className="h-3 w-3 text-mute-soft" />
-                  <span className="text-[11px] text-mute-soft font-mono-ui">
-                    search
-                  </span>
-                </div>
-                <button className="text-[11px] font-medium text-white bg-accent rounded-md px-2.5 py-1.5">
-                  + Add
-                </button>
-              </div>
+              <span className="inline-flex items-center gap-1 rounded-lg bg-accent text-white text-[11px] font-medium px-2.5 py-1.5">
+                <Plus className="h-3 w-3" />
+                Add row
+              </span>
             </div>
 
-            {/* Items */}
-            <div className="space-y-1.5">
-              <MockItem
-                type="link"
-                title="Hero illustration — final v3"
-                meta="canva.com · 2 days ago"
-                tags={["v3", "approved"]}
-                pinned
-              />
-              <MockItem
-                type="file"
-                title="Brand guidelines.pdf"
-                meta="2.4 MB · last week"
-                tags={["brand"]}
-              />
-              <MockItem
-                type="link"
-                title="Component library on Figma"
-                meta="figma.com · last week"
-                tags={["figma", "system"]}
-              />
-              <MockItem
-                type="link"
-                title="Email signature template"
-                meta="canva.com · 3 days ago"
-                tags={["email"]}
-              />
-              <MockItem
-                type="file"
-                title="Logo pack — final.zip"
-                meta="8.1 MB · today"
-                tags={["logo", "final"]}
-                accentRow
-              />
+            {/* The register table */}
+            <div className="rounded-xl border border-line bg-paper-elevated overflow-hidden">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-line">
+                    <th className="px-2.5 py-2 w-8 font-mono-ui text-[9px] font-semibold uppercase tracking-wider text-mute border-r border-line">#</th>
+                    <th className="px-2.5 py-2 font-mono-ui text-[9px] font-semibold uppercase tracking-wider text-mute border-r border-line">Name</th>
+                    <th className="hidden md:table-cell px-2.5 py-2 font-mono-ui text-[9px] font-semibold uppercase tracking-wider text-mute border-r border-line">Description</th>
+                    <th className="hidden sm:table-cell px-2.5 py-2 font-mono-ui text-[9px] font-semibold uppercase tracking-wider text-mute border-r border-line">Link</th>
+                    <th className="hidden sm:table-cell px-2.5 py-2 font-mono-ui text-[9px] font-semibold uppercase tracking-wider text-mute border-r border-line">Date</th>
+                    <th className="px-2.5 py-2 font-mono-ui text-[9px] font-semibold uppercase tracking-wider text-mute">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {ROWS.map((r) => (
+                    <tr
+                      key={r.n}
+                      className={`border-b border-line last:border-b-0 ${
+                        r.pinned ? "bg-accent-soft/30" : ""
+                      }`}
+                    >
+                      <td className="px-2.5 py-2 font-mono-ui text-[10px] text-mute-soft border-r border-line">{r.n}</td>
+                      <td className="px-2.5 py-2 border-r border-line">
+                        <span className="text-xs font-medium text-ink">
+                          {r.name}
+                          {r.pinned && <Pin className="inline h-2.5 w-2.5 text-accent ml-1 -mt-0.5" fill="currentColor" />}
+                        </span>
+                      </td>
+                      <td className="hidden md:table-cell px-2.5 py-2 text-[11px] text-mute border-r border-line">{r.desc}</td>
+                      <td className="hidden sm:table-cell px-2.5 py-2 font-mono-ui text-[10px] text-mute border-r border-line">{r.link}</td>
+                      <td className="hidden sm:table-cell px-2.5 py-2 font-mono-ui text-[10px] text-mute border-r border-line">{r.date}</td>
+                      <td className="px-2.5 py-2">
+                        <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-medium ${r.status.cls}`}>
+                          {r.status.label}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                  {/* Quick-add ghost row */}
+                  <tr className="border-t border-line bg-paper/60">
+                    <td className="px-2.5 py-2 text-mute-soft border-r border-line">
+                      <Plus className="h-3 w-3" />
+                    </td>
+                    <td colSpan={5} className="px-2.5 py-2 text-[11px] text-mute-soft">
+                      Add a row — type a title…
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
@@ -215,91 +234,37 @@ function MockWindow() {
   );
 }
 
-function SidebarFolder({
-  name,
-  count,
-  active,
-}: {
-  name: string;
-  count: number;
-  active?: boolean;
-}) {
+/* What the client opens — small floating frame, desktop only. */
+function ClientFrame() {
   return (
-    <div
-      className={`flex items-center gap-2 px-2 py-1.5 rounded-md transition-colors ${
-        active ? "bg-line text-ink font-medium" : "text-mute hover:bg-line/60"
-      }`}
-    >
-      <Folder className="h-3 w-3 text-mute-soft" />
-      <span className="truncate text-[13px]">{name}</span>
-      <span className="ml-auto font-mono-ui text-[10px] text-mute-soft">
-        {count}
-      </span>
-    </div>
-  );
-}
-
-function MockItem({
-  type,
-  title,
-  meta,
-  tags,
-  pinned,
-  accentRow,
-}: {
-  type: "link" | "file";
-  title: string;
-  meta: string;
-  tags: string[];
-  pinned?: boolean;
-  accentRow?: boolean;
-}) {
-  return (
-    <div
-      className={`flex items-center gap-3 rounded-lg border px-3 py-2.5 transition-colors ${
-        accentRow
-          ? "border-accent-soft bg-accent-soft/40"
-          : "border-line bg-paper-elevated"
-      }`}
-    >
-      <div
-        className={`shrink-0 h-6 w-6 rounded-md flex items-center justify-center ${
-          type === "link"
-            ? "bg-accent-soft text-accent"
-            : "bg-line text-mute"
-        }`}
-      >
-        {type === "link" ? (
-          <Link2 className="h-3 w-3" />
-        ) : (
-          <FileText className="h-3 w-3" />
-        )}
-      </div>
-
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-1.5">
-          <span className="text-[13px] font-medium text-ink truncate">
-            {title}
+    <div className="hidden lg:block absolute -bottom-6 right-0 xl:-right-6 w-[300px]">
+      <p className="font-mono-ui text-[9px] uppercase tracking-[0.25em] text-mute mb-2 pl-1">
+        What your client opens
+      </p>
+      <div className="rounded-xl border border-line-strong bg-paper-elevated shadow-[0_18px_50px_-35px_rgba(15,15,15,0.5)] overflow-hidden">
+        {/* Mini header */}
+        <div className="flex items-center justify-between px-3.5 py-2.5 border-b border-line bg-paper">
+          <span className="font-display-italic text-sm text-ink">Google</span>
+          <span className="inline-flex items-center gap-1 rounded-full bg-accent-soft px-2 py-0.5 text-[9px] font-mono-ui text-accent">
+            <Eye className="h-2.5 w-2.5" />
+            View only
           </span>
-          {pinned && (
-            <Pin
-              className="h-3 w-3 text-accent shrink-0"
-              fill="currentColor"
-            />
-          )}
         </div>
-        <p className="text-[11px] text-mute font-mono-ui truncate">{meta}</p>
-      </div>
-
-      <div className="hidden sm:flex items-center gap-1 shrink-0">
-        {tags.map((t) => (
-          <span
-            key={t}
-            className="font-mono-ui text-[10px] text-mute px-1.5 py-0.5 rounded bg-line/70"
-          >
-            #{t}
-          </span>
-        ))}
+        <div className="px-3.5 py-3">
+          <p className="text-[10px] text-mute italic leading-snug">
+            &ldquo;Everything for the Q3 launch — newest at the top.&rdquo;
+          </p>
+          <div className="mt-2.5 space-y-1.5">
+            <div className="flex items-center justify-between gap-2 rounded-lg border border-line px-2.5 py-2">
+              <span className="text-[11px] font-medium text-ink truncate">Brand guidelines v2</span>
+              <span className="shrink-0 rounded-full bg-green-50 text-green-700 px-1.5 py-0.5 text-[9px] font-medium">Delivered</span>
+            </div>
+            <div className="flex items-center justify-between gap-2 rounded-lg border border-line px-2.5 py-2">
+              <span className="text-[11px] font-medium text-ink truncate">Hero illustration</span>
+              <span className="shrink-0 rounded-full bg-violet-50 text-violet-700 px-1.5 py-0.5 text-[9px] font-medium">Approved</span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

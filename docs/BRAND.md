@@ -96,6 +96,29 @@ This is the Vercel / Arc / Pitch playbook: when your typography is good enough, 
 
 ---
 
+## Type scale (the only sizes)
+
+| Role | Size | Face | Use |
+|---|---|---|---|
+| display | ≥24px | Instrument Serif | Headlines only |
+| title | 16px semibold | Geist Sans | View titles, modal titles |
+| body | 14px | Geist Sans | Names, inputs, primary content |
+| secondary | 13px | Geist Sans | Descriptions, notes |
+| label | 11px uppercase | Geist Mono | Table headers, field labels, eyebrows |
+| micro | 10px | Geist Mono | Counts, captions, chips |
+
+**Dates, indexes, counts, and URLs are always Geist Mono.** No ad-hoc sizes outside this scale.
+
+## Interaction rules
+
+- **Accent restraint in tables.** Link cells are `--mute`, turning accent on hover. Terracotta belongs to the primary CTA, pinned states, and brand moments — not every URL.
+- **Shadows:** none decorative. One pop shadow for portaled menus/modals. Marketing mockup frames may use a single soft drop.
+- **Motion:** 120–150ms ease-out on hover/menus. The marketing `reveal` animation never ships inside the app.
+- **Radius registers:** app surfaces `rounded-lg/xl`; marketing CTAs are pills (`rounded-full`). Don't mix.
+- **Focus:** every interactive element gets a visible `focus-visible` ring (`ring-accent/40`).
+
+---
+
 ## Reference brands (study these)
 
 The brands Ayuvam is aesthetically aligned with:

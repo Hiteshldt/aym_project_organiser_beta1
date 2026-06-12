@@ -79,17 +79,17 @@ export default function Bento() {
         {/* Small tile — search */}
         <Tile className="md:col-span-2">
           <TileIcon><Search className="h-4 w-4" /></TileIcon>
-          <TileTitle>Press ⌘K. Find anything.</TileTitle>
+          <TileTitle>Type a word. Find anything.</TileTitle>
           <TileBody>
-            Search titles, tags, notes, URLs. Across every workspace at once.
+            Titles, tags, notes, URLs, dates — even with a typo in it.
           </TileBody>
           <div className="mt-4 flex items-center gap-2 rounded-md border border-line bg-paper px-2.5 py-1.5">
             <Search className="h-3 w-3 text-mute-soft" />
             <span className="text-[12px] text-mute font-mono-ui">
-              brand guidelines
+              brand guidlines
             </span>
             <span className="ml-auto font-mono-ui text-[10px] text-mute-soft border border-line px-1.5 py-0.5 rounded">
-              ⌘K
+              /
             </span>
           </div>
         </Tile>

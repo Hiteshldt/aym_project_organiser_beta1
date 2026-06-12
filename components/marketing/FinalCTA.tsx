@@ -5,21 +5,19 @@ export default function FinalCTA() {
   return (
     <section className="mx-auto max-w-6xl px-6 pb-24">
       <div className="relative overflow-hidden rounded-3xl bg-ink text-paper px-8 py-16 md:px-16 md:py-24">
-        {/* Background accent */}
+        {/* One restrained accent wash */}
         <div
           aria-hidden
-          className="absolute -top-32 -right-32 h-96 w-96 rounded-full blur-3xl opacity-50"
-          style={{ background: "rgba(200, 75, 49, 0.45)" }}
-        />
-        <div
-          aria-hidden
-          className="absolute -bottom-40 -left-20 h-80 w-80 rounded-full blur-3xl opacity-30"
-          style={{ background: "rgba(200, 75, 49, 0.35)" }}
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background:
+              "radial-gradient(50% 60% at 85% 0%, rgba(200, 75, 49, 0.22) 0%, rgba(200, 75, 49, 0) 70%)",
+          }}
         />
 
         <div className="relative max-w-2xl">
           <p className="font-mono-ui text-xs uppercase tracking-[0.2em] text-paper/50">
-            Stop sending Drive links
+            Share the work. Not the mess.
           </p>
           <h2 className="mt-3 font-display text-4xl md:text-6xl leading-[1.02] tracking-[-0.02em] text-paper">
             Start organizing<br />
