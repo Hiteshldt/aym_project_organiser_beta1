@@ -2,7 +2,7 @@ import { MessageSquare, FolderTree, Mail, Sparkles } from "lucide-react";
 
 export default function BeforeAfter() {
   return (
-    <section className="mx-auto max-w-6xl px-6 py-16 md:py-24">
+    <section className="mx-auto max-w-6xl px-6 py-12 md:py-16">
       <header className="max-w-3xl">
         <p className="font-mono-ui text-xs uppercase tracking-[0.2em] text-accent">
           The problem

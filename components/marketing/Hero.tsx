@@ -14,7 +14,7 @@ export default function Hero() {
         }}
       />
 
-      <div className="mx-auto max-w-6xl px-6 pt-16 pb-12 md:pt-24 md:pb-16">
+      <div className="mx-auto max-w-6xl px-6 pt-16 pb-8 md:pt-24 md:pb-10">
         {/* Eyebrow */}
         <div className="reveal flex justify-center">
           <span className="inline-flex items-center gap-2 rounded-full border border-line bg-paper-elevated px-3 py-1 text-xs font-mono-ui text-mute tracking-wide">

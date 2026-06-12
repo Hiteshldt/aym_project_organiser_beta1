@@ -27,7 +27,20 @@
       "Bash(perl -pi -e 's/my-20 flex items-center gap-6/my-12 flex items-center gap-6/; s/rounded-2xl border border-line bg-paper-elevated p-6 transition-all hover:border-line-strong/rounded-2xl border border-line bg-paper-elevated p-6 card-lift/; s/\"bg-paper-elevated border border-line hover:border-line-strong\"/\"bg-paper-elevated border border-line card-lift\"/' BeforeAfter.tsx)",
       "Bash(perl -pi -e 's/mt-16 md:mt-20 grid md:grid-cols-3/mt-12 grid md:grid-cols-3/' HowItWorks.tsx)",
       "Bash(perl -pi -e 's/<header className=\"text-center\">/<header>/' FAQ.tsx)",
-      "Bash(perl -pi -e 's/<footer className=\"mt-24 border-t border-line\">/<footer className=\"mt-16 border-t border-line\">/' components/marketing/Footer.tsx)"
+      "Bash(perl -pi -e 's/<footer className=\"mt-24 border-t border-line\">/<footer className=\"mt-16 border-t border-line\">/' components/marketing/Footer.tsx)",
+      "Bash(curl -sL --max-time 15 https://ayuvam.com)",
+      "Skill(run)",
+      "Bash(npx playwright *)",
+      "Bash(npm init *)",
+      "Bash(npm i *)",
+      "Bash(node sections.mjs)",
+      "Bash(perl -pi -e 's/min-h-screen bg-grain text-ink flex flex-col/min-h-screen bg-paper text-ink flex flex-col/' \"app/\\(marketing\\)/layout.tsx\")",
+      "Bash(perl -pi -e 's/className=\"mx-auto max-w-6xl px-6 py-16 md:py-24\">/className=\"mx-auto max-w-6xl px-6 py-12 md:py-16\">/' BeforeAfter.tsx)",
+      "Bash(perl -pi -e 's/className=\"mx-auto max-w-6xl px-6 py-16 md:py-24 scroll-mt-20\"/className=\"mx-auto max-w-6xl px-6 border-t border-line py-12 md:py-16 scroll-mt-20\"/' Bento.tsx HowItWorks.tsx Pricing.tsx)",
+      "Bash(perl -pi -e 's/className=\"mx-auto max-w-3xl px-6 py-16 md:py-24\"/className=\"mx-auto max-w-6xl px-6 border-t border-line py-12 md:py-16\"/' FAQ.tsx)",
+      "Bash(perl -pi -e 's/mt-12 divide-y divide-line border-y border-line/mt-10 max-w-3xl divide-y divide-line border-y border-line/' FAQ.tsx)",
+      "Bash(node -e ' *)",
+      "Bash(curl -s http://localhost:3000/)"
     ],
     "additionalDirectories": [
       "/Users/hiteshgupta/Vs Code/hitesh/files-organiser/app/api/auth"

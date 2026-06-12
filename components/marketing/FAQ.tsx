@@ -32,7 +32,7 @@ const FAQS = [
 
 export default function FAQ() {
   return (
-    <section className="mx-auto max-w-3xl px-6 py-16 md:py-24">
+    <section className="mx-auto max-w-6xl px-6 border-t border-line py-12 md:py-16">
       <header>
         <p className="font-mono-ui text-xs uppercase tracking-[0.2em] text-accent">
           Common questions
@@ -42,7 +42,7 @@ export default function FAQ() {
         </h2>
       </header>
 
-      <div className="mt-12 divide-y divide-line border-y border-line">
+      <div className="mt-10 max-w-3xl divide-y divide-line border-y border-line">
         {FAQS.map((item, i) => (
           <FAQItem key={i} q={item.q} a={item.a} defaultOpen={i === 0} />
         ))}

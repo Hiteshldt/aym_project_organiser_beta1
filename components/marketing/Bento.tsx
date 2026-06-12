@@ -11,7 +11,7 @@ export default function Bento() {
   return (
     <section
       id="features"
-      className="mx-auto max-w-6xl px-6 py-16 md:py-24 scroll-mt-20"
+      className="mx-auto max-w-6xl px-6 border-t border-line py-12 md:py-16 scroll-mt-20"
     >
       <header className="max-w-2xl">
         <p className="font-mono-ui text-xs uppercase tracking-[0.2em] text-accent">

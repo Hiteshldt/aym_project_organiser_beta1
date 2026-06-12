@@ -2,10 +2,10 @@ import Link from "next/link";
 
 export default function Footer() {
   return (
-    <footer className="mt-16 border-t border-line">
+    <footer className="border-t border-line">
       {/* Editorial sign-off */}
       <div className="border-b border-line">
-        <div className="mx-auto max-w-6xl px-6 py-12 md:py-16">
+        <div className="mx-auto max-w-6xl px-6 py-10 md:py-12">
           <p className="font-display text-3xl md:text-5xl text-ink leading-[1.08] tracking-[-0.02em] max-w-2xl">
             Make the work look{" "}
             <span className="font-display-italic text-accent">as good as it is.</span>
@@ -16,7 +16,7 @@ export default function Footer() {
         </div>
       </div>
 
-      <div className="mx-auto max-w-6xl px-6 py-12 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+      <div className="mx-auto max-w-6xl px-6 py-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
         {/* Brand */}
         <div className="space-y-1">
           <div className="font-display-italic text-2xl text-ink leading-none">
