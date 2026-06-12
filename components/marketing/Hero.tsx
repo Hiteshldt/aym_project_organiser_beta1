@@ -3,7 +3,7 @@ import { ArrowUpRight, Plus, Eye, Pin } from "lucide-react";
 
 export default function Hero() {
   return (
-    <section className="relative overflow-hidden">
+    <section className="relative overflow-hidden grain">
       {/* Subtle accent glow behind hero */}
       <div
         aria-hidden
@@ -26,7 +26,7 @@ export default function Hero() {
         {/* Headline */}
         <h1 className="reveal reveal-delay-1 mt-6 text-center font-display text-[44px] leading-[1.05] md:text-[72px] md:leading-[1.02] text-ink tracking-[-0.02em]">
           Make the work look<br />
-          <span className="font-display-italic">as good as it is.</span>
+          <span className="font-display-italic text-ember">as good as it is.</span>
         </h1>
 
         {/* Subhead */}
@@ -61,6 +61,19 @@ export default function Hero() {
         <div className="mt-16 md:mt-20 relative lg:pb-16">
           <RegisterFrame />
           <ClientFrame />
+        </div>
+
+        {/* Stat strip */}
+        <div className="mt-14 lg:mt-8 border-y border-line">
+          <div className="py-4 flex flex-wrap items-center justify-center gap-x-4 sm:gap-x-8 gap-y-1.5 font-mono-ui text-[10px] sm:text-[11px] uppercase tracking-[0.18em] text-mute">
+            <span>One link per client</span>
+            <span className="text-line-strong" aria-hidden>·</span>
+            <span>No client logins</span>
+            <span className="text-line-strong" aria-hidden>·</span>
+            <span>Typo-proof search</span>
+            <span className="text-line-strong" aria-hidden>·</span>
+            <span>Revocable anytime</span>
+          </div>
         </div>
       </div>
     </section>
@@ -120,7 +133,7 @@ const FOLDERS = [
 
 function RegisterFrame() {
   return (
-    <div className="relative mx-auto max-w-5xl">
+    <div className="frame-shine relative mx-auto max-w-5xl rounded-2xl">
       <div className="relative rounded-2xl border border-line-strong bg-paper-elevated shadow-[0_24px_70px_-45px_rgba(15,15,15,0.45)] overflow-hidden">
         {/* Browser top bar */}
         <div className="h-9 flex items-center gap-2 px-3 sm:px-4 border-b border-line bg-paper">
@@ -241,7 +254,7 @@ function ClientFrame() {
       <p className="font-mono-ui text-[9px] uppercase tracking-[0.25em] text-mute mb-2 pl-1">
         What your client opens
       </p>
-      <div className="rounded-xl border border-line-strong bg-paper-elevated shadow-[0_18px_50px_-35px_rgba(15,15,15,0.5)] overflow-hidden">
+      <div className="float-slow rounded-xl border border-line-strong bg-paper-elevated shadow-[0_18px_50px_-35px_rgba(15,15,15,0.5)] overflow-hidden">
         {/* Mini header */}
         <div className="flex items-center justify-between px-3.5 py-2.5 border-b border-line bg-paper">
           <span className="font-display-italic text-sm text-ink">Google</span>

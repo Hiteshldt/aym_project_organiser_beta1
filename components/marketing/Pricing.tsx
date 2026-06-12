@@ -151,8 +151,8 @@ function PlanCard({ plan, annual }: { plan: Plan; annual: boolean }) {
     <div
       className={`relative rounded-2xl p-7 flex flex-col transition-all ${
         plan.accent
-          ? "bg-ink text-paper border border-ink"
-          : "bg-paper-elevated border border-line hover:border-line-strong"
+          ? "bg-ink text-paper border border-ink shadow-[0_24px_60px_-30px_rgba(200,75,49,0.45)]"
+          : "bg-paper-elevated border border-line card-lift"
       }`}
     >
       {plan.tag && (

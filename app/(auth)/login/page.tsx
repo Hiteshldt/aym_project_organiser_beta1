@@ -41,8 +41,17 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-grain flex items-center justify-center px-4">
-      <div className="w-full max-w-sm">
+    <div className="relative min-h-screen bg-grain flex items-center justify-center px-4 overflow-hidden">
+      {/* Soft brand glow behind the card */}
+      <div
+        aria-hidden
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background:
+            "radial-gradient(45% 38% at 50% 38%, rgba(200, 75, 49, 0.07) 0%, rgba(200, 75, 49, 0) 70%)",
+        }}
+      />
+      <div className="relative w-full max-w-sm">
         {/* Brand */}
         <div className="mb-10 text-center">
           <Link
@@ -57,7 +66,7 @@ export default function LoginPage() {
         </div>
 
         {/* Card */}
-        <div className="rounded-2xl border border-line bg-paper-elevated p-7 space-y-5">
+        <div className="frame-shine relative rounded-2xl border border-line bg-paper-elevated p-7 space-y-5">
           {/* Google */}
           <button
             type="button"

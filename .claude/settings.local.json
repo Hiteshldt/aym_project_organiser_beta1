@@ -18,7 +18,8 @@
       "Bash(sed -n '1,60p' components/marketing/FAQ.tsx)",
       "Bash(sed -n '60,175p' components/marketing/Pricing.tsx)",
       "Bash(sed -n '1,95p' components/marketing/Hero.tsx)",
-      "Bash(sed -n '1,110p' components/marketing/BeforeAfter.tsx)"
+      "Bash(sed -n '1,110p' components/marketing/BeforeAfter.tsx)",
+      "WebSearch"
     ],
     "additionalDirectories": [
       "/Users/hiteshgupta/Vs Code/hitesh/files-organiser/app/api/auth"

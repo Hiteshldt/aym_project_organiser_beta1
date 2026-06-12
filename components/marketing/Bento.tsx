@@ -153,7 +153,7 @@ function Tile({
 }) {
   return (
     <div
-      className={`group relative rounded-2xl border border-line bg-paper-elevated p-6 flex flex-col transition-all hover:border-line-strong hover:shadow-[0_10px_40px_-20px_rgba(15,15,15,0.15)] ${className}`}
+      className={`group relative rounded-2xl border border-line bg-paper-elevated p-6 flex flex-col card-lift ${className}`}
     >
       {children}
     </div>

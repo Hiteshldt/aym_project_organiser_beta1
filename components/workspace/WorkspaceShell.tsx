@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useConfirm } from "@/components/ui/confirm";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
+import { cn, FOLDER_COLORS } from "@/lib/utils";
 import { ThemeController, ThemeToggle } from "@/components/theme";
 import { DEFAULT_STATUS_OPTIONS, REGISTER_COLORS, COLOR_DOT, type StatusOption } from "@/lib/register";
 import { Textarea } from "@/components/ui/textarea";
@@ -684,7 +684,16 @@ export default function WorkspaceShell({
             {!isSearching && (
               <div className="flex items-center justify-between px-6 py-4 border-b border-line">
                 <div className="flex items-center gap-2 min-w-0">
-                  <Table2 className="h-4 w-4 text-accent shrink-0" />
+                  {selectedFolder ? (
+                    <span
+                      className={cn(
+                        "h-2.5 w-2.5 rounded-full shrink-0",
+                        (FOLDER_COLORS[selectedFolder.color as keyof typeof FOLDER_COLORS] ?? FOLDER_COLORS.slate).dot
+                      )}
+                    />
+                  ) : (
+                    <Table2 className="h-4 w-4 text-accent shrink-0" />
+                  )}
                   <div className="min-w-0">
                     <h2 className="text-base font-semibold text-ink truncate">
                       {parentFolder && (

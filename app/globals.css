@@ -211,6 +211,87 @@ body {
 .reveal-delay-2 { animation-delay: 0.16s; }
 .reveal-delay-3 { animation-delay: 0.24s; }
 
+/* ────────────────────────────────────────────────────────────────
+   Premium effects kit — used sparingly. One shine per screen.
+   ──────────────────────────────────────────────────────────────── */
+
+html { scroll-behavior: smooth; }
+
+/* Ember — the brand's gradient treatment for italic display lines */
+.text-ember {
+  background: linear-gradient(100deg, var(--accent) 0%, #e07a4f 55%, #d99a62 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Film grain — barely-there texture over hero / ink panels */
+.grain { position: relative; }
+.grain::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='table' tableValues='0 0.05'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+}
+
+/* Shine frame — a slow conic light running around a showcase border */
+@property --shine-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+.frame-shine::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: conic-gradient(
+    from var(--shine-angle),
+    rgba(200, 75, 49, 0) 0%,
+    rgba(200, 75, 49, 0.55) 10%,
+    rgba(217, 154, 98, 0.4) 20%,
+    rgba(200, 75, 49, 0) 34%
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  animation: shine-rotate 8s linear infinite;
+  pointer-events: none;
+}
+@keyframes shine-rotate {
+  to { --shine-angle: 360deg; }
+}
+
+/* Gentle bob for floating showcase elements */
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+.float-slow { animation: float-slow 7s ease-in-out infinite; }
+
+/* Standard hover lift for marketing tiles */
+.card-lift {
+  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.card-lift:hover {
+  transform: translateY(-2px);
+  border-color: var(--line-strong);
+  box-shadow: 0 14px 36px -24px rgba(15, 15, 15, 0.3);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .frame-shine::before { animation: none; }
+  .float-slow { animation: none; }
+  .reveal { animation-duration: 0.01ms; animation-delay: 0s; }
+  .card-lift:hover { transform: none; }
+}
+
 /* CTA — terracotta button */
 .btn-accent {
   background: var(--accent);
