@@ -11,16 +11,16 @@ export default function Bento() {
   return (
     <section
       id="features"
-      className="mx-auto max-w-6xl px-6 py-24 md:py-32 scroll-mt-20"
+      className="mx-auto max-w-6xl px-6 py-16 md:py-24 scroll-mt-20"
     >
-      <header className="text-center max-w-2xl mx-auto">
-        <p className="font-mono-ui text-xs uppercase tracking-[0.2em] text-mute">
+      <header className="max-w-2xl">
+        <p className="font-mono-ui text-xs uppercase tracking-[0.2em] text-accent">
           What's inside
         </p>
         <h2 className="mt-3 font-display text-3xl md:text-5xl text-ink leading-[1.05] tracking-[-0.02em]">
           Three things, <span className="font-display-italic">done properly.</span>
         </h2>
-        <p className="mt-4 text-mute">
+        <p className="mt-4 text-ink-soft">
           No CRM. No invoices. No messaging. Just the thing that was always
           missing.
         </p>
@@ -178,6 +178,6 @@ function TileTitle({ children }: { children: React.ReactNode }) {
 
 function TileBody({ children }: { children: React.ReactNode }) {
   return (
-    <p className="mt-2 text-sm text-mute leading-relaxed">{children}</p>
+    <p className="mt-2 text-sm text-ink-soft leading-relaxed">{children}</p>
   );
 }

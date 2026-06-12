@@ -16,6 +16,8 @@
   --line-strong: #e0ddcd;
   --mute: #7a7773;
   --mute-soft: #b8b5af;
+  /* Readable body copy on paper — darker than mute, softer than ink */
+  --ink-soft: #45423c;
 
   /* Accent — terracotta */
   --accent: #c84b31;
@@ -49,6 +51,7 @@
   --line-strong: #54545f;
   --mute: #aeaca6;
   --mute-soft: #8a8881;
+  --ink-soft: #cfcdc7;
 
   --accent: #e26244;
   --accent-hover: #ed6e4f;
@@ -76,6 +79,7 @@
   --color-line-strong: var(--line-strong);
   --color-mute: var(--mute);
   --color-mute-soft: var(--mute-soft);
+  --color-ink-soft: var(--ink-soft);
 
   --color-accent: var(--accent);
   --color-accent-hover: var(--accent-hover);

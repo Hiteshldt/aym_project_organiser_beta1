@@ -20,13 +20,13 @@ export default function LegalPage({
   return (
     <article className="mx-auto max-w-3xl px-6 py-20 md:py-28">
       <header className="border-b border-line pb-10 mb-12">
-        <p className="font-mono-ui text-[11px] uppercase tracking-[0.2em] text-mute">
+        <p className="font-mono-ui text-[11px] uppercase tracking-[0.2em] text-accent">
           {eyebrow}
         </p>
         <h1 className="mt-3 font-display text-4xl md:text-6xl text-ink leading-[1.02] tracking-[-0.02em]">
           {title} <span className="font-display-italic">{italicTitle}</span>
         </h1>
-        <p className="mt-4 text-mute text-sm font-mono-ui">
+        <p className="mt-4 text-ink-soft text-sm font-mono-ui">
           Last updated: {updated}
         </p>
       </header>

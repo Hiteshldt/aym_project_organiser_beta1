@@ -82,16 +82,16 @@ export default function Pricing() {
   return (
     <section
       id="pricing"
-      className="mx-auto max-w-6xl px-6 py-24 md:py-32 scroll-mt-20"
+      className="mx-auto max-w-6xl px-6 py-16 md:py-24 scroll-mt-20"
     >
-      <header className="text-center max-w-2xl mx-auto">
-        <p className="font-mono-ui text-xs uppercase tracking-[0.2em] text-mute">
+      <header className="max-w-2xl">
+        <p className="font-mono-ui text-xs uppercase tracking-[0.2em] text-accent">
           Pricing
         </p>
         <h2 className="mt-3 font-display text-3xl md:text-5xl text-ink leading-[1.05] tracking-[-0.02em]">
           Less than a coffee, <span className="font-display-italic">monthly.</span>
         </h2>
-        <p className="mt-4 text-mute">
+        <p className="mt-4 text-ink-soft">
           Honest pricing. No seats, no surprise fees, no annual lock-in.
         </p>
 

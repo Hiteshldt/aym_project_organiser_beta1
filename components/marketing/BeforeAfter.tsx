@@ -2,15 +2,15 @@ import { MessageSquare, FolderTree, Mail, Sparkles } from "lucide-react";
 
 export default function BeforeAfter() {
   return (
-    <section className="mx-auto max-w-6xl px-6 py-24 md:py-32">
+    <section className="mx-auto max-w-6xl px-6 py-16 md:py-24">
       <header className="max-w-3xl">
-        <p className="font-mono-ui text-xs uppercase tracking-[0.2em] text-mute">
+        <p className="font-mono-ui text-xs uppercase tracking-[0.2em] text-accent">
           The problem
         </p>
         <h2 className="mt-3 font-display text-3xl md:text-5xl text-ink leading-[1.05] tracking-[-0.02em]">
           Your client work, <span className="font-display-italic">right now.</span>
         </h2>
-        <p className="mt-4 text-mute text-base md:text-lg max-w-xl">
+        <p className="mt-4 text-ink-soft text-base md:text-lg max-w-xl">
           Most studios deliver excellent work through messy channels. Three
           ways it falls apart:
         </p>
@@ -35,7 +35,7 @@ export default function BeforeAfter() {
       </div>
 
       {/* Divider into the "after" */}
-      <div className="my-20 flex items-center gap-6">
+      <div className="my-12 flex items-center gap-6">
         <div className="h-px flex-1 bg-line" />
         <span className="font-mono-ui text-[11px] uppercase tracking-[0.25em] text-mute-soft">
           on ayuvam
@@ -50,7 +50,7 @@ export default function BeforeAfter() {
         <h2 className="mt-3 font-display text-3xl md:text-5xl text-ink leading-[1.05] tracking-[-0.02em]">
           One place. <span className="font-display-italic">Per client.</span>
         </h2>
-        <p className="mt-4 text-mute text-base md:text-lg max-w-xl">
+        <p className="mt-4 text-ink-soft text-base md:text-lg max-w-xl">
           Every client gets a workspace. You organize. They open one link.
           Nobody hunts for anything.
         </p>
@@ -88,7 +88,7 @@ function PainCard({
   body: string;
 }) {
   return (
-    <div className="group relative rounded-2xl border border-line bg-paper-elevated p-6 transition-all hover:border-line-strong">
+    <div className="group relative rounded-2xl border border-line bg-paper-elevated p-6 card-lift">
       <div className="flex items-center gap-2 text-mute">
         <span className="h-7 w-7 rounded-md bg-line/70 flex items-center justify-center">
           {icon}
@@ -98,7 +98,7 @@ function PainCard({
         </span>
       </div>
       <h3 className="mt-4 font-display text-xl text-ink">{title}</h3>
-      <p className="mt-2 text-sm text-mute leading-relaxed">{body}</p>
+      <p className="mt-2 text-sm text-ink-soft leading-relaxed">{body}</p>
     </div>
   );
 }
@@ -119,7 +119,7 @@ function FixCard({
       className={`group relative rounded-2xl p-6 transition-all ${
         accent
           ? "bg-ink text-paper border border-ink"
-          : "bg-paper-elevated border border-line hover:border-line-strong"
+          : "bg-paper-elevated border border-line card-lift"
       }`}
     >
       <div className="flex items-center gap-2">
@@ -143,7 +143,7 @@ function FixCard({
       </h3>
       <p
         className={`mt-2 text-sm leading-relaxed ${
-          accent ? "text-paper/75" : "text-mute"
+          accent ? "text-paper/75" : "text-ink-soft"
         }`}
       >
         {body}

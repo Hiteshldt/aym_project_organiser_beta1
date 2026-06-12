@@ -2,13 +2,13 @@ import Link from "next/link";
 
 export default function Footer() {
   return (
-    <footer className="mt-32 border-t border-line">
+    <footer className="mt-16 border-t border-line">
       {/* Editorial sign-off */}
       <div className="border-b border-line">
-        <div className="mx-auto max-w-6xl px-6 py-14 md:py-20">
+        <div className="mx-auto max-w-6xl px-6 py-12 md:py-16">
           <p className="font-display text-3xl md:text-5xl text-ink leading-[1.08] tracking-[-0.02em] max-w-2xl">
             Make the work look{" "}
-            <span className="font-display-italic text-ember">as good as it is.</span>
+            <span className="font-display-italic text-accent">as good as it is.</span>
           </p>
           <p className="mt-4 font-mono-ui text-[11px] uppercase tracking-[0.2em] text-mute-soft">
             The handoff should match the work

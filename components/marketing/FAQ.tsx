@@ -32,9 +32,9 @@ const FAQS = [
 
 export default function FAQ() {
   return (
-    <section className="mx-auto max-w-3xl px-6 py-24 md:py-32">
-      <header className="text-center">
-        <p className="font-mono-ui text-xs uppercase tracking-[0.2em] text-mute">
+    <section className="mx-auto max-w-3xl px-6 py-16 md:py-24">
+      <header>
+        <p className="font-mono-ui text-xs uppercase tracking-[0.2em] text-accent">
           Common questions
         </p>
         <h2 className="mt-3 font-display text-3xl md:text-5xl text-ink leading-[1.05] tracking-[-0.02em]">
@@ -89,7 +89,7 @@ function FAQItem({
         }`}
       >
         <div className="overflow-hidden">
-          <p className="text-mute leading-relaxed max-w-prose">{a}</p>
+          <p className="text-ink-soft leading-relaxed max-w-prose">{a}</p>
         </div>
       </div>
     </div>

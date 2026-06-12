@@ -19,7 +19,15 @@
       "Bash(sed -n '60,175p' components/marketing/Pricing.tsx)",
       "Bash(sed -n '1,95p' components/marketing/Hero.tsx)",
       "Bash(sed -n '1,110p' components/marketing/BeforeAfter.tsx)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(perl -pi -e 's/py-24 md:py-32/py-16 md:py-24/g; s/tracking-\\\\[0\\\\.2em\\\\] text-mute\"/tracking-[0.2em] text-accent\"/g; s/mt-4 text-mute/mt-4 text-ink-soft/g; s/<header className=\"text-center max-w-2xl mx-auto\">/<header className=\"max-w-2xl\">/g' BeforeAfter.tsx Bento.tsx HowItWorks.tsx FAQ.tsx Pricing.tsx LegalPage.tsx)",
+      "Bash(perl -pi -e 's/text-mute leading-relaxed max-w-prose/text-ink-soft leading-relaxed max-w-prose/' FAQ.tsx)",
+      "Bash(perl -pi -e 's/text-sm text-mute leading-relaxed/text-sm text-ink-soft leading-relaxed/g; s/text-mute text-base leading-relaxed/text-ink-soft text-base leading-relaxed/g' BeforeAfter.tsx Bento.tsx HowItWorks.tsx)",
+      "Bash(perl -pi -e 's/accent \\\\? \"text-paper\\\\/75\" : \"text-mute\"/accent ? \"text-paper\\\\/75\" : \"text-ink-soft\"/' BeforeAfter.tsx)",
+      "Bash(perl -pi -e 's/my-20 flex items-center gap-6/my-12 flex items-center gap-6/; s/rounded-2xl border border-line bg-paper-elevated p-6 transition-all hover:border-line-strong/rounded-2xl border border-line bg-paper-elevated p-6 card-lift/; s/\"bg-paper-elevated border border-line hover:border-line-strong\"/\"bg-paper-elevated border border-line card-lift\"/' BeforeAfter.tsx)",
+      "Bash(perl -pi -e 's/mt-16 md:mt-20 grid md:grid-cols-3/mt-12 grid md:grid-cols-3/' HowItWorks.tsx)",
+      "Bash(perl -pi -e 's/<header className=\"text-center\">/<header>/' FAQ.tsx)",
+      "Bash(perl -pi -e 's/<footer className=\"mt-24 border-t border-line\">/<footer className=\"mt-16 border-t border-line\">/' components/marketing/Footer.tsx)"
     ],
     "additionalDirectories": [
       "/Users/hiteshgupta/Vs Code/hitesh/files-organiser/app/api/auth"

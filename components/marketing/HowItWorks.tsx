@@ -2,22 +2,22 @@ export default function HowItWorks() {
   return (
     <section
       id="how"
-      className="mx-auto max-w-6xl px-6 py-24 md:py-32 scroll-mt-20"
+      className="mx-auto max-w-6xl px-6 py-16 md:py-24 scroll-mt-20"
     >
-      <header className="text-center max-w-2xl mx-auto">
-        <p className="font-mono-ui text-xs uppercase tracking-[0.2em] text-mute">
+      <header className="max-w-2xl">
+        <p className="font-mono-ui text-xs uppercase tracking-[0.2em] text-accent">
           Setup
         </p>
         <h2 className="mt-3 font-display text-3xl md:text-5xl text-ink leading-[1.05] tracking-[-0.02em]">
           Five minutes. <span className="font-display-italic">That's it.</span>
         </h2>
-        <p className="mt-4 text-mute">
+        <p className="mt-4 text-ink-soft">
           No onboarding calls. No data import. Open it, set it up, send the
           link.
         </p>
       </header>
 
-      <div className="mt-16 md:mt-20 grid md:grid-cols-3 gap-6 md:gap-10">
+      <div className="mt-12 grid md:grid-cols-3 gap-6 md:gap-10">
         <Step
           number="01"
           title="Create a workspace per client."
@@ -62,7 +62,7 @@ function Step({
       <h3 className="mt-3 font-display text-2xl md:text-[28px] text-ink leading-[1.15] tracking-[-0.01em]">
         {title}
       </h3>
-      <p className="mt-3 text-mute text-base leading-relaxed">{body}</p>
+      <p className="mt-3 text-ink-soft text-base leading-relaxed">{body}</p>
 
       {/* Step connector — only on md+ */}
       {!accent && (

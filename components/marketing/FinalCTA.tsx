@@ -21,7 +21,7 @@ export default function FinalCTA() {
           </p>
           <h2 className="mt-3 font-display text-4xl md:text-6xl leading-[1.02] tracking-[-0.02em] text-paper">
             Start organizing<br />
-            <span className="font-display-italic">your client work.</span>
+            <span className="font-display-italic text-ember">your client work.</span>
           </h2>
           <p className="mt-5 text-paper/70 text-lg max-w-lg leading-relaxed">
             Free forever for your first client. No credit card. Set up in under

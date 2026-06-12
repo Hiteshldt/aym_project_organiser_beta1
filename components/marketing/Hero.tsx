@@ -3,7 +3,7 @@ import { ArrowUpRight, Plus, Eye, Pin } from "lucide-react";
 
 export default function Hero() {
   return (
-    <section className="relative overflow-hidden grain">
+    <section className="relative overflow-hidden">
       {/* Subtle accent glow behind hero */}
       <div
         aria-hidden
@@ -14,7 +14,7 @@ export default function Hero() {
         }}
       />
 
-      <div className="mx-auto max-w-6xl px-6 pt-20 pb-16 md:pt-28 md:pb-24">
+      <div className="mx-auto max-w-6xl px-6 pt-16 pb-12 md:pt-24 md:pb-16">
         {/* Eyebrow */}
         <div className="reveal flex justify-center">
           <span className="inline-flex items-center gap-2 rounded-full border border-line bg-paper-elevated px-3 py-1 text-xs font-mono-ui text-mute tracking-wide">
@@ -26,11 +26,11 @@ export default function Hero() {
         {/* Headline */}
         <h1 className="reveal reveal-delay-1 mt-6 text-center font-display text-[44px] leading-[1.05] md:text-[72px] md:leading-[1.02] text-ink tracking-[-0.02em]">
           Make the work look<br />
-          <span className="font-display-italic text-ember">as good as it is.</span>
+          <span className="font-display-italic text-accent">as good as it is.</span>
         </h1>
 
         {/* Subhead */}
-        <p className="reveal reveal-delay-2 mt-6 mx-auto max-w-2xl text-center text-base md:text-lg text-mute leading-relaxed">
+        <p className="reveal reveal-delay-2 mt-6 mx-auto max-w-2xl text-center text-base md:text-lg text-ink-soft leading-relaxed">
           One clean space per client — proposals, decks, files, links.
           Organized by you. Beautiful for them.
         </p>
@@ -53,18 +53,18 @@ export default function Hero() {
         </div>
 
         {/* Proof line */}
-        <p className="mt-5 text-center text-xs font-mono-ui text-mute-soft tracking-wide">
+        <p className="mt-5 text-center text-xs font-mono-ui text-mute tracking-wide">
           Free for your first client · ~60 seconds to a shareable link
         </p>
 
         {/* Product mockup — the register + what the client opens */}
-        <div className="mt-16 md:mt-20 relative lg:pb-16">
+        <div className="mt-12 md:mt-16 relative lg:pb-20">
           <RegisterFrame />
           <ClientFrame />
         </div>
 
         {/* Stat strip */}
-        <div className="mt-14 lg:mt-8 border-y border-line">
+        <div className="mt-12 border-y border-line">
           <div className="py-4 flex flex-wrap items-center justify-center gap-x-4 sm:gap-x-8 gap-y-1.5 font-mono-ui text-[10px] sm:text-[11px] uppercase tracking-[0.18em] text-mute">
             <span>One link per client</span>
             <span className="text-line-strong" aria-hidden>·</span>
