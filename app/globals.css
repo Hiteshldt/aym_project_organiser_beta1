@@ -526,3 +526,73 @@ html { scroll-behavior: smooth; }
   .app-flash { animation: none; }
   .app-shimmer { animation: none; }
 }
+
+/* ────────────────────────────────────────────────────────────────
+   Upgrade celebration — restrained, on-brand. Checkmark draw + a soft
+   confetti of brand-colored slivers. One-time, after a successful upgrade.
+   ──────────────────────────────────────────────────────────────── */
+@keyframes upgrade-cele-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.upgrade-cele-fade { animation: upgrade-cele-fade 0.25s ease-out both; }
+
+@keyframes upgrade-cele-pop {
+  0%   { opacity: 0; transform: translateY(10px) scale(0.96); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+.upgrade-cele-pop {
+  animation: upgrade-cele-pop 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.upgrade-check-circle {
+  stroke-dasharray: 145;
+  stroke-dashoffset: 145;
+  animation: upgrade-draw 0.5s ease-out 0.15s forwards;
+}
+.upgrade-check-tick {
+  stroke-dasharray: 40;
+  stroke-dashoffset: 40;
+  animation: upgrade-draw 0.35s ease-out 0.5s forwards;
+}
+@keyframes upgrade-draw {
+  to { stroke-dashoffset: 0; }
+}
+
+.upgrade-confetti {
+  position: absolute;
+  top: -8%;
+  width: 7px;
+  height: 12px;
+  border-radius: 1px;
+  opacity: 0;
+  animation: upgrade-confetti-fall 2.4s ease-in forwards;
+}
+@keyframes upgrade-confetti-fall {
+  0%   { opacity: 0; transform: translateY(-10vh) rotate(0deg); }
+  12%  { opacity: 0.9; }
+  100% { opacity: 0; transform: translateY(108vh) rotate(540deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .upgrade-cele-fade,
+  .upgrade-cele-pop { animation-duration: 0.01ms; }
+  .upgrade-check-circle,
+  .upgrade-check-tick { stroke-dashoffset: 0; animation: none; }
+  .upgrade-confetti { display: none; }
+}
+
+/* Upgrade slide-over — self-contained (the project has no animate plugin, so
+   Radix's data-state classes are inert). Radix waits for the closed-state
+   animation before unmounting, giving a real slide-out. */
+@keyframes sheet-in  { from { transform: translateX(100%); } to { transform: translateX(0); } }
+@keyframes sheet-out { from { transform: translateX(0); } to { transform: translateX(100%); } }
+@keyframes overlay-in  { from { opacity: 0; } to { opacity: 1; } }
+@keyframes overlay-out { from { opacity: 1; } to { opacity: 0; } }
+.upgrade-sheet[data-state="open"]    { animation: sheet-in 0.34s cubic-bezier(0.32, 0.72, 0, 1); }
+.upgrade-sheet[data-state="closed"]  { animation: sheet-out 0.24s ease-in; }
+.upgrade-overlay[data-state="open"]  { animation: overlay-in 0.25s ease-out; }
+.upgrade-overlay[data-state="closed"]{ animation: overlay-out 0.2s ease-in; }
+@media (prefers-reduced-motion: reduce) {
+  .upgrade-sheet, .upgrade-overlay { animation: none; }
+}

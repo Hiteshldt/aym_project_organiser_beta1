@@ -5,7 +5,7 @@ import { users } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import SettingsShell from "@/components/settings/SettingsShell";
 import { getUserSubscription } from "@/lib/billing/paddle-server";
-import { priceMap, FREE_PLAN, type PlanTier } from "@/lib/billing/plans";
+import { FREE_PLAN, type PlanTier } from "@/lib/billing/plans";
 import type { BillingProps } from "@/components/billing/BillingPanel";
 
 export const metadata = {
@@ -48,12 +48,6 @@ export default async function SettingsPage() {
     currentPeriodEnd: sub?.currentPeriodEnd?.toISOString() ?? null,
     cancelAtPeriodEnd: sub?.cancelAtPeriodEnd ?? false,
     hasCustomer: !!sub?.paddleCustomerId,
-    env:
-      process.env.NEXT_PUBLIC_PADDLE_ENV === "production"
-        ? "production"
-        : "sandbox",
-    clientToken: process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN ?? null,
-    prices: priceMap(),
   };
 
   return (

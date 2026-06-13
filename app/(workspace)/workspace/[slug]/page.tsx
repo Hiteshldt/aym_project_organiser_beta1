@@ -4,6 +4,7 @@ import { db } from "@/db";
 import { companies, companyMembers, folders, items, users } from "@/db/schema";
 import { eq, and, desc, asc, sql } from "drizzle-orm";
 import WorkspaceShell from "@/components/workspace/WorkspaceShell";
+import { getBillingContext } from "@/lib/billing/context";
 
 export default async function WorkspaceSlugPage({
   params,
@@ -103,11 +104,14 @@ export default async function WorkspaceSlugPage({
       .orderBy(companies.name),
   ]);
 
+  const billing = await getBillingContext(session.user.id);
+
   return (
     <WorkspaceShell
       company={company}
       userRole={userRole}
       user={session.user}
+      billing={billing}
       initialFolders={allFolders.map((f) => ({
         ...f,
         createdAt: f.createdAt.toISOString(),

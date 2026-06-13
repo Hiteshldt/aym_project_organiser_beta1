@@ -76,6 +76,78 @@ export const PLANS: Record<
   },
 };
 
+/* ────────────────────────────────────────────────────────────────
+   Display copy for the upgrade surfaces (client-safe — no secrets).
+   Prices here are for display only; the source of truth for billing is
+   the Paddle price IDs. Mirrors the public /pricing page.
+   ──────────────────────────────────────────────────────────────── */
+export type PlanDisplay = {
+  name: string;
+  tagline: string;
+  monthly: number;
+  annual: number;
+  features: string[];
+  /** Self-serve checkout available, or route to contact (Agency). */
+  selfServe: boolean;
+};
+
+export const PLAN_DISPLAY: Record<PlanTier, PlanDisplay> = {
+  free: {
+    name: "Free",
+    tagline: "One client, to try it out.",
+    monthly: 0,
+    annual: 0,
+    features: ["1 client workspace", "25 items", "1 team member", "100MB storage"],
+    selfServe: false,
+  },
+  solo: {
+    name: "Solo",
+    tagline: "For independent freelancers.",
+    monthly: 9,
+    annual: 90,
+    features: [
+      "5 client workspaces",
+      "Unlimited items",
+      "3 team members",
+      "2GB storage",
+      "Magic-link client access",
+    ],
+    selfServe: true,
+  },
+  studio: {
+    name: "Studio",
+    tagline: "For studios with a few clients.",
+    monthly: 19,
+    annual: 190,
+    features: [
+      "Unlimited workspaces",
+      "10 team members",
+      "10GB storage",
+      "Tags, search, history",
+      "Priority support",
+    ],
+    selfServe: true,
+  },
+  agency: {
+    name: "Agency",
+    tagline: "For growing agencies.",
+    monthly: 49,
+    annual: 490,
+    features: [
+      "Everything in Studio",
+      "Unlimited team members",
+      "50GB storage",
+      "Custom subdomain",
+      "White label",
+    ],
+    selfServe: false,
+  },
+};
+
+export function planRank(tier: PlanTier): number {
+  return PLAN_ORDER.indexOf(tier);
+}
+
 /** priceId → plan tier, read per cycle. Empty string for unset env. */
 type CyclePrices = { monthly: string; annual: string };
 

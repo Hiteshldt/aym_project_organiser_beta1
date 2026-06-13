@@ -5,6 +5,10 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useConfirm } from "@/components/ui/confirm";
 import { toast } from "sonner";
+import PlanChip from "@/components/billing/PlanChip";
+import UpgradeDialog from "@/components/billing/UpgradeDialog";
+import UpgradeCelebration from "@/components/billing/UpgradeCelebration";
+import type { BillingContext } from "@/lib/billing/context";
 import { cn, FOLDER_COLORS } from "@/lib/utils";
 import { ThemeController, ThemeToggle } from "@/components/theme";
 import { DEFAULT_STATUS_OPTIONS, REGISTER_COLORS, COLOR_DOT, type StatusOption } from "@/lib/register";
@@ -89,6 +93,7 @@ export default function WorkspaceShell({
   initialFolders,
   initialItems,
   initialCompanies,
+  billing,
 }: {
   company: Company;
   userRole: string;
@@ -96,6 +101,7 @@ export default function WorkspaceShell({
   initialFolders?: Folder[];
   initialItems?: RegisterItem[];
   initialCompanies?: MyCompany[];
+  billing: BillingContext;
 }) {
   const confirm = useConfirm();
   const router = useRouter();
@@ -117,7 +123,14 @@ export default function WorkspaceShell({
   const [newWorkspaceName, setNewWorkspaceName] = useState("");
   const [creatingWorkspace, setCreatingWorkspace] = useState(false);
   const [wsSettingsOpen, setWsSettingsOpen] = useState(false);
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
+  const [upgradeReason, setUpgradeReason] = useState<string | null>(null);
   const [wsName, setWsName] = useState(company.name);
+
+  function openUpgrade(reason: string | null = null) {
+    setUpgradeReason(reason);
+    setUpgradeOpen(true);
+  }
   const [wsAccent, setWsAccent] = useState<string | null>(company.accentColor ?? null);
   const [wsNote, setWsNote] = useState(company.clientNote ?? "");
   const [savingWs, setSavingWs] = useState(false);
@@ -284,15 +297,12 @@ export default function WorkspaceShell({
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
       if (data.code === "PLAN_LIMIT") {
-        toast.error(data.error ?? "Plan limit reached.", {
-          action: {
-            label: "View plans",
-            onClick: () => router.push("/settings"),
-          },
-        });
-      } else {
-        toast.error(data.error ?? "Could not create workspace.");
+        setNewWorkspaceOpen(false);
+        setCreatingWorkspace(false);
+        openUpgrade("workspace");
+        return;
       }
+      toast.error(data.error ?? "Could not create workspace.");
       setCreatingWorkspace(false);
       return;
     }
@@ -667,9 +677,15 @@ export default function WorkspaceShell({
               )}
             </div>
 
-            {/* Sidebar footer — workspace settings */}
-            {isManager && (
-              <div className="border-t border-line p-2">
+            {/* Sidebar footer — plan + workspace settings */}
+            <div className="border-t border-line p-2 space-y-1">
+              <PlanChip
+                tier={billing.tier}
+                workspacesOwned={billing.usage.workspacesOwned}
+                maxWorkspaces={billing.entitlements.maxWorkspaces}
+                onUpgrade={() => openUpgrade(null)}
+              />
+              {isManager && (
                 <button
                   onClick={() => {
                     setWsName(company.name);
@@ -683,8 +699,8 @@ export default function WorkspaceShell({
                   <Settings className="h-3.5 w-3.5 shrink-0" />
                   Workspace settings
                 </button>
-              </div>
-            )}
+              )}
+            </div>
           </div>
 
           {/* Content */}
@@ -950,6 +966,17 @@ export default function WorkspaceShell({
             </form>
           </DialogContent>
         </Dialog>
+
+        {/* Plan upgrade slide-over + post-purchase celebration */}
+        <UpgradeDialog
+          open={upgradeOpen}
+          onOpenChange={setUpgradeOpen}
+          currentTier={billing.tier}
+          email={user.email}
+          userId={user.id}
+          reason={upgradeReason}
+        />
+        <UpgradeCelebration />
       </div>
     </ThemeController>
   );

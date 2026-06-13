@@ -54,6 +54,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unhandled" }, { status: 400 });
   }
 
+  console.log(`[paddle] webhook received: ${event.eventType}`);
+
   try {
     switch (event.eventType) {
       case "subscription.created":
@@ -110,8 +112,14 @@ async function upsertSubscription(sub: SubLike) {
       .insert(subscriptions)
       .values({ userId, ...values })
       .onConflictDoUpdate({ target: subscriptions.userId, set: values });
+    console.log(
+      `[paddle] subscription ${sub.id} → user ${userId}: ${planTier}/${status}`
+    );
     return;
   }
+  console.warn(
+    `[paddle] subscription ${sub.id} had no customData.userId; updating by sub id`
+  );
 
   // No userId on the event — update the existing row keyed by subscription ID.
   await db
