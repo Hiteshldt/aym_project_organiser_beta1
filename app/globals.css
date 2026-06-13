@@ -14,16 +14,26 @@
   --paper-elevated: #ffffff;
   --line: #ecead9;
   --line-strong: #e0ddcd;
-  --mute: #7a7773;
-  --mute-soft: #b8b5af;
+  --mute: #6f6c68;
+  /* Was #b8b5af — too faint for billing/caption text. Darkened for legibility. */
+  --mute-soft: #8a8781;
   /* Readable body copy on paper — darker than mute, softer than ink */
   --ink-soft: #45423c;
+  /* Recessed warm band — gives sections tonal rhythm without going dark */
+  --paper-dim: #f3efe6;
+  /* Warm near-black for dark contrast panels (warmer than pure ink) */
+  --ink-warm: #1a1613;
 
   /* Accent — terracotta */
   --accent: #c84b31;
   --accent-hover: #b03d27;
   --accent-soft: #f4e4dc;
   --accent-soft-hover: #ebd5c9;
+  /* Warm second stop for ember gradients / glows */
+  --accent-2: #e0905a;
+
+  /* Shadow base (warm-tinted, not flat grey) */
+  --shadow-rgb: 38, 26, 16;
 
   /* Functional */
   --success: #2a6e4f;
@@ -52,11 +62,16 @@
   --mute: #aeaca6;
   --mute-soft: #8a8881;
   --ink-soft: #cfcdc7;
+  --paper-dim: #1b1b20;
+  --ink-warm: #0e0e11;
 
   --accent: #e26244;
   --accent-hover: #ed6e4f;
   --accent-soft: #3a2a26;
   --accent-soft-hover: #4a352f;
+  --accent-2: #e8a06b;
+
+  --shadow-rgb: 0, 0, 0;
 
   --success: #4caf7d;
   --danger: #e07057;
@@ -73,8 +88,10 @@
   --color-foreground: var(--foreground);
 
   --color-ink: var(--ink);
+  --color-ink-warm: var(--ink-warm);
   --color-paper: var(--paper);
   --color-paper-elevated: var(--paper-elevated);
+  --color-paper-dim: var(--paper-dim);
   --color-line: var(--line);
   --color-line-strong: var(--line-strong);
   --color-mute: var(--mute);
@@ -85,6 +102,7 @@
   --color-accent-hover: var(--accent-hover);
   --color-accent-soft: var(--accent-soft);
   --color-accent-soft-hover: var(--accent-soft-hover);
+  --color-accent-2: var(--accent-2);
 
   --color-success: var(--success);
   --color-danger: var(--danger);
@@ -193,12 +211,12 @@ body {
 /* Frosted nav backdrop — opaque enough that content never bleeds through
    (mockups, ink panels), frosted enough to keep the glass feel. */
 .nav-blur {
-  background: rgba(251, 250, 247, 0.92);
-  backdrop-filter: saturate(1.4) blur(12px);
-  -webkit-backdrop-filter: saturate(1.4) blur(12px);
+  background: rgba(251, 250, 247, 0.97);
+  backdrop-filter: saturate(1.4) blur(14px);
+  -webkit-backdrop-filter: saturate(1.4) blur(14px);
 }
 .dark .nav-blur {
-  background: rgba(22, 22, 26, 0.92);
+  background: rgba(22, 22, 26, 0.97);
 }
 
 /* Soft "hairline" border — almost imperceptible */
@@ -222,12 +240,26 @@ body {
 
 html { scroll-behavior: smooth; }
 
-/* Ember — the brand's gradient treatment for italic display lines */
+/* Ember — the brand's gradient treatment for italic display lines.
+   A slow sheen sweeps across it for a hint of life. */
 .text-ember {
-  background: linear-gradient(100deg, var(--accent) 0%, #e07a4f 55%, #d99a62 100%);
+  background: linear-gradient(
+    100deg,
+    var(--accent) 0%,
+    var(--accent-2) 50%,
+    #efb98a 70%,
+    var(--accent-2) 50%,
+    var(--accent) 100%
+  );
+  background-size: 220% 100%;
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+  animation: ember-sheen 9s ease-in-out infinite;
+}
+@keyframes ember-sheen {
+  0%, 100% { background-position: 100% 0; }
+  50%      { background-position: 0 0; }
 }
 
 /* Film grain — barely-there texture over hero / ink panels */
@@ -281,20 +313,140 @@ html { scroll-behavior: smooth; }
 
 /* Standard hover lift for marketing tiles */
 .card-lift {
-  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.22s ease,
+    box-shadow 0.22s ease;
 }
 .card-lift:hover {
-  transform: translateY(-2px);
+  transform: translateY(-3px);
   border-color: var(--line-strong);
-  box-shadow: 0 14px 36px -24px rgba(15, 15, 15, 0.3);
+  box-shadow: 0 18px 48px -28px rgba(var(--shadow-rgb), 0.4);
 }
+
+/* ── Premium depth ──────────────────────────────────────────────── */
+/* Layered, warm-tinted shadows — soft contact + deep ambient. */
+.shadow-soft {
+  box-shadow: 0 1px 2px rgba(var(--shadow-rgb), 0.04),
+    0 12px 32px -20px rgba(var(--shadow-rgb), 0.28);
+}
+.shadow-float {
+  box-shadow: 0 2px 6px rgba(var(--shadow-rgb), 0.06),
+    0 40px 80px -36px rgba(var(--shadow-rgb), 0.42);
+}
+/* Faint top-edge highlight — makes surfaces feel lit from above. */
+.lit-top {
+  position: relative;
+}
+.lit-top::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.5) 0%,
+    rgba(255, 255, 255, 0) 22%
+  );
+  mix-blend-mode: overlay;
+}
+
+/* ── Warm hero backdrop ─────────────────────────────────────────── */
+/* A soft terracotta dawn behind the hero + the faintest paper tooth. */
+.hero-wash {
+  background-image:
+    radial-gradient(60% 50% at 50% -10%, rgba(200, 75, 49, 0.1) 0%, rgba(200, 75, 49, 0) 60%),
+    radial-gradient(40% 40% at 85% 8%, rgba(224, 144, 90, 0.1) 0%, rgba(224, 144, 90, 0) 55%);
+}
+
+/* ── Editorial accent underline ─────────────────────────────────── */
+/* A hand-inked SVG stroke that draws itself under display words.
+   The path uses pathLength="1" so dash math is resolution-independent;
+   vector-effect keeps the stroke crisp while the SVG stretches to fit. */
+.ink-uline {
+  position: relative;
+  display: inline-block;
+  /* Own stacking context so the stroke can sit *behind* the glyphs
+     (z-index:-1 below) without slipping behind the page background. */
+  isolation: isolate;
+}
+.ink-uline__svg {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -0.12em;
+  width: 100%;
+  height: 0.36em;
+  overflow: visible;
+  pointer-events: none;
+  z-index: -1; /* behind the text */
+}
+.ink-uline__stroke {
+  fill: none;
+  stroke: url(#ink-grad);
+  stroke-width: 3;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  /* Pen-like draw — eases in fast, settles soft, mimicking handwriting. */
+  transition: stroke-dashoffset 1.05s cubic-bezier(0.55, 0.08, 0.3, 1) 0.45s;
+}
+/* Draw when the heading (or any ancestor with reveal-in) enters view. */
+.reveal-in .ink-uline__stroke,
+.draw .ink-uline__stroke {
+  stroke-dashoffset: 0;
+}
+
+/* ── Scroll reveal (IntersectionObserver-driven) ────────────────── */
+/* Elements with data-reveal start hidden + low; .reveal-in (added when
+   they scroll into view) settles them. Stagger via --rd inline var. */
+[data-reveal],
+[data-reveal-stagger] > * {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: var(--rd, 0ms);
+  will-change: opacity, transform;
+}
+[data-reveal].reveal-in,
+[data-reveal-stagger] > *.reveal-in {
+  opacity: 1;
+  transform: none;
+}
+
+/* ── Cursor-follow spotlight ────────────────────────────────────── */
+/* A soft warm glow tracks the pointer across a card (vars set in JS). */
+[data-spotlight]::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 0;
+  background: radial-gradient(
+    240px circle at var(--mx, 50%) var(--my, 50%),
+    rgba(200, 75, 49, 0.1),
+    transparent 62%
+  );
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+[data-spotlight]:hover::before { opacity: 1; }
+/* Keep card content above the glow. */
+[data-spotlight] > * { position: relative; z-index: 1; }
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   .frame-shine::before { animation: none; }
   .float-slow { animation: none; }
+  .text-ember { animation: none; }
   .reveal { animation-duration: 0.01ms; animation-delay: 0s; }
   .card-lift:hover { transform: none; }
+  [data-reveal],
+  [data-reveal-stagger] > * { opacity: 1; transform: none; transition: none; }
+  .ink-uline__stroke { transition: none; stroke-dashoffset: 0; }
+  [data-spotlight]::before { display: none; }
 }
 
 /* CTA — terracotta button */
@@ -320,4 +472,46 @@ html { scroll-behavior: smooth; }
 .btn-ghost:hover {
   background: var(--paper-elevated);
   border-color: var(--ink);
+}
+
+/* ────────────────────────────────────────────────────────────────
+   App micro-interactions — used INSIDE the tool, not marketing.
+   Deliberately quick + quiet: they aid orientation, never decorate.
+   ──────────────────────────────────────────────────────────────── */
+
+/* Register fades in when you switch folders/views (the grid remounts).
+   Short + small so it reads as "settling", not animating. */
+@keyframes app-view-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: none; }
+}
+.app-view-in { animation: app-view-in 0.24s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+/* A just-added row glows warm for a beat, then settles — so your eye
+   lands on what you just created. */
+@keyframes app-flash {
+  0%   { background-color: var(--accent-soft); }
+  100% { background-color: transparent; }
+}
+.app-flash { animation: app-flash 1.4s ease-out; }
+
+/* Loading skeleton — a light sweep reads as "fetching", warmer than a pulse. */
+@keyframes app-shimmer {
+  100% { background-position: -200% 0; }
+}
+.app-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--line) 25%,
+    var(--line-strong) 38%,
+    var(--line) 60%
+  );
+  background-size: 200% 100%;
+  animation: app-shimmer 1.5s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-view-in { animation: none; }
+  .app-flash { animation: none; }
+  .app-shimmer { animation: none; }
 }

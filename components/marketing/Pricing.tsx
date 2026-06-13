@@ -13,6 +13,7 @@ type Plan = {
   features: string[];
   accent?: boolean;
   cta: string;
+  href?: string;
 };
 
 const PLANS: Plan[] = [
@@ -73,6 +74,7 @@ const PLANS: Plan[] = [
       "White label (remove brand)",
     ],
     cta: "Talk to us",
+    href: "/contact",
   },
 ];
 
@@ -84,7 +86,7 @@ export default function Pricing() {
       id="pricing"
       className="mx-auto max-w-6xl px-6 border-t border-line py-12 md:py-16 scroll-mt-20"
     >
-      <header className="max-w-2xl">
+      <header data-reveal className="max-w-2xl">
         <p className="font-mono-ui text-xs uppercase tracking-[0.2em] text-accent">
           Pricing
         </p>
@@ -125,7 +127,7 @@ export default function Pricing() {
         </div>
       </header>
 
-      <div className="mt-14 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div data-reveal-stagger data-step="80" className="mt-14 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {PLANS.map((p) => (
           <PlanCard key={p.name} plan={p} annual={annual} />
         ))}
@@ -149,10 +151,11 @@ function PlanCard({ plan, annual }: { plan: Plan; annual: boolean }) {
 
   return (
     <div
-      className={`relative rounded-2xl p-7 flex flex-col transition-all ${
+      data-spotlight
+      className={`relative lit-top rounded-2xl p-7 flex flex-col transition-all ${
         plan.accent
-          ? "bg-ink text-paper border border-ink shadow-[0_24px_60px_-30px_rgba(200,75,49,0.45)]"
-          : "bg-paper-elevated border border-line card-lift"
+          ? "bg-ink-warm text-paper border border-ink-warm shadow-[0_30px_70px_-32px_rgba(200,75,49,0.5)] lg:-translate-y-3"
+          : "bg-paper-elevated border border-line shadow-soft card-lift"
       }`}
     >
       {plan.tag && (
@@ -207,7 +210,7 @@ function PlanCard({ plan, annual }: { plan: Plan; annual: boolean }) {
 
       {/* CTA */}
       <Link
-        href="/login"
+        href={plan.href ?? "/login"}
         className={`mt-7 inline-flex items-center justify-center gap-1.5 rounded-full px-4 py-2.5 text-sm font-medium transition-all ${
           plan.accent
             ? "bg-paper text-ink hover:bg-paper-elevated"

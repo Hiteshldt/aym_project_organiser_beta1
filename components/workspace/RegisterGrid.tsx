@@ -77,7 +77,9 @@ export type RegisterItem = {
 };
 
 // Shared cell styling — thin grid lines on every side give the spreadsheet feel.
-const CELL = "border-r border-line px-3 py-3 align-top";
+// Single-line rows: keep cells compact + vertically centered so the register
+// stays scannable no matter how long a description or title is.
+const CELL = "border-r border-line px-3 py-2.5 align-middle";
 // shadow = the header's bottom hairline; real borders don't stick with the thead.
 const HEAD =
   "border-r border-line px-3 py-2 text-left text-[11px] font-semibold text-mute uppercase tracking-wide bg-paper shadow-[0_1px_0_0_var(--line)]";
@@ -89,7 +91,7 @@ function GridSkeleton({ cols }: { cols: number }) {
         <tr key={r} className="border-b border-line">
           {Array.from({ length: cols }).map((_, c) => (
             <td key={c} className="border-r border-line px-3 py-2.5">
-              <div className="h-3.5 bg-line rounded animate-pulse" style={{ width: `${40 + ((r + c) % 4) * 18}px` }} />
+              <div className="h-3.5 rounded app-shimmer" style={{ width: `${40 + ((r + c) % 4) * 18}px` }} />
             </td>
           ))}
         </tr>
@@ -144,6 +146,8 @@ export default function RegisterGrid({
   const [menu, setMenu] = useState<MenuState | null>(null);
   const [statusMgrOpen, setStatusMgrOpen] = useState(false);
   const [openItemId, setOpenItemId] = useState<string | null>(null);
+  // Row that was just created — briefly highlighted so it's easy to spot.
+  const [flashId, setFlashId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -248,6 +252,8 @@ export default function RegisterGrid({
         historyCount: 0,
       },
     ]);
+    setFlashId(created.id);
+    setTimeout(() => setFlashId((id) => (id === created.id ? null : id)), 1400);
     setQaTitle("");
     setQaUrl("");
     qaTitleRef.current?.focus(); // straight into the next entry
@@ -325,7 +331,7 @@ export default function RegisterGrid({
   if (!loading && items.length === 0) {
     if (!canAdd) return null; // container folder — the sub-folder overview is the content
     return (
-      <div className="flex-1 flex flex-col items-center justify-center py-20 text-center px-6">
+      <div className="app-view-in flex-1 flex flex-col items-center justify-center py-20 text-center px-6">
         <div className="h-12 w-12 rounded-xl bg-accent-soft flex items-center justify-center mb-3">
           <Table2 className="h-5 w-5 text-accent" />
         </div>
@@ -347,7 +353,7 @@ export default function RegisterGrid({
   }
 
   return (
-    <div className="flex-1 min-h-0 flex flex-col px-4 sm:px-6 py-4">
+    <div className="app-view-in flex-1 min-h-0 flex flex-col px-4 sm:px-6 py-4">
       {/* Toolbar */}
       {isManager && folder && canAdd && (
         <div className="shrink-0 flex items-center justify-end mb-2">
@@ -419,13 +425,14 @@ export default function RegisterGrid({
                       "group border-b border-line last:border-b-0 align-top transition-colors",
                       tint || "hover:bg-paper",
                       item.isPinned && !tint && "bg-accent-soft/30",
+                      item.id === flashId && "app-flash",
                       draggingId === item.id && "opacity-40",
                       overId === item.id && draggingId && draggingId !== item.id && "border-t-2 border-t-accent"
                     )}
                   >
                     {/* Drag handle */}
                     {reorderable && (
-                      <td className="border-r border-line px-1 py-2 align-top">
+                      <td className="border-r border-line px-1 py-2 align-middle">
                         <button
                           onMouseDown={() => setDragId(item.id)}
                           onMouseUp={() => setDragId(null)}
@@ -451,40 +458,41 @@ export default function RegisterGrid({
                     </td>
 
                     {/* Name — click opens the detail panel */}
-                    <td className={CELL}>
-                      <div className="flex items-start gap-1.5">
-                        <span className={cn("shrink-0 mt-0.5", item.type === "link" ? "text-accent" : "text-warning")}>
+                    <td className={cn(CELL, "max-w-[260px]")}>
+                      <div className="flex items-center gap-1.5">
+                        <span className={cn("shrink-0", item.type === "link" ? "text-accent" : "text-warning")}>
                           {item.type === "link" ? <Link2 className="h-3 w-3" /> : <FileText className="h-3 w-3" />}
                         </span>
-                        <div className="min-w-0 flex-1">
-                          <button
-                            onClick={() => setOpenItemId(item.id)}
-                            className="text-left font-medium text-ink leading-snug hover:text-accent transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
-                          >
-                            {item.title}
-                            {item.isPinned && <Pin className="inline h-2.5 w-2.5 text-accent ml-1" fill="currentColor" />}
-                          </button>
-                        </div>
+                        <button
+                          onClick={() => setOpenItemId(item.id)}
+                          title={item.title}
+                          className="flex items-center gap-1 min-w-0 max-w-full text-left font-medium text-ink hover:text-accent transition-colors rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                        >
+                          <span className="truncate">{item.title}</span>
+                          {item.isPinned && <Pin className="shrink-0 h-2.5 w-2.5 text-accent" fill="currentColor" />}
+                        </button>
                       </div>
                     </td>
 
                     {/* Description */}
-                    <td className={cn(CELL, "hidden md:table-cell text-[13px] text-mute leading-relaxed max-w-[240px]")}>
+                    <td className={cn(CELL, "hidden md:table-cell text-[13px] text-mute max-w-[240px]")}>
                       <InlineText
                         value={item.description}
                         editable={isManager}
                         placeholder="—"
+                        className="truncate"
                         onSave={(v) => patchItem(item.id, { description: v || null })}
                       />
                     </td>
 
                     {/* Note */}
-                    <td className={cn(CELL, "hidden lg:table-cell text-[13px] text-mute leading-relaxed max-w-[320px] whitespace-pre-wrap")}>
+                    <td className={cn(CELL, "hidden lg:table-cell text-[13px] text-mute max-w-[280px]")}>
                       <InlineText
                         value={item.notes}
                         editable={isManager}
                         placeholder="—"
                         multiline
+                        className="truncate"
                         onSave={(v) => patchItem(item.id, { notes: v || null })}
                       />
                     </td>
@@ -892,7 +900,8 @@ function InlineText({
     <div
       onDoubleClick={() => editable && setEditing(true)}
       className={cn(editable && "cursor-text rounded hover:bg-line/40 -mx-1 px-1", className)}
-      title={editable ? "Double-click to edit" : undefined}
+      // Full text on hover — important now that cells truncate to one line.
+      title={value || (editable ? "Double-click to edit" : undefined)}
     >
       {display ?? (value ? value : <span className="text-mute-soft">{placeholder}</span>)}
     </div>

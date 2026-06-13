@@ -2,8 +2,9 @@ import { MessageSquare, FolderTree, Mail, Sparkles } from "lucide-react";
 
 export default function BeforeAfter() {
   return (
-    <section className="mx-auto max-w-6xl px-6 py-12 md:py-16">
-      <header className="max-w-3xl">
+    <section className="bg-paper-dim border-y border-line">
+      <div className="mx-auto max-w-6xl px-6 py-16 md:py-24">
+      <header data-reveal className="max-w-3xl">
         <p className="font-mono-ui text-xs uppercase tracking-[0.2em] text-accent">
           The problem
         </p>
@@ -16,7 +17,7 @@ export default function BeforeAfter() {
         </p>
       </header>
 
-      <div className="mt-12 grid md:grid-cols-3 gap-4">
+      <div data-reveal-stagger className="mt-12 grid md:grid-cols-3 gap-4">
         <PainCard
           icon={<MessageSquare className="h-4 w-4" />}
           title="Slack scrolling"
@@ -35,15 +36,15 @@ export default function BeforeAfter() {
       </div>
 
       {/* Divider into the "after" */}
-      <div className="my-12 flex items-center gap-6">
-        <div className="h-px flex-1 bg-line" />
+      <div data-reveal className="my-14 flex items-center gap-6">
+        <div className="h-px flex-1 bg-line-strong" />
         <span className="font-mono-ui text-[11px] uppercase tracking-[0.25em] text-mute-soft">
           on ayuvam
         </span>
-        <div className="h-px flex-1 bg-line" />
+        <div className="h-px flex-1 bg-line-strong" />
       </div>
 
-      <header className="max-w-3xl">
+      <header data-reveal className="max-w-3xl">
         <p className="font-mono-ui text-xs uppercase tracking-[0.2em] text-accent">
           The fix
         </p>
@@ -56,7 +57,7 @@ export default function BeforeAfter() {
         </p>
       </header>
 
-      <div className="mt-12 grid md:grid-cols-3 gap-4">
+      <div data-reveal-stagger className="mt-12 grid md:grid-cols-3 gap-4">
         <FixCard
           number="01"
           title="Drop everything in"
@@ -74,6 +75,7 @@ export default function BeforeAfter() {
           accent
         />
       </div>
+      </div>
     </section>
   );
 }
@@ -88,7 +90,7 @@ function PainCard({
   body: string;
 }) {
   return (
-    <div className="group relative rounded-2xl border border-line bg-paper-elevated p-6 card-lift">
+    <div data-spotlight className="group lit-top relative rounded-2xl border border-line bg-paper-elevated p-6 shadow-soft card-lift">
       <div className="flex items-center gap-2 text-mute">
         <span className="h-7 w-7 rounded-md bg-line/70 flex items-center justify-center">
           {icon}
@@ -116,10 +118,11 @@ function FixCard({
 }) {
   return (
     <div
-      className={`group relative rounded-2xl p-6 transition-all ${
+      data-spotlight
+      className={`group lit-top relative rounded-2xl p-6 transition-all ${
         accent
-          ? "bg-ink text-paper border border-ink"
-          : "bg-paper-elevated border border-line card-lift"
+          ? "bg-ink-warm text-paper border border-ink-warm shadow-float"
+          : "bg-paper-elevated border border-line shadow-soft card-lift"
       }`}
     >
       <div className="flex items-center gap-2">

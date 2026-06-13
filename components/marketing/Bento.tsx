@@ -13,7 +13,7 @@ export default function Bento() {
       id="features"
       className="mx-auto max-w-6xl px-6 border-t border-line py-12 md:py-16 scroll-mt-20"
     >
-      <header className="max-w-2xl">
+      <header data-reveal className="max-w-2xl">
         <p className="font-mono-ui text-xs uppercase tracking-[0.2em] text-accent">
           What's inside
         </p>
@@ -27,7 +27,7 @@ export default function Bento() {
       </header>
 
       {/* Bento grid */}
-      <div className="mt-14 grid grid-cols-1 md:grid-cols-6 gap-4 auto-rows-[minmax(180px,auto)]">
+      <div data-reveal-stagger data-step="70" className="mt-14 grid grid-cols-1 md:grid-cols-6 gap-4 auto-rows-[minmax(180px,auto)]">
         {/* Big tile — one workspace per client */}
         <Tile className="md:col-span-4 md:row-span-2">
           <TileIcon><Building2 className="h-4 w-4" /></TileIcon>
@@ -153,7 +153,8 @@ function Tile({
 }) {
   return (
     <div
-      className={`group relative rounded-2xl border border-line bg-paper-elevated p-6 flex flex-col card-lift ${className}`}
+      data-spotlight
+      className={`group lit-top relative rounded-2xl border border-line bg-paper-elevated p-6 flex flex-col shadow-soft card-lift ${className}`}
     >
       {children}
     </div>

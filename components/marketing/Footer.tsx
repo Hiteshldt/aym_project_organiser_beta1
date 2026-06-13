@@ -1,14 +1,17 @@
 import Link from "next/link";
+import InkUnderline from "@/components/marketing/InkUnderline";
 
 export default function Footer() {
   return (
     <footer className="border-t border-line">
       {/* Editorial sign-off */}
       <div className="border-b border-line">
-        <div className="mx-auto max-w-6xl px-6 py-10 md:py-12">
+        <div data-reveal className="mx-auto max-w-6xl px-6 py-14 md:py-20">
           <p className="font-display text-3xl md:text-5xl text-ink leading-[1.08] tracking-[-0.02em] max-w-2xl">
             Make the work look{" "}
-            <span className="font-display-italic text-accent">as good as it is.</span>
+            <InkUnderline className="font-display-italic text-accent">
+              as good as it is.
+            </InkUnderline>
           </p>
           <p className="mt-4 font-mono-ui text-[11px] uppercase tracking-[0.2em] text-mute-soft">
             The handoff should match the work
@@ -34,6 +37,9 @@ export default function Footer() {
           </Link>
           <Link href="/#features" className="hover:text-ink transition-colors">
             Features
+          </Link>
+          <Link href="/contact" className="hover:text-ink transition-colors">
+            Contact
           </Link>
           <Link href="/privacy" className="hover:text-ink transition-colors">
             Privacy

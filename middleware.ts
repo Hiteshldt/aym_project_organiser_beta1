@@ -6,6 +6,7 @@ const PUBLIC_PATHS = new Set<string>([
   "/pricing",
   "/about",
   "/changelog",
+  "/contact",
   "/privacy",
   "/terms",
   "/refund",

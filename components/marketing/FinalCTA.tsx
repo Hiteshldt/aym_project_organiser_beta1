@@ -3,8 +3,8 @@ import { ArrowUpRight } from "lucide-react";
 
 export default function FinalCTA() {
   return (
-    <section className="mx-auto max-w-6xl px-6 pt-10 md:pt-14 pb-14">
-      <div className="relative overflow-hidden rounded-3xl bg-ink text-paper px-8 py-14 md:px-16 md:py-16 grain">
+    <section className="mx-auto max-w-6xl px-6 pt-16 md:pt-20 pb-16">
+      <div data-reveal className="relative overflow-hidden rounded-3xl bg-ink-warm text-paper px-8 py-16 md:px-16 md:py-20 grain shadow-float">
         {/* One restrained accent wash */}
         <div
           aria-hidden

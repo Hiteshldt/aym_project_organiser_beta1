@@ -2,9 +2,10 @@ export default function HowItWorks() {
   return (
     <section
       id="how"
-      className="mx-auto max-w-6xl px-6 border-t border-line py-12 md:py-16 scroll-mt-20"
+      className="bg-paper-dim border-y border-line scroll-mt-20"
     >
-      <header className="max-w-2xl">
+      <div className="mx-auto max-w-6xl px-6 py-16 md:py-24">
+      <header data-reveal className="max-w-2xl">
         <p className="font-mono-ui text-xs uppercase tracking-[0.2em] text-accent">
           Setup
         </p>
@@ -17,7 +18,7 @@ export default function HowItWorks() {
         </p>
       </header>
 
-      <div className="mt-12 grid md:grid-cols-3 gap-6 md:gap-10">
+      <div data-reveal-stagger data-step="120" className="mt-12 grid md:grid-cols-3 gap-6 md:gap-10">
         <Step
           number="01"
           title="Create a workspace per client."
@@ -34,6 +35,7 @@ export default function HowItWorks() {
           body="Your client clicks. They see their workspace, beautifully organized. They never see anyone else's work."
           accent
         />
+      </div>
       </div>
     </section>
   );
@@ -52,22 +54,20 @@ function Step({
 }) {
   return (
     <div className="relative">
-      <div
-        className={`font-mono-ui text-xs tracking-wider ${
-          accent ? "text-accent" : "text-mute-soft"
-        }`}
-      >
-        {number}
+      <div className="flex items-baseline gap-3">
+        <span
+          className={`font-display text-4xl md:text-5xl leading-none ${
+            accent ? "text-accent" : "text-line-strong"
+          }`}
+        >
+          {number}
+        </span>
+        <span className="h-px flex-1 bg-line translate-y-[-6px]" />
       </div>
-      <h3 className="mt-3 font-display text-2xl md:text-[28px] text-ink leading-[1.15] tracking-[-0.01em]">
+      <h3 className="mt-5 font-display text-2xl md:text-[28px] text-ink leading-[1.15] tracking-[-0.01em]">
         {title}
       </h3>
       <p className="mt-3 text-ink-soft text-base leading-relaxed">{body}</p>
-
-      {/* Step connector — only on md+ */}
-      {!accent && (
-        <div className="hidden md:block absolute top-2 right-[-20px] w-10 h-px bg-line" />
-      )}
     </div>
   );
 }

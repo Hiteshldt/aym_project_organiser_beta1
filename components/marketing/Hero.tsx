@@ -1,70 +1,94 @@
 import Link from "next/link";
 import { ArrowUpRight, Plus, Eye, Pin } from "lucide-react";
+import InkUnderline from "@/components/marketing/InkUnderline";
 
 export default function Hero() {
   return (
-    <section className="relative overflow-hidden">
-      {/* Subtle accent glow behind hero */}
-      <div
-        aria-hidden
-        className="absolute inset-0 -z-10 pointer-events-none"
-        style={{
-          background:
-            "radial-gradient(60% 50% at 50% 0%, rgba(200, 75, 49, 0.06) 0%, rgba(200, 75, 49, 0) 70%)",
-        }}
-      />
-
-      <div className="mx-auto max-w-6xl px-6 pt-16 pb-8 md:pt-24 md:pb-10">
+    <section className="relative overflow-hidden hero-wash">
+      <div className="mx-auto max-w-6xl px-6 pt-16 pb-10 md:pt-24 md:pb-12">
         {/* Eyebrow */}
-        <div className="reveal flex justify-center">
-          <span className="inline-flex items-center gap-2 rounded-full border border-line bg-paper-elevated px-3 py-1 text-xs font-mono-ui text-mute tracking-wide">
-            <span className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse" />
+        <div data-reveal className="flex justify-center">
+          <span className="inline-flex items-center gap-2 rounded-full border border-line bg-paper-elevated/80 px-3.5 py-1.5 text-xs font-mono-ui text-mute tracking-wide shadow-soft backdrop-blur-sm">
+            <span className="relative flex h-1.5 w-1.5">
+              <span className="absolute inline-flex h-full w-full rounded-full bg-accent opacity-60 animate-ping" />
+              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-accent" />
+            </span>
             Now in early access
           </span>
         </div>
 
         {/* Headline */}
-        <h1 className="reveal reveal-delay-1 mt-6 text-center font-display text-[44px] leading-[1.05] md:text-[72px] md:leading-[1.02] text-ink tracking-[-0.02em]">
+        <h1
+          data-reveal
+          style={{ ["--rd" as string]: "80ms" }}
+          className="mt-7 text-center font-display text-[46px] leading-[1.03] md:text-[78px] md:leading-[0.98] text-ink tracking-[-0.025em]"
+        >
           Make the work look<br />
-          <span className="font-display-italic text-accent">as good as it is.</span>
+          <InkUnderline className="font-display-italic text-accent">
+            as good as it is.
+          </InkUnderline>
         </h1>
 
         {/* Subhead */}
-        <p className="reveal reveal-delay-2 mt-6 mx-auto max-w-2xl text-center text-base md:text-lg text-ink-soft leading-relaxed">
-          One clean space per client — proposals, decks, files, links.
-          Organized by you. Beautiful for them.
+        <p
+          data-reveal
+          style={{ ["--rd" as string]: "160ms" }}
+          className="mt-7 mx-auto max-w-xl text-center text-base md:text-xl text-ink-soft leading-relaxed"
+        >
+          One clean, shareable space per client — proposals, decks, files,
+          links. You keep it organized. They just open one link.
         </p>
 
         {/* CTAs */}
-        <div className="reveal reveal-delay-3 mt-9 flex flex-col sm:flex-row items-center justify-center gap-3">
+        <div
+          data-reveal
+          style={{ ["--rd" as string]: "240ms" }}
+          className="mt-9 flex flex-col sm:flex-row items-center justify-center gap-3"
+        >
           <Link
             href="/login"
-            className="btn-accent inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-medium"
+            className="btn-accent group inline-flex items-center gap-2 rounded-full px-6 py-3.5 text-sm font-medium"
           >
             Start free — no credit card
-            <ArrowUpRight className="h-4 w-4" />
+            <ArrowUpRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
           </Link>
           <Link
-            href="#how"
-            className="btn-ghost inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-medium"
+            href="/contact"
+            className="btn-ghost inline-flex items-center gap-2 rounded-full px-6 py-3.5 text-sm font-medium"
           >
-            See how it works
+            Contact sales
           </Link>
         </div>
 
-        {/* Proof line */}
-        <p className="mt-5 text-center text-xs font-mono-ui text-mute tracking-wide">
-          Free for your first client · ~60 seconds to a shareable link
-        </p>
+        {/* Proof line + quiet explore link */}
+        <div
+          data-reveal
+          style={{ ["--rd" as string]: "320ms" }}
+          className="mt-5 flex flex-col items-center gap-2"
+        >
+          <p className="text-center text-xs font-mono-ui text-mute tracking-wide">
+            Free for your first client · ~60 seconds to a shareable link
+          </p>
+          <Link
+            href="#how"
+            className="inline-flex items-center gap-1 text-xs text-mute hover:text-ink transition-colors"
+          >
+            See how it works <span aria-hidden>↓</span>
+          </Link>
+        </div>
 
         {/* Product mockup — the register + what the client opens */}
-        <div className="mt-12 md:mt-16 relative lg:pb-20">
+        <div
+          data-reveal
+          style={{ ["--rd" as string]: "400ms" }}
+          className="mt-14 md:mt-18 relative lg:pb-20"
+        >
           <RegisterFrame />
           <ClientFrame />
         </div>
 
         {/* Stat strip */}
-        <div className="mt-12 border-y border-line">
+        <div data-reveal className="mt-12 border-y border-line">
           <div className="py-4 flex flex-wrap items-center justify-center gap-x-4 sm:gap-x-8 gap-y-1.5 font-mono-ui text-[10px] sm:text-[11px] uppercase tracking-[0.18em] text-mute">
             <span>One link per client</span>
             <span className="text-line-strong" aria-hidden>·</span>
@@ -134,7 +158,7 @@ const FOLDERS = [
 function RegisterFrame() {
   return (
     <div className="frame-shine relative mx-auto max-w-5xl rounded-2xl">
-      <div className="relative rounded-2xl border border-line-strong bg-paper-elevated shadow-[0_24px_70px_-45px_rgba(15,15,15,0.45)] overflow-hidden">
+      <div className="lit-top relative rounded-2xl border border-line-strong bg-paper-elevated shadow-float overflow-hidden">
         {/* Browser top bar */}
         <div className="h-9 flex items-center gap-2 px-3 sm:px-4 border-b border-line bg-paper">
           <div className="flex items-center gap-1.5">
@@ -254,7 +278,7 @@ function ClientFrame() {
       <p className="font-mono-ui text-[9px] uppercase tracking-[0.25em] text-mute mb-2 pl-1">
         What your client opens
       </p>
-      <div className="float-slow rounded-xl border border-line-strong bg-paper-elevated shadow-[0_18px_50px_-35px_rgba(15,15,15,0.5)] overflow-hidden">
+      <div className="float-slow lit-top rounded-xl border border-line-strong bg-paper-elevated shadow-float overflow-hidden">
         {/* Mini header */}
         <div className="flex items-center justify-between px-3.5 py-2.5 border-b border-line bg-paper">
           <span className="font-display-italic text-sm text-ink">Google</span>
