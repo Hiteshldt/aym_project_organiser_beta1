@@ -4,6 +4,9 @@ import { db } from "@/db";
 import { users } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import SettingsShell from "@/components/settings/SettingsShell";
+import { getUserSubscription } from "@/lib/billing/paddle-server";
+import { priceMap, FREE_PLAN, type PlanTier } from "@/lib/billing/plans";
+import type { BillingProps } from "@/components/billing/BillingPanel";
 
 export const metadata = {
   title: "Settings",
@@ -28,6 +31,31 @@ export default async function SettingsPage() {
 
   if (!user[0]) redirect("/login");
 
+  const sub = await getUserSubscription(user[0].id);
+  const activeTier: PlanTier =
+    sub &&
+    (sub.status === "active" ||
+      sub.status === "trialing" ||
+      sub.status === "past_due")
+      ? sub.planTier
+      : FREE_PLAN;
+
+  const billing: BillingProps = {
+    userId: user[0].id,
+    email: user[0].email,
+    currentTier: activeTier,
+    status: sub?.status ?? "none",
+    currentPeriodEnd: sub?.currentPeriodEnd?.toISOString() ?? null,
+    cancelAtPeriodEnd: sub?.cancelAtPeriodEnd ?? false,
+    hasCustomer: !!sub?.paddleCustomerId,
+    env:
+      process.env.NEXT_PUBLIC_PADDLE_ENV === "production"
+        ? "production"
+        : "sandbox",
+    clientToken: process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN ?? null,
+    prices: priceMap(),
+  };
+
   return (
     <SettingsShell
       user={{
@@ -38,6 +66,7 @@ export default async function SettingsPage() {
         createdAt: user[0].createdAt.toISOString(),
         hasPassword: !!user[0].passwordHash,
       }}
+      billing={billing}
     />
   );
 }

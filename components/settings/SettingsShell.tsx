@@ -5,6 +5,7 @@ import Link from "next/link";
 import { signOut } from "next-auth/react";
 import { ArrowLeft, Loader2, Check, LogOut } from "lucide-react";
 import { formatDate } from "@/lib/utils";
+import BillingPanel, { type BillingProps } from "@/components/billing/BillingPanel";
 
 type User = {
   id: string;
@@ -15,7 +16,13 @@ type User = {
   hasPassword: boolean;
 };
 
-export default function SettingsShell({ user }: { user: User }) {
+export default function SettingsShell({
+  user,
+  billing,
+}: {
+  user: User;
+  billing: BillingProps;
+}) {
   // Return to the workspace you came from (the selector only shows when you
   // genuinely have several and none is remembered).
   const [backHref, setBackHref] = useState("/workspace");
@@ -60,6 +67,9 @@ export default function SettingsShell({ user }: { user: User }) {
 
         {/* Identity card */}
         <ProfileCard user={user} />
+
+        {/* Plan & billing */}
+        <BillingPanel {...billing} />
 
         {/* Password card */}
         <PasswordCard hasPassword={user.hasPassword} />

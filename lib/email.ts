@@ -61,6 +61,131 @@ export async function sendShareInvite(opts: {
 }
 
 /* ────────────────────────────────────────────────────────────────
+   Contact form → inbox (contact@ayuvam.com)
+   The visitor's address is set as reply-to, so hitting "Reply" in the
+   inbox replies straight to them.
+   ──────────────────────────────────────────────────────────────── */
+
+const CONTACT_INBOX = "contact@ayuvam.com";
+
+const TOPIC_LABELS: Record<string, string> = {
+  sales: "Sales & demos",
+  help: "Help & support",
+  feedback: "Feedback / idea",
+  other: "General",
+};
+
+export async function sendContactMessage(opts: {
+  name: string;
+  email: string;
+  topic: string;
+  message: string;
+}): Promise<SendResult> {
+  const resend = getResend();
+  if (!resend) {
+    return { ok: false, error: "RESEND_API_KEY not configured" };
+  }
+
+  const topicLabel = TOPIC_LABELS[opts.topic] ?? TOPIC_LABELS.other;
+  const subject = `[${topicLabel}] ${opts.name} via ayuvam.com`;
+
+  try {
+    const result = await resend.emails.send({
+      from: getFromAddress(),
+      to: CONTACT_INBOX,
+      replyTo: opts.email,
+      subject,
+      html: renderContactHtml({ ...opts, topicLabel }),
+      text: renderContactText({ ...opts, topicLabel }),
+    });
+
+    if (result.error) {
+      return { ok: false, error: result.error.message };
+    }
+    return { ok: true, id: result.data?.id ?? "" };
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : "Unknown email error";
+    return { ok: false, error: msg };
+  }
+}
+
+function renderContactHtml(opts: {
+  name: string;
+  email: string;
+  topicLabel: string;
+  message: string;
+}): string {
+  const { name, email, topicLabel, message } = opts;
+  return `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>New message via ayuvam.com</title>
+  </head>
+  <body style="margin:0;padding:0;background:#fbfaf7;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#0f0f0f;-webkit-font-smoothing:antialiased;">
+    <div style="max-width:560px;margin:0 auto;padding:48px 24px;">
+      <div style="margin-bottom:32px;">
+        <span style="font-family:Georgia,'Times New Roman',serif;font-style:italic;font-size:24px;color:#0f0f0f;">Ayuvam</span>
+      </div>
+
+      <div style="background:#ffffff;border:1px solid #ecead9;border-radius:16px;padding:36px 32px;">
+        <p style="margin:0 0 8px;font-family:'SF Mono',Menlo,Consolas,monospace;font-size:11px;letter-spacing:1.4px;text-transform:uppercase;color:#c84b31;">
+          ${escapeHtml(topicLabel)}
+        </p>
+        <h1 style="margin:0 0 20px;font-family:Georgia,'Times New Roman',serif;font-weight:400;font-size:26px;line-height:1.2;color:#0f0f0f;letter-spacing:-0.01em;">
+          New message from <span style="font-style:italic;">${escapeHtml(name)}</span>
+        </h1>
+
+        <table style="width:100%;border-collapse:collapse;margin:0 0 20px;font-size:14px;">
+          <tr>
+            <td style="padding:6px 0;color:#7a7773;width:80px;">Name</td>
+            <td style="padding:6px 0;color:#0f0f0f;">${escapeHtml(name)}</td>
+          </tr>
+          <tr>
+            <td style="padding:6px 0;color:#7a7773;">Email</td>
+            <td style="padding:6px 0;"><a href="mailto:${escapeAttr(email)}" style="color:#c84b31;text-decoration:none;">${escapeHtml(email)}</a></td>
+          </tr>
+          <tr>
+            <td style="padding:6px 0;color:#7a7773;vertical-align:top;">Topic</td>
+            <td style="padding:6px 0;color:#0f0f0f;">${escapeHtml(topicLabel)}</td>
+          </tr>
+        </table>
+
+        <div style="border-top:1px solid #ecead9;padding-top:20px;">
+          <p style="margin:0;font-size:15px;line-height:1.6;color:#1a1613;white-space:pre-wrap;">${escapeHtml(message)}</p>
+        </div>
+      </div>
+
+      <p style="margin:24px 8px 0;font-size:12px;color:#b8b5af;">
+        Reply to this email to respond to ${escapeHtml(name)} directly.
+      </p>
+    </div>
+  </body>
+</html>`;
+}
+
+function renderContactText(opts: {
+  name: string;
+  email: string;
+  topicLabel: string;
+  message: string;
+}): string {
+  return [
+    `New message via ayuvam.com`,
+    "",
+    `Topic: ${opts.topicLabel}`,
+    `Name:  ${opts.name}`,
+    `Email: ${opts.email}`,
+    "",
+    "Message:",
+    opts.message,
+    "",
+    `— Reply to this email to respond to ${opts.name} directly.`,
+  ].join("\n");
+}
+
+/* ────────────────────────────────────────────────────────────────
    Template — HTML (table-light, inline styles, brand-aligned)
    ──────────────────────────────────────────────────────────────── */
 

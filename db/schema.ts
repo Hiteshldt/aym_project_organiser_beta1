@@ -32,6 +32,21 @@ export const folderColorEnum = pgEnum("folder_color", [
   "emerald",
 ]);
 
+// Billing plan tiers + Paddle subscription status (mirrors Paddle's statuses).
+export const planTierEnum = pgEnum("plan_tier", [
+  "free",
+  "solo",
+  "studio",
+  "agency",
+]);
+export const subscriptionStatusEnum = pgEnum("subscription_status", [
+  "active",
+  "trialing",
+  "past_due",
+  "paused",
+  "canceled",
+]);
+
 export const users = pgTable("users", {
   id: text("id")
     .primaryKey()
@@ -229,12 +244,49 @@ export const itemHistory = pgTable(
   (t) => [index("item_history_item_idx").on(t.itemId)]
 );
 
+// One Paddle subscription per user (the studio owner / paying account).
+// Free users have no row → treated as the free plan. Updated by the Paddle
+// webhook; never written from the client.
+export const subscriptions = pgTable(
+  "subscriptions",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    userId: text("user_id")
+      .notNull()
+      .unique()
+      .references(() => users.id, { onDelete: "cascade" }),
+    paddleCustomerId: text("paddle_customer_id"),
+    paddleSubscriptionId: text("paddle_subscription_id").unique(),
+    priceId: text("price_id"),
+    planTier: planTierEnum("plan_tier").notNull().default("free"),
+    status: subscriptionStatusEnum("status").notNull().default("active"),
+    currentPeriodEnd: timestamp("current_period_end"),
+    cancelAtPeriodEnd: boolean("cancel_at_period_end").notNull().default(false),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (t) => [index("subscriptions_customer_idx").on(t.paddleCustomerId)]
+);
+
 // Relations
-export const usersRelations = relations(users, ({ many }) => ({
+export const usersRelations = relations(users, ({ many, one }) => ({
   companyMembers: many(companyMembers),
   createdCompanies: many(companies),
   createdFolders: many(folders),
   createdItems: many(items),
+  subscription: one(subscriptions, {
+    fields: [users.id],
+    references: [subscriptions.userId],
+  }),
+}));
+
+export const subscriptionsRelations = relations(subscriptions, ({ one }) => ({
+  user: one(users, {
+    fields: [subscriptions.userId],
+    references: [users.id],
+  }),
 }));
 
 export const companiesRelations = relations(companies, ({ many, one }) => ({
@@ -287,3 +339,4 @@ export type Folder = typeof folders.$inferSelect;
 export type Item = typeof items.$inferSelect;
 export type ItemHistory = typeof itemHistory.$inferSelect;
 export type ClientShare = typeof clientShares.$inferSelect;
+export type Subscription = typeof subscriptions.$inferSelect;

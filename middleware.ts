@@ -28,6 +28,12 @@ export default auth((req) => {
   // Public short links — resolve + redirect, no login.
   if (pathname.startsWith("/l/")) return NextResponse.next();
 
+  // Public contact form submission — no login.
+  if (pathname === "/api/contact") return NextResponse.next();
+
+  // Paddle billing webhook — verified by signature inside the handler, not auth.
+  if (pathname.startsWith("/api/webhooks/")) return NextResponse.next();
+
   if (isPublic) return NextResponse.next();
 
   if (isLoggedIn && isAuthPage) {

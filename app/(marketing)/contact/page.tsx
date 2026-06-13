@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowUpRight, Calendar } from "lucide-react";
 import InkUnderline from "@/components/marketing/InkUnderline";
+import ContactForm from "@/components/marketing/ContactForm";
 
 export const metadata: Metadata = {
   title: "Contact",
@@ -47,54 +48,45 @@ export default function ContactPage() {
           </p>
         </header>
 
-        {/* Channels */}
-        <div
-          data-reveal-stagger
-          data-step="90"
-          className="mt-12 grid md:grid-cols-2 gap-4"
-        >
-          {CHANNELS.map((c) => (
-            <div
-              key={c.email}
-              data-spotlight
-              className="group lit-top relative flex flex-col rounded-2xl border border-line bg-paper-elevated p-7 shadow-soft card-lift"
-            >
-              <p className="font-mono-ui text-[11px] uppercase tracking-[0.2em] text-accent">
-                {c.eyebrow}
-              </p>
-              <h2 className="mt-3 font-display text-2xl md:text-[26px] text-ink leading-[1.15] tracking-[-0.01em]">
-                {c.title}
-              </h2>
-              <p className="mt-3 text-sm text-ink-soft leading-relaxed">
-                {c.body}
-              </p>
-
-              <div className="mt-auto pt-6">
-                <a
-                  href={`mailto:${c.email}`}
-                  className="btn-accent group/btn inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-medium"
-                >
-                  {c.cta}
-                  <ArrowUpRight className="h-4 w-4 transition-transform group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5" />
-                </a>
-                <a
-                  href={`mailto:${c.email}`}
-                  className="mt-3 block font-mono-ui text-xs text-mute hover:text-accent transition-colors"
-                >
-                  {c.email}
-                </a>
-              </div>
+        {/* Form + channels */}
+        <div className="mt-12 grid gap-6 lg:grid-cols-[1.5fr_1fr] lg:gap-8">
+          {/* Form */}
+          <div data-reveal>
+            <ContactForm />
+            <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono-ui text-xs text-mute">
+              <Calendar className="h-3.5 w-3.5 text-mute-soft" />
+              <span>Replies Mon–Fri, usually within a few hours.</span>
             </div>
-          ))}
-        </div>
+          </div>
 
-        {/* Footnote */}
-        <div
-          data-reveal
-          className="mt-10 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono-ui text-xs text-mute"
-        >
-          <Calendar className="h-3.5 w-3.5 text-mute-soft" />
-          <span>Replies Mon–Fri, usually within a few hours.</span>
+          {/* Prefer email? Channels as a quieter sidebar. */}
+          <div data-reveal-stagger data-step="90" className="flex flex-col gap-4">
+            <p className="font-mono-ui text-[11px] uppercase tracking-[0.2em] text-mute-soft">
+              Prefer email?
+            </p>
+            {CHANNELS.map((c) => (
+              <a
+                key={c.email}
+                href={`mailto:${c.email}`}
+                data-spotlight
+                className="group lit-top relative flex flex-col rounded-2xl border border-line bg-paper-elevated p-5 shadow-soft card-lift"
+              >
+                <p className="font-mono-ui text-[11px] uppercase tracking-[0.2em] text-accent">
+                  {c.eyebrow}
+                </p>
+                <h2 className="mt-2 font-display text-lg text-ink leading-snug tracking-[-0.01em]">
+                  {c.title}
+                </h2>
+                <p className="mt-2 text-[13px] text-ink-soft leading-relaxed">
+                  {c.body}
+                </p>
+                <span className="mt-3 inline-flex items-center gap-1 font-mono-ui text-xs text-mute group-hover:text-accent transition-colors">
+                  {c.email}
+                  <ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                </span>
+              </a>
+            ))}
+          </div>
         </div>
 
         <Link
