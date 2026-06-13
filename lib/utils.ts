@@ -129,13 +129,16 @@ export function formatDateTime(date: Date | string) {
   });
 }
 
+// Folder color chips. Light values are tinted pills; dark values use a
+// translucent tint + bright text (matching REGISTER status chips) so they read
+// as colored accents on the dark UI instead of bright light pills.
 export const FOLDER_COLORS = {
-  slate: { bg: "bg-slate-100", text: "text-slate-600", dot: "bg-slate-400" },
-  indigo: { bg: "bg-indigo-50", text: "text-indigo-600", dot: "bg-indigo-400" },
-  violet: { bg: "bg-violet-50", text: "text-violet-600", dot: "bg-violet-400" },
-  rose: { bg: "bg-rose-50", text: "text-rose-600", dot: "bg-rose-400" },
-  amber: { bg: "bg-amber-50", text: "text-amber-600", dot: "bg-amber-400" },
-  emerald: { bg: "bg-emerald-50", text: "text-emerald-600", dot: "bg-emerald-400" },
+  slate: { bg: "bg-slate-100 dark:bg-slate-400/15", text: "text-slate-600 dark:text-slate-300", dot: "bg-slate-400" },
+  indigo: { bg: "bg-indigo-50 dark:bg-indigo-400/15", text: "text-indigo-600 dark:text-indigo-300", dot: "bg-indigo-400" },
+  violet: { bg: "bg-violet-50 dark:bg-violet-400/15", text: "text-violet-600 dark:text-violet-300", dot: "bg-violet-400" },
+  rose: { bg: "bg-rose-50 dark:bg-rose-400/15", text: "text-rose-600 dark:text-rose-300", dot: "bg-rose-400" },
+  amber: { bg: "bg-amber-50 dark:bg-amber-400/15", text: "text-amber-600 dark:text-amber-300", dot: "bg-amber-400" },
+  emerald: { bg: "bg-emerald-50 dark:bg-emerald-400/15", text: "text-emerald-600 dark:text-emerald-300", dot: "bg-emerald-400" },
 } as const;
 
 export const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB

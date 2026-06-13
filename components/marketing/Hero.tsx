@@ -116,7 +116,7 @@ const ROWS = [
     desc: "Final pass for review",
     link: "figma.com",
     date: "12 Jun",
-    status: { label: "In progress", cls: "bg-amber-50 text-amber-800" },
+    status: { label: "In progress", cls: "bg-amber-50 text-amber-800 dark:bg-amber-400/15 dark:text-amber-300" },
     pinned: false,
   },
   {
@@ -125,7 +125,7 @@ const ROWS = [
     desc: "Type + color rules",
     link: "drive.google.com",
     date: "10 Jun",
-    status: { label: "Delivered", cls: "bg-green-50 text-green-700" },
+    status: { label: "Delivered", cls: "bg-green-50 text-green-700 dark:bg-green-400/15 dark:text-green-300" },
     pinned: true,
   },
   {
@@ -134,7 +134,7 @@ const ROWS = [
     desc: "Approved by Maya",
     link: "canva.com",
     date: "8 Jun",
-    status: { label: "Approved", cls: "bg-violet-50 text-violet-700" },
+    status: { label: "Approved", cls: "bg-violet-50 text-violet-700 dark:bg-violet-400/15 dark:text-violet-300" },
     pinned: false,
   },
   {
@@ -143,7 +143,7 @@ const ROWS = [
     desc: "18 slides, exports inside",
     link: "pitch.com",
     date: "5 Jun",
-    status: { label: "To do", cls: "bg-slate-100 text-slate-600" },
+    status: { label: "To do", cls: "bg-slate-100 text-slate-600 dark:bg-slate-400/15 dark:text-slate-300" },
     pinned: false,
   },
 ];
@@ -294,11 +294,11 @@ function ClientFrame() {
           <div className="mt-2.5 space-y-1.5">
             <div className="flex items-center justify-between gap-2 rounded-lg border border-line px-2.5 py-2">
               <span className="text-[11px] font-medium text-ink truncate">Brand guidelines v2</span>
-              <span className="shrink-0 rounded-full bg-green-50 text-green-700 px-1.5 py-0.5 text-[9px] font-medium">Delivered</span>
+              <span className="shrink-0 rounded-full bg-green-50 text-green-700 dark:bg-green-400/15 dark:text-green-300 px-1.5 py-0.5 text-[9px] font-medium">Delivered</span>
             </div>
             <div className="flex items-center justify-between gap-2 rounded-lg border border-line px-2.5 py-2">
               <span className="text-[11px] font-medium text-ink truncate">Hero illustration</span>
-              <span className="shrink-0 rounded-full bg-violet-50 text-violet-700 px-1.5 py-0.5 text-[9px] font-medium">Approved</span>
+              <span className="shrink-0 rounded-full bg-violet-50 text-violet-700 dark:bg-violet-400/15 dark:text-violet-300 px-1.5 py-0.5 text-[9px] font-medium">Approved</span>
             </div>
           </div>
         </div>

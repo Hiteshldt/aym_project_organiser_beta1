@@ -179,7 +179,7 @@ export default function ShareWithClientModal({
             </div>
           )}
           {emailFeedback?.status === "failed" && (
-            <div className="flex items-start gap-2 rounded-lg border border-warning/30 bg-amber-50/60 px-3 py-2.5">
+            <div className="flex items-start gap-2 rounded-lg border border-warning/30 bg-amber-50/60 dark:bg-warning/10 px-3 py-2.5">
               <AlertTriangle className="h-3.5 w-3.5 text-warning shrink-0 mt-0.5" />
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-medium text-ink">

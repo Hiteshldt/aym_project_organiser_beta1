@@ -103,7 +103,7 @@ export default function Bento() {
             where it lives and offers to add a quick update note instead.
           </TileBody>
 
-          <div className="mt-5 rounded-lg border border-warning/30 bg-amber-50/40 p-3">
+          <div className="mt-5 rounded-lg border border-warning/30 bg-amber-50/40 dark:bg-warning/10 p-3">
             <div className="flex items-start gap-2">
               <div className="h-5 w-5 rounded bg-warning/15 flex items-center justify-center shrink-0 mt-0.5">
                 <Link2 className="h-2.5 w-2.5 text-warning" />

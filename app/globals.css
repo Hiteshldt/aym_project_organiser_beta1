@@ -51,19 +51,30 @@
    ──────────────────────────────────────────────────────────────── */
 
 .dark {
-  /* Neutral charcoal — readable, lets the terracotta accent + status colors pop. */
-  --ink: #f4f3f0;
-  --paper: #16161a;
-  --paper-elevated: #1e1e24;
-  /* Borders/dividers need clear separation from the panels (#1e1e24) or the
-     spreadsheet grid lines vanish — keep these noticeably lighter. */
-  --line: #3d3d47;
-  --line-strong: #54545f;
-  --mute: #aeaca6;
-  --mute-soft: #8a8881;
-  --ink-soft: #cfcdc7;
-  --paper-dim: #1b1b20;
-  --ink-warm: #0e0e11;
+  /* Neutral charcoal — readable, lets the terracotta accent + status colors pop.
+     Surfaces form a clear 3-step depth ladder so panels read as lifted and
+     bands as recessed; before, paper/elevated/dim sat within ~5 points and the
+     whole UI went flat. */
+  --ink: #f5f4f1;
+  /* Base canvas — deepened so elevated panels visibly float above it. */
+  --paper: #131317;
+  /* Cards, panels, inputs — clearly lifted off the canvas. */
+  --paper-elevated: #21212a;
+  /* Borders/dividers carry the structure (tables, cards, hairlines). They were
+     vanishing against the panels — lifted so the spreadsheet grid stays legible
+     even at the half-opacity (bg-line/50) used for soft dividers. */
+  --line: #41414c;
+  --line-strong: #5b5b69;
+  /* Secondary text (209 uses) — brighter, crisper greys; warm muddy tone read
+     as low-contrast even where the ratio technically passed. */
+  --mute: #b7b5ae;
+  /* Captions, counts, billing copy (108 uses) — the dimmest token, lifted most. */
+  --mute-soft: #9b998f;
+  --ink-soft: #d8d6d0;
+  /* Recessed band — now DARKER than paper (was lighter, an inverted well that
+     made sunken sections read as raised). */
+  --paper-dim: #0e0e12;
+  --ink-warm: #0b0b0e;
 
   --accent: #e26244;
   --accent-hover: #ed6e4f;
@@ -216,7 +227,7 @@ body {
   -webkit-backdrop-filter: saturate(1.4) blur(14px);
 }
 .dark .nav-blur {
-  background: rgba(22, 22, 26, 0.97);
+  background: rgba(19, 19, 23, 0.97);
 }
 
 /* Soft "hairline" border — almost imperceptible */
