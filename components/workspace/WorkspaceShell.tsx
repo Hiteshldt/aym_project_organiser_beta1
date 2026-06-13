@@ -283,7 +283,16 @@ export default function WorkspaceShell({
     });
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
-      toast.error(data.error ?? "Could not create workspace.");
+      if (data.code === "PLAN_LIMIT") {
+        toast.error(data.error ?? "Plan limit reached.", {
+          action: {
+            label: "View plans",
+            onClick: () => router.push("/settings"),
+          },
+        });
+      } else {
+        toast.error(data.error ?? "Could not create workspace.");
+      }
       setCreatingWorkspace(false);
       return;
     }

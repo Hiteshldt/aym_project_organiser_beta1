@@ -1,9 +1,10 @@
 import { auth } from "@/lib/auth";
 import { db } from "@/db";
 import { companies, companyMembers } from "@/db/schema";
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { slugify } from "@/lib/utils";
+import { getEntitlements } from "@/lib/billing/paddle-server";
 
 /** Returns the company + the caller's role, or null if they aren't a member. */
 async function memberAccess(userId: string, slug: string) {
@@ -38,6 +39,29 @@ export async function POST(req: NextRequest) {
       { error: "Name must be 60 characters or fewer" },
       { status: 400 }
     );
+  }
+
+  // Plan limit: a user may own up to entitlements.maxWorkspaces (-1 = unlimited).
+  // "Owned" = workspaces this user created; team members managing someone
+  // else's workspace are governed by that owner's plan, not their own.
+  const { maxWorkspaces } = await getEntitlements(session.user.id);
+  if (maxWorkspaces !== -1) {
+    const [{ owned }] = await db
+      .select({ owned: sql<number>`count(*)::int` })
+      .from(companies)
+      .where(eq(companies.createdBy, session.user.id));
+    if (owned >= maxWorkspaces) {
+      return NextResponse.json(
+        {
+          error:
+            maxWorkspaces === 1
+              ? "The Free plan includes 1 client workspace. Upgrade to add more."
+              : `Your plan includes ${maxWorkspaces} workspaces. Upgrade to add more.`,
+          code: "PLAN_LIMIT",
+        },
+        { status: 403 }
+      );
+    }
   }
 
   // Generate a unique slug

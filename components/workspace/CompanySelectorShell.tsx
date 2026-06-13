@@ -29,10 +29,12 @@ export default function CompanySelectorShell({
   const [name, setName] = useState("");
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState("");
+  const [limitHit, setLimitHit] = useState(false);
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+    setLimitHit(false);
     if (!name.trim()) {
       setError("Give your workspace a name.");
       return;
@@ -46,6 +48,7 @@ export default function CompanySelectorShell({
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
       setError(data.error ?? "Could not create the workspace.");
+      setLimitHit(data.code === "PLAN_LIMIT");
       setCreating(false);
       return;
     }
@@ -149,7 +152,20 @@ export default function CompanySelectorShell({
                   autoFocus
                   className="w-full font-display text-2xl leading-tight bg-transparent border-b border-line focus:border-accent transition-colors outline-none py-2 placeholder:text-mute-soft text-ink"
                 />
-                {error && <p className="text-xs text-danger">{error}</p>}
+                {error && (
+                  <div className="text-xs text-danger">
+                    <p>{error}</p>
+                    {limitHit && (
+                      <Link
+                        href="/settings"
+                        className="mt-1 inline-flex items-center gap-1 font-medium text-accent hover:underline"
+                      >
+                        View plans
+                        <ArrowUpRight className="h-3 w-3" />
+                      </Link>
+                    )}
+                  </div>
+                )}
                 <button
                   type="submit"
                   disabled={creating || !name.trim()}
