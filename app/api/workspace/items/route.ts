@@ -5,6 +5,7 @@ import { eq, and, desc, asc, sql } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { generateShortCode } from "@/lib/shortcode";
 import { normalizeUrl } from "@/lib/utils";
+import { deleteBlobs } from "@/lib/blob";
 
 async function getCompanyAccess(userId: string, slug: string) {
   const result = await db
@@ -220,6 +221,17 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: "Managers only" }, { status: 403 });
   }
 
+  // Grab the file references before the row is gone, then free the blob storage.
+  // (`url` covers legacy file items that stored their blob URL there.)
+  const [doomed] = await db
+    .select({ fileUrl: items.fileUrl, url: items.url })
+    .from(items)
+    .where(and(eq(items.id, id), eq(items.companyId, access.company.id)))
+    .limit(1);
+
   await db.delete(items).where(and(eq(items.id, id), eq(items.companyId, access.company.id)));
+
+  if (doomed) await deleteBlobs([doomed.fileUrl, doomed.url]);
+
   return NextResponse.json({ success: true });
 }

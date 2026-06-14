@@ -1,9 +1,10 @@
 import { auth } from "@/lib/auth";
 import { db } from "@/db";
-import { companies, companyMembers, users } from "@/db/schema";
+import { companies, companyMembers, users, items } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { slugify } from "@/lib/utils";
+import { deleteBlobs } from "@/lib/blob";
 
 export async function GET() {
   const session = await auth();
@@ -45,6 +46,16 @@ export async function DELETE(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const id = searchParams.get("id");
   if (!id) return NextResponse.json({ error: "ID required" }, { status: 400 });
+
+  // Free every uploaded file in the workspace before the cascade removes the rows.
+  const doomedItems = await db
+    .select({ fileUrl: items.fileUrl, url: items.url })
+    .from(items)
+    .where(eq(items.companyId, id));
+
   await db.delete(companies).where(eq(companies.id, id));
+
+  await deleteBlobs(doomedItems.flatMap((i) => [i.fileUrl, i.url]));
+
   return NextResponse.json({ success: true });
 }

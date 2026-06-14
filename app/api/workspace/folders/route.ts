@@ -1,8 +1,9 @@
 import { auth } from "@/lib/auth";
 import { db } from "@/db";
-import { folders, companyMembers, companies } from "@/db/schema";
-import { eq, and, isNull } from "drizzle-orm";
+import { folders, companyMembers, companies, items } from "@/db/schema";
+import { eq, and, isNull, inArray } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
+import { deleteBlobs } from "@/lib/blob";
 
 async function getCompanyAccess(userId: string, slug: string) {
   const result = await db
@@ -89,9 +90,40 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: "Managers only" }, { status: 403 });
   }
 
+  // Deleting a folder cascades to nested folders and every item inside them, so
+  // collect the whole subtree's uploaded files first to free their blob storage.
+  const companyFolders = await db
+    .select({ id: folders.id, parentId: folders.parentId })
+    .from(folders)
+    .where(eq(folders.companyId, access.company.id));
+
+  const subtree = new Set<string>([folderId]);
+  for (let changed = true; changed; ) {
+    changed = false;
+    for (const f of companyFolders) {
+      if (f.parentId && subtree.has(f.parentId) && !subtree.has(f.id)) {
+        subtree.add(f.id);
+        changed = true;
+      }
+    }
+  }
+
+  const doomedItems = await db
+    .select({ fileUrl: items.fileUrl, url: items.url })
+    .from(items)
+    .where(
+      and(
+        eq(items.companyId, access.company.id),
+        inArray(items.folderId, [...subtree])
+      )
+    );
+
   await db.delete(folders).where(
     and(eq(folders.id, folderId), eq(folders.companyId, access.company.id))
   );
+
+  await deleteBlobs(doomedItems.flatMap((i) => [i.fileUrl, i.url]));
+
   return NextResponse.json({ success: true });
 }
 
