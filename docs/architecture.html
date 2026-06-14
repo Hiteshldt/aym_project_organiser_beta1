@@ -1,0 +1,592 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Ayuvam — System Architecture</title>
+<style>
+  :root{
+    --paper:#fbfaf7; --card:#ffffff; --ink:#1a1613; --mute:#6f6c68; --mute2:#9a9690;
+    --line:#ecead9; --line2:#e0ddcd; --accent:#c84b31; --accent2:#e0905a; --accent-soft:#f4e4dc;
+    --neon:#0d9488; --blob:#d97706; --resend:#6d5dfc; --google:#4285F4; --paddle:#b45309;
+    --github:#24292f; --vercel:#000; --mac:#475569;
+    --shadow:0 18px 40px -24px rgba(38,26,16,.45);
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0; background:var(--paper); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.55; -webkit-font-smoothing:antialiased;
+  }
+  .serif{font-family:Georgia,"Times New Roman",serif;}
+  .mono{font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace;}
+  .wrap{max-width:1200px; margin:0 auto; padding:0 28px;}
+  a{color:var(--accent); text-decoration:none}
+  a:hover{text-decoration:underline}
+
+  /* Header */
+  header.top{
+    background:
+      radial-gradient(1200px 360px at 78% -10%, rgba(224,144,90,.16), transparent 60%),
+      linear-gradient(180deg,#fff,transparent);
+    border-bottom:1px solid var(--line);
+    padding:52px 0 40px;
+  }
+  .eyebrow{font:600 11px/1 var(--mono,monospace); letter-spacing:.22em; text-transform:uppercase; color:var(--accent)}
+  h1.title{font-family:Georgia,serif; font-size:clamp(34px,5vw,56px); line-height:1.04; letter-spacing:-.02em; margin:14px 0 0; font-weight:400}
+  h1.title em{color:var(--accent)}
+  .sub{max-width:680px; color:var(--mute); font-size:17px; margin-top:14px}
+  .meta{display:flex; flex-wrap:wrap; gap:10px; margin-top:22px}
+  .pill{display:inline-flex; align-items:center; gap:7px; background:var(--card); border:1px solid var(--line); border-radius:999px; padding:7px 13px; font-size:12.5px; color:var(--ink)}
+  .pill b{font-weight:600}
+  .pill .dot{width:7px;height:7px;border-radius:50%;background:var(--accent)}
+
+  /* Section scaffolding */
+  section{padding:46px 0; border-bottom:1px solid var(--line)}
+  .s-head{display:flex; align-items:baseline; gap:14px; margin-bottom:8px}
+  .s-num{font:600 12px/1 var(--mono,monospace); color:var(--accent2); letter-spacing:.1em}
+  h2{font-family:Georgia,serif; font-weight:400; font-size:30px; letter-spacing:-.01em; margin:0}
+  .s-desc{color:var(--mute); max-width:760px; margin:6px 0 26px; font-size:15px}
+
+  /* ── Diagram ── */
+  .diagram-scroll{overflow-x:auto; padding-bottom:8px}
+  .diagram{position:relative; width:1160px; height:740px; margin:0 auto}
+  .node{position:absolute; background:var(--card); border:1px solid var(--line2); border-radius:14px;
+        box-shadow:var(--shadow); padding:12px 14px; overflow:hidden}
+  .node .accentbar{position:absolute; left:0; top:0; bottom:0; width:4px}
+  .node .nt{display:flex; align-items:center; gap:8px; font-weight:650; font-size:14px}
+  .node .ni{width:22px;height:22px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;font-size:13px;color:#fff;flex:0 0 auto}
+  .node .nd{color:var(--mute); font-size:11.5px; margin-top:5px; line-height:1.45}
+  .node .tag{display:inline-block; font:600 10px/1 var(--mono,monospace); letter-spacing:.04em; color:var(--mute); background:var(--paper); border:1px solid var(--line); border-radius:5px; padding:3px 6px; margin:4px 4px 0 0}
+  .hub{background:linear-gradient(180deg,#fff, #fdfbf7); border:1.5px solid var(--ink)}
+  .hub .nt{font-size:16px}
+  .layer{border:1px dashed var(--line2); border-radius:10px; padding:8px 10px; margin-top:8px; background:var(--paper)}
+  .layer .lh{font:600 10px/1 var(--mono,monospace); letter-spacing:.1em; text-transform:uppercase; color:var(--accent); margin-bottom:5px}
+  .layer .li{font-size:11.5px; color:var(--ink); display:flex; gap:6px; flex-wrap:wrap}
+  .layer .li span{background:#fff;border:1px solid var(--line);border-radius:5px;padding:2px 6px;font-size:10.5px;color:var(--mute)}
+
+  svg.wires{position:absolute; inset:0; width:1160px; height:740px; pointer-events:none; z-index:0}
+  .node{z-index:1}
+  .wlabel{font:600 10.5px/1.3 var(--mono,monospace); fill:var(--mute)}
+  .wlabel-bg{fill:#fff; opacity:.92}
+
+  .legend{display:flex; flex-wrap:wrap; gap:16px; margin-top:18px; font-size:12.5px; color:var(--mute)}
+  .legend span{display:inline-flex;align-items:center;gap:7px}
+  .legend .ln{width:26px;height:0;border-top:2px solid var(--mute2)}
+  .legend .ln.dep{border-top-style:dashed; border-color:var(--accent)}
+  .legend .ln.data{border-color:var(--neon)}
+  .legend .ln.ext{border-color:var(--accent2)}
+
+  /* Cards grid */
+  .grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(330px,1fr)); gap:16px}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:18px 18px 16px; position:relative; box-shadow:0 10px 30px -26px rgba(38,26,16,.5)}
+  .card .cbar{height:3px;width:34px;border-radius:3px;margin-bottom:12px;background:var(--accent)}
+  .card h3{margin:0; font-size:16.5px; display:flex; align-items:center; gap:9px}
+  .card h3 .ci{width:26px;height:26px;border-radius:7px;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:14px;flex:0 0 auto}
+  .card .role{color:var(--mute); font-size:13.5px; margin:9px 0 12px}
+  .kv{font-size:12.5px; border-top:1px solid var(--line); padding-top:9px; margin-top:9px}
+  .kv div{display:flex; gap:8px; margin:3px 0}
+  .kv .k{color:var(--mute2); min-width:96px; flex:0 0 auto; font-weight:600}
+  .kv .v{color:var(--ink)}
+  .kv code{font-family:"SF Mono",monospace; background:var(--paper); border:1px solid var(--line); border-radius:4px; padding:1px 5px; font-size:11.5px}
+
+  /* Tables */
+  table{width:100%; border-collapse:collapse; font-size:13px; background:var(--card); border:1px solid var(--line); border-radius:12px; overflow:hidden}
+  th,td{text-align:left; padding:9px 12px; border-bottom:1px solid var(--line); vertical-align:top}
+  th{background:var(--paper); font:600 11px/1.2 var(--mono,monospace); letter-spacing:.06em; text-transform:uppercase; color:var(--mute)}
+  tr:last-child td{border-bottom:none}
+  td code{font-family:"SF Mono",monospace; font-size:11.5px; color:var(--accent)}
+  .badge{display:inline-block; font:600 10px/1 var(--mono,monospace); padding:3px 7px; border-radius:999px; letter-spacing:.03em}
+  .b-pub{background:#fdeee6; color:#9a3a22}
+  .b-sec{background:#eef1ed; color:#3f6b52}
+
+  /* Data model */
+  .tables{display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:14px}
+  .tbl{background:var(--card); border:1px solid var(--line); border-radius:12px; overflow:hidden}
+  .tbl .th{background:var(--ink); color:#fff; padding:9px 13px; font:600 13px/1 var(--mono,monospace); display:flex; justify-content:space-between; align-items:center}
+  .tbl .th .cnt{font-size:10px; color:#cfcdc7; font-weight:500}
+  .tbl ul{margin:0; padding:8px 13px 11px; list-style:none}
+  .tbl li{font-size:12px; padding:2.5px 0; color:var(--ink); display:flex; gap:7px}
+  .tbl li .col{font-family:"SF Mono",monospace; font-size:11.5px}
+  .tbl li .ty{color:var(--mute2); font-size:10.5px; margin-left:auto; white-space:nowrap}
+  .tbl li.fk .col{color:var(--accent)}
+  .tbl li.pk .col{font-weight:700}
+
+  /* Flow steps */
+  .flows{display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:16px}
+  .flow{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px}
+  .flow h4{margin:0 0 10px; font-size:14.5px; display:flex; align-items:center; gap:8px}
+  .flow ol{margin:0; padding-left:18px; font-size:12.8px; color:var(--ink)}
+  .flow ol li{margin:5px 0; padding-left:3px}
+  .flow ol li b{color:var(--accent)}
+
+  .note{background:#fff7f2; border:1px solid var(--accent-soft); border-left:3px solid var(--accent); border-radius:10px; padding:13px 15px; font-size:13px; color:var(--ink); margin-top:14px}
+  .note b{color:var(--accent)}
+
+  footer{padding:34px 0 60px; color:var(--mute); font-size:12.5px}
+  .cols2{display:grid; grid-template-columns:1fr 1fr; gap:16px}
+  @media(max-width:760px){ .cols2{grid-template-columns:1fr} }
+  .glossary{columns:2; column-gap:26px; font-size:13px}
+  @media(max-width:760px){ .glossary{columns:1} }
+  .glossary div{break-inside:avoid; margin-bottom:11px}
+  .glossary b{color:var(--ink)}
+  .glossary .g-mute{color:var(--mute)}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <div class="eyebrow">Ayuvam · System Architecture</div>
+    <h1 class="title serif">How the whole thing <em>fits together.</em></h1>
+    <p class="sub">A single map of every service, how they connect, what runs where, and what you need to know to keep it healthy — for you today, and for any developer or agent who picks this up later.</p>
+    <div class="meta">
+      <span class="pill"><span class="dot"></span><b>Product:</b>&nbsp;Ayuvam — client deliverables portal</span>
+      <span class="pill"><b>Domain:</b>&nbsp;ayuvam.com</span>
+      <span class="pill"><b>Repo:</b>&nbsp;Hiteshldt/aym_project_organiser_beta1</span>
+      <span class="pill"><b>Stack:</b>&nbsp;Next.js 16 · React 19 · Postgres</span>
+      <span class="pill"><b>Updated:</b>&nbsp;Jun 2026</span>
+    </div>
+  </div>
+</header>
+
+<!-- ───────────────────────── DIAGRAM ───────────────────────── -->
+<section>
+  <div class="wrap">
+    <div class="s-head"><span class="s-num">01</span><h2 class="serif">The map</h2></div>
+    <p class="s-desc">Everything flows through <b>Vercel</b> — that's where the app actually runs. Your code reaches it through GitHub; everything else (database, files, email, sign-in, payments) is a service Vercel talks to at runtime.</p>
+
+    <div class="diagram-scroll">
+    <div class="diagram">
+      <svg class="wires" viewBox="0 0 1160 740" width="1160" height="740">
+        <defs>
+          <marker id="ah" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#9a9690"/></marker>
+          <marker id="ahd" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#c84b31"/></marker>
+          <marker id="ahn" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#0d9488"/></marker>
+          <marker id="ahe" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#e0905a"/></marker>
+          <marker id="ahe-s" markerWidth="9" markerHeight="9" refX="2" refY="3" orient="auto"><path d="M7,0 L0,3 L7,6 Z" fill="#e0905a"/></marker>
+        </defs>
+
+        <!-- deploy pipeline (dashed accent) -->
+        <path d="M232,74 L296,74" stroke="#c84b31" stroke-width="2" stroke-dasharray="5 4" fill="none" marker-end="url(#ahd)"/>
+        <path d="M405,110 C405,150 450,160 450,206" stroke="#c84b31" stroke-width="2" stroke-dasharray="5 4" fill="none" marker-end="url(#ahd)"/>
+        <rect class="wlabel-bg" x="250" y="52" width="38" height="14" rx="3"/><text class="wlabel" x="252" y="62">push</text>
+        <rect class="wlabel-bg" x="412" y="158" width="120" height="14" rx="3"/><text class="wlabel" x="415" y="168">auto-deploy (CI/CD)</text>
+
+        <!-- people → vercel (grey) -->
+        <path d="M232,292 C270,292 280,320 300,330" stroke="#9a9690" stroke-width="2" fill="none" marker-end="url(#ah)"/>
+        <path d="M232,452 C272,452 282,452 300,452" stroke="#9a9690" stroke-width="2" fill="none" marker-end="url(#ah)"/>
+        <rect class="wlabel-bg" x="232" y="300" width="74" height="14" rx="3"/><text class="wlabel" x="235" y="310">HTTPS login</text>
+        <rect class="wlabel-bg" x="232" y="430" width="92" height="14" rx="3"/><text class="wlabel" x="235" y="440">/share/:token</text>
+
+        <!-- vercel → services -->
+        <path d="M604,250 C660,250 660,110 696,100" stroke="#0d9488" stroke-width="2" fill="none" marker-end="url(#ahn)"/>
+        <rect class="wlabel-bg" x="612" y="150" width="92" height="14" rx="3"/><text class="wlabel" x="615" y="160">Drizzle · SQL</text>
+
+        <path d="M604,300 C650,300 656,235 696,224" stroke="#e0905a" stroke-width="2" fill="none" marker-end="url(#ahe)"/>
+        <rect class="wlabel-bg" x="612" y="252" width="80" height="14" rx="3"/><text class="wlabel" x="615" y="262">file uploads</text>
+
+        <path d="M604,348 C648,348 656,330 696,327" stroke="#e0905a" stroke-width="2" fill="none" marker-end="url(#ahe)"/>
+        <rect class="wlabel-bg" x="612" y="305" width="58" height="14" rx="3"/><text class="wlabel" x="615" y="315">email</text>
+
+        <path d="M604,398 C648,398 656,425 696,432" stroke="#e0905a" stroke-width="2" fill="none" marker-end="url(#ahe)"/>
+        <rect class="wlabel-bg" x="612" y="404" width="114" height="14" rx="3"/><text class="wlabel" x="615" y="414">OAuth 2.0 sign-in</text>
+
+        <!-- paddle two-way -->
+        <path d="M604,452 C650,452 656,540 696,548" stroke="#e0905a" stroke-width="2" fill="none" marker-end="url(#ahe)" marker-start="url(#ahe-s)"/>
+        <rect class="wlabel-bg" x="612" y="498" width="128" height="14" rx="3"/><text class="wlabel" x="615" y="508">checkout → · webhook ←</text>
+      </svg>
+
+      <!-- Pipeline -->
+      <div class="node" style="left:20px; top:40px; width:212px; height:70px">
+        <div class="accentbar" style="background:var(--mac)"></div>
+        <div class="nt"><span class="ni" style="background:var(--mac)">▣</span>Your Mac · local dev</div>
+        <div class="nd">Where the code lives &amp; runs with <code>npm run dev</code>. Node 24 · Next.js (Turbopack).</div>
+      </div>
+
+      <div class="node" style="left:300px; top:40px; width:210px; height:70px">
+        <div class="accentbar" style="background:var(--github)"></div>
+        <div class="nt"><span class="ni" style="background:var(--github)">⎇</span>GitHub</div>
+        <div class="nd"><code>Hiteshldt/aym_project_organiser_beta1</code> · branch <b>main</b> (source of truth).</div>
+      </div>
+
+      <!-- Vercel hub -->
+      <div class="node hub" style="left:300px; top:206px; width:304px; height:336px">
+        <div class="accentbar" style="background:var(--accent)"></div>
+        <div class="nt"><span class="ni" style="background:var(--vercel)">▲</span>Vercel — runtime &amp; CI/CD</div>
+        <div class="nd">Builds on every push, hosts <b>ayuvam.com</b>. Runs the Next.js app: pages (SSR), serverless API routes, and edge middleware.</div>
+        <div class="layer">
+          <div class="lh">Next.js app</div>
+          <div class="li"><span>Marketing site</span><span>Workspace app</span><span>Client share view</span></div>
+        </div>
+        <div class="layer">
+          <div class="lh">API routes (serverless)</div>
+          <div class="li"><span>/api/workspace/*</span><span>/api/auth</span><span>/api/contact</span><span>/api/billing</span><span>/api/webhooks/paddle</span></div>
+        </div>
+        <div class="layer">
+          <div class="lh">Edge middleware</div>
+          <div class="li"><span>auth gate</span><span>public-path allowlist</span></div>
+        </div>
+      </div>
+
+      <!-- People -->
+      <div class="node" style="left:20px; top:252px; width:212px; height:78px">
+        <div class="accentbar" style="background:var(--accent)"></div>
+        <div class="nt"><span class="ni" style="background:var(--accent)">☻</span>Studio owner &amp; team</div>
+        <div class="nd">Sign in (Google or email). Roles: <b>manager</b> / <b>reader</b>. Build workspaces &amp; deliverables.</div>
+      </div>
+      <div class="node" style="left:20px; top:412px; width:212px; height:78px">
+        <div class="accentbar" style="background:var(--accent2)"></div>
+        <div class="nt"><span class="ni" style="background:var(--accent2)">♢</span>Clients</div>
+        <div class="nd">No account. Open a magic <b>/share</b> link → read-only view of their work.</div>
+      </div>
+
+      <!-- Services -->
+      <div class="node" style="left:700px; top:40px; width:440px; height:122px">
+        <div class="accentbar" style="background:var(--neon)"></div>
+        <div class="nt"><span class="ni" style="background:var(--neon)">⛁</span>Neon — Postgres database</div>
+        <div class="nd">Serverless Postgres, queried over HTTP via <b>Drizzle ORM</b>. Holds all app data.</div>
+        <div>
+          <span class="tag">users</span><span class="tag">companies</span><span class="tag">company_members</span><span class="tag">folders</span><span class="tag">items</span><span class="tag">item_history</span><span class="tag">item_references</span><span class="tag">client_shares</span><span class="tag">subscriptions</span>
+        </div>
+      </div>
+
+      <div class="node" style="left:700px; top:185px; width:440px; height:78px">
+        <div class="accentbar" style="background:var(--blob)"></div>
+        <div class="nt"><span class="ni" style="background:var(--blob)">⛃</span>Vercel Blob — file storage</div>
+        <div class="nd">Uploaded files (decks, PDFs, images). Browser uploads <b>directly</b> with a signed token; served from public URLs.</div>
+      </div>
+
+      <div class="node" style="left:700px; top:288px; width:440px; height:78px">
+        <div class="accentbar" style="background:var(--resend)"></div>
+        <div class="nt"><span class="ni" style="background:var(--resend)">✉</span>Resend — transactional email</div>
+        <div class="nd">Share invites &amp; contact-form messages. Sends from verified <code>hello@ayuvam.com</code>.</div>
+      </div>
+
+      <div class="node" style="left:700px; top:391px; width:440px; height:78px">
+        <div class="accentbar" style="background:var(--google)"></div>
+        <div class="nt"><span class="ni" style="background:var(--google)">G</span>Google Cloud — OAuth 2.0</div>
+        <div class="nd">"Continue with Google" sign-in. One OAuth Client (APIs &amp; Services → Credentials). Scopes: openid, email, profile.</div>
+      </div>
+
+      <div class="node" style="left:700px; top:494px; width:440px; height:122px">
+        <div class="accentbar" style="background:var(--paddle)"></div>
+        <div class="nt"><span class="ni" style="background:var(--paddle)">$</span>Paddle — payments (Merchant of Record)</div>
+        <div class="nd">Subscription checkout via Paddle.js; confirms back via a <b>signed webhook</b>. Handles cards, tax, and emails customers a receipt + invoice.</div>
+        <div><span class="tag">Sandbox + Production</span><span class="tag">Free · Solo · Studio · Agency</span></div>
+      </div>
+    </div>
+    </div>
+
+    <div class="legend">
+      <span><span class="ln dep"></span> Code → deploy (CI/CD)</span>
+      <span><span class="ln"></span> People → app (HTTPS)</span>
+      <span><span class="ln data"></span> Database (SQL)</span>
+      <span><span class="ln ext"></span> External services</span>
+    </div>
+  </div>
+</section>
+
+<!-- ───────────────────────── SERVICES ───────────────────────── -->
+<section>
+  <div class="wrap">
+    <div class="s-head"><span class="s-num">02</span><h2 class="serif">Services &amp; where to manage them</h2></div>
+    <p class="s-desc">Each box on the map, with what it does here, the keys it uses, and where you log in to fix or check it.</p>
+    <div class="grid">
+
+      <div class="card">
+        <div class="cbar" style="background:var(--github)"></div>
+        <h3><span class="ci" style="background:var(--github)">⎇</span>GitHub</h3>
+        <div class="role">Source of truth for the code. Pushing to <b>main</b> is what triggers a deploy.</div>
+        <div class="kv">
+          <div><span class="k">Repo</span><span class="v"><code>Hiteshldt/aym_project_organiser_beta1</code></span></div>
+          <div><span class="k">Branch</span><span class="v">main (deploys on push)</span></div>
+          <div><span class="k">Manage at</span><span class="v"><a href="https://github.com/Hiteshldt/aym_project_organiser_beta1">github.com</a></span></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="cbar" style="background:var(--accent)"></div>
+        <h3><span class="ci" style="background:var(--vercel)">▲</span>Vercel</h3>
+        <div class="role">Hosting + CI/CD. Builds the app on each push and serves it at ayuvam.com. Holds the production environment variables.</div>
+        <div class="kv">
+          <div><span class="k">Domain</span><span class="v">ayuvam.com (apex is canonical; www → redirect)</span></div>
+          <div><span class="k">Runs</span><span class="v">SSR pages · serverless API · edge middleware</span></div>
+          <div><span class="k">Env vars</span><span class="v">Settings → Environment Variables</span></div>
+          <div><span class="k">Manage at</span><span class="v"><a href="https://vercel.com/dashboard">vercel.com</a></span></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="cbar" style="background:var(--neon)"></div>
+        <h3><span class="ci" style="background:var(--neon)">⛁</span>Neon — Postgres</h3>
+        <div class="role">The database. All users, workspaces, folders, items, shares, and subscriptions live here. Accessed through Drizzle ORM over an HTTP driver.</div>
+        <div class="kv">
+          <div><span class="k">Key</span><span class="v"><code>DATABASE_URL</code></span></div>
+          <div><span class="k">Schema</span><span class="v"><code>db/schema.ts</code> · apply with <code>npm run db:push</code></span></div>
+          <div><span class="k">Manage at</span><span class="v"><a href="https://console.neon.tech">console.neon.tech</a></span></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="cbar" style="background:var(--blob)"></div>
+        <h3><span class="ci" style="background:var(--blob)">⛃</span>Vercel Blob</h3>
+        <div class="role">File storage for uploads. The browser uploads straight to Blob using a short-lived token minted by our API — so large files bypass the 4.5 MB serverless limit.</div>
+        <div class="kv">
+          <div><span class="k">Key</span><span class="v"><code>BLOB_READ_WRITE_TOKEN</code></span></div>
+          <div><span class="k">Token route</span><span class="v"><code>/api/workspace/upload</code></span></div>
+          <div><span class="k">Limit</span><span class="v">20 MB / file (<code>MAX_FILE_SIZE</code>)</span></div>
+          <div><span class="k">Manage at</span><span class="v">Vercel → Storage → Blob</span></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="cbar" style="background:var(--resend)"></div>
+        <h3><span class="ci" style="background:var(--resend)">✉</span>Resend</h3>
+        <div class="role">Sends transactional email: client share invites and contact-form messages (to contact@ayuvam.com, reply-to the sender).</div>
+        <div class="kv">
+          <div><span class="k">Keys</span><span class="v"><code>RESEND_API_KEY</code>, <code>RESEND_FROM_EMAIL</code>, <code>RESEND_FROM_NAME</code></span></div>
+          <div><span class="k">From</span><span class="v">hello@ayuvam.com (domain verified)</span></div>
+          <div><span class="k">Code</span><span class="v"><code>lib/email.ts</code></span></div>
+          <div><span class="k">Manage at</span><span class="v"><a href="https://resend.com">resend.com</a></span></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="cbar" style="background:var(--google)"></div>
+        <h3><span class="ci" style="background:var(--google)">G</span>Google Cloud</h3>
+        <div class="role">Powers "Continue with Google" sign-in only. A single OAuth 2.0 Client ID — no other Google APIs are used.</div>
+        <div class="kv">
+          <div><span class="k">Keys</span><span class="v"><code>GOOGLE_CLIENT_ID</code>, <code>GOOGLE_CLIENT_SECRET</code></span></div>
+          <div><span class="k">Service</span><span class="v">APIs &amp; Services → Credentials → OAuth 2.0 Client</span></div>
+          <div><span class="k">Redirect URI</span><span class="v"><code>/api/auth/callback/google</code></span></div>
+          <div><span class="k">Manage at</span><span class="v"><a href="https://console.cloud.google.com">console.cloud.google.com</a></span></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="cbar" style="background:var(--paddle)"></div>
+        <h3><span class="ci" style="background:var(--paddle)">$</span>Paddle</h3>
+        <div class="role">Billing &amp; subscriptions as Merchant of Record. Checkout opens via Paddle.js; a signed webhook writes the subscription to our DB. Paddle emails the receipt + invoice automatically.</div>
+        <div class="kv">
+          <div><span class="k">Public keys</span><span class="v"><code>NEXT_PUBLIC_PADDLE_ENV</code>, <code>…CLIENT_TOKEN</code>, 6× <code>…PRICE_*</code></span></div>
+          <div><span class="k">Secret keys</span><span class="v"><code>PADDLE_API_KEY</code>, <code>PADDLE_WEBHOOK_SECRET</code></span></div>
+          <div><span class="k">Webhook</span><span class="v"><code>/api/webhooks/paddle</code> (subscription.*)</span></div>
+          <div><span class="k">Note</span><span class="v">Sandbox &amp; Production are fully separate accounts</span></div>
+          <div><span class="k">Manage at</span><span class="v"><a href="https://vendors.paddle.com">paddle.com</a> · guide: <code>docs/PADDLE.md</code></span></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ───────────────────────── DATA MODEL ───────────────────────── -->
+<section>
+  <div class="wrap">
+    <div class="s-head"><span class="s-num">03</span><h2 class="serif">Data model</h2></div>
+    <p class="s-desc">Nine tables in Postgres (<code>db/schema.ts</code>). A <b>user</b> owns <b>companies</b> (client workspaces); each company has <b>folders</b> of <b>items</b> (deliverables) and <b>client shares</b>. Billing attaches to the user. <span style="color:var(--accent)">Orange = foreign key.</span></p>
+    <div class="tables">
+
+      <div class="tbl"><div class="th">users<span class="cnt">the account</span></div><ul>
+        <li class="pk"><span class="col">id</span><span class="ty">uuid</span></li>
+        <li><span class="col">name · email</span><span class="ty">varchar</span></li>
+        <li><span class="col">passwordHash</span><span class="ty">text</span></li>
+        <li><span class="col">role</span><span class="ty">admin/manager/reader</span></li>
+      </ul></div>
+
+      <div class="tbl"><div class="th">companies<span class="cnt">= client workspace</span></div><ul>
+        <li class="pk"><span class="col">id</span><span class="ty">uuid</span></li>
+        <li><span class="col">name · slug</span><span class="ty">varchar</span></li>
+        <li><span class="col">accentColor · clientNote</span><span class="ty">branding</span></li>
+        <li class="fk"><span class="col">createdBy → users</span><span class="ty">fk</span></li>
+      </ul></div>
+
+      <div class="tbl"><div class="th">company_members<span class="cnt">access</span></div><ul>
+        <li class="fk"><span class="col">companyId → companies</span><span class="ty">fk</span></li>
+        <li class="fk"><span class="col">userId → users</span><span class="ty">fk</span></li>
+        <li><span class="col">role</span><span class="ty">manager/reader</span></li>
+      </ul></div>
+
+      <div class="tbl"><div class="th">folders<span class="cnt">grouping</span></div><ul>
+        <li class="pk"><span class="col">id</span><span class="ty">uuid</span></li>
+        <li><span class="col">name · color · position</span><span class="ty"></span></li>
+        <li><span class="col">viewType</span><span class="ty">cards/register</span></li>
+        <li><span class="col">statusOptions</span><span class="ty">jsonb</span></li>
+        <li class="fk"><span class="col">companyId · parentId</span><span class="ty">fk</span></li>
+      </ul></div>
+
+      <div class="tbl"><div class="th">items<span class="cnt">a deliverable</span></div><ul>
+        <li class="pk"><span class="col">id</span><span class="ty">uuid</span></li>
+        <li><span class="col">title · description · notes</span><span class="ty"></span></li>
+        <li><span class="col">type</span><span class="ty">link/file</span></li>
+        <li><span class="col">url · links[]</span><span class="ty">links</span></li>
+        <li><span class="col">fileUrl · fileKey · fileName</span><span class="ty">blob</span></li>
+        <li><span class="col">status · rowColor · tags[]</span><span class="ty"></span></li>
+        <li><span class="col">shortCode · isPinned · position</span><span class="ty"></span></li>
+        <li class="fk"><span class="col">folderId · companyId</span><span class="ty">fk</span></li>
+      </ul></div>
+
+      <div class="tbl"><div class="th">item_history<span class="cnt">update log</span></div><ul>
+        <li class="fk"><span class="col">itemId → items</span><span class="ty">fk</span></li>
+        <li><span class="col">updateNote</span><span class="ty">text</span></li>
+      </ul></div>
+
+      <div class="tbl"><div class="th">item_references<span class="cnt">links between items</span></div><ul>
+        <li class="fk"><span class="col">itemId · refItemId</span><span class="ty">fk</span></li>
+        <li><span class="col">note</span><span class="ty">varchar</span></li>
+      </ul></div>
+
+      <div class="tbl"><div class="th">client_shares<span class="cnt">magic links</span></div><ul>
+        <li class="fk"><span class="col">companyId → companies</span><span class="ty">fk</span></li>
+        <li><span class="col">token</span><span class="ty">unique</span></li>
+        <li><span class="col">label · clientEmail</span><span class="ty"></span></li>
+        <li><span class="col">expiresAt · revokedAt</span><span class="ty">lifecycle</span></li>
+      </ul></div>
+
+      <div class="tbl"><div class="th">subscriptions<span class="cnt">billing</span></div><ul>
+        <li class="fk"><span class="col">userId → users</span><span class="ty">unique fk</span></li>
+        <li><span class="col">paddleCustomerId</span><span class="ty">paddle</span></li>
+        <li><span class="col">paddleSubscriptionId</span><span class="ty">paddle</span></li>
+        <li><span class="col">planTier</span><span class="ty">free…agency</span></li>
+        <li><span class="col">status · currentPeriodEnd</span><span class="ty"></span></li>
+      </ul></div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ───────────────────────── FLOWS ───────────────────────── -->
+<section>
+  <div class="wrap">
+    <div class="s-head"><span class="s-num">04</span><h2 class="serif">How key things work</h2></div>
+    <p class="s-desc">The main request flows, end to end — handy when something breaks and you need to know which service to check.</p>
+    <div class="flows">
+
+      <div class="flow"><h4>🔐 Sign in</h4><ol>
+        <li>User clicks <b>Continue with Google</b> (or email + password).</li>
+        <li>Google verifies → redirects to <code>/api/auth/callback/google</code>.</li>
+        <li>NextAuth finds/creates the <b>users</b> row, issues a JWT cookie.</li>
+        <li>Middleware now lets them into <code>/workspace</code>.</li>
+      </ol></div>
+
+      <div class="flow"><h4>📎 Add an item with a file</h4><ol>
+        <li>App asks <code>/api/workspace/upload</code> for a signed token.</li>
+        <li>Browser uploads the file <b>directly to Vercel Blob</b>.</li>
+        <li>Blob returns a public URL → saved on the <b>items</b> row in Neon.</li>
+        <li>File opens later in the in-app viewer (<code>FilePreview</code>).</li>
+      </ol></div>
+
+      <div class="flow"><h4>🔗 Share with a client</h4><ol>
+        <li>Manager creates a share → row in <b>client_shares</b> with a token.</li>
+        <li><b>Resend</b> emails the client a magic link.</li>
+        <li>Client opens <code>/share/:token</code> — no login, read-only.</li>
+        <li>Middleware allows it via the public-path allowlist.</li>
+      </ol></div>
+
+      <div class="flow"><h4>💳 Upgrade a plan</h4><ol>
+        <li>User picks a plan → <b>Paddle.js</b> opens checkout overlay.</li>
+        <li>Payment completes on Paddle (cards, tax, receipt email).</li>
+        <li>Paddle sends a <b>signed webhook</b> → <code>/api/webhooks/paddle</code>.</li>
+        <li>We verify the signature &amp; write the <b>subscriptions</b> row → plan unlocks.</li>
+      </ol></div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ───────────────────────── ENV VARS ───────────────────────── -->
+<section>
+  <div class="wrap">
+    <div class="s-head"><span class="s-num">05</span><h2 class="serif">Environment variables</h2></div>
+    <p class="s-desc">The keys each service needs. <span class="badge b-pub">PUBLIC</span> values are baked into the browser bundle (safe to expose); <span class="badge b-sec">SECRET</span> values are server-only and must never be committed. Live in <code>.env.local</code> (local) and Vercel → Environment Variables (production). <code>.env.local</code> is gitignored.</p>
+    <table>
+      <thead><tr><th>Variable</th><th>Service</th><th>Visibility</th><th>Purpose</th></tr></thead>
+      <tbody>
+        <tr><td><code>DATABASE_URL</code></td><td>Neon</td><td><span class="badge b-sec">SECRET</span></td><td>Postgres connection string</td></tr>
+        <tr><td><code>AUTH_SECRET</code></td><td>NextAuth</td><td><span class="badge b-sec">SECRET</span></td><td>Signs the session JWT</td></tr>
+        <tr><td><code>NEXTAUTH_URL</code></td><td>NextAuth</td><td><span class="badge b-sec">CONFIG</span></td><td>Canonical site URL (https://ayuvam.com)</td></tr>
+        <tr><td><code>GOOGLE_CLIENT_ID</code> / <code>…SECRET</code></td><td>Google</td><td><span class="badge b-sec">SECRET</span></td><td>OAuth sign-in</td></tr>
+        <tr><td><code>RESEND_API_KEY</code></td><td>Resend</td><td><span class="badge b-sec">SECRET</span></td><td>Send email</td></tr>
+        <tr><td><code>RESEND_FROM_EMAIL</code> / <code>…NAME</code></td><td>Resend</td><td><span class="badge b-sec">CONFIG</span></td><td>Sender identity</td></tr>
+        <tr><td><code>BLOB_READ_WRITE_TOKEN</code></td><td>Vercel Blob</td><td><span class="badge b-sec">SECRET</span></td><td>Mint upload tokens</td></tr>
+        <tr><td><code>NEXT_PUBLIC_PADDLE_ENV</code></td><td>Paddle</td><td><span class="badge b-pub">PUBLIC</span></td><td>sandbox / production</td></tr>
+        <tr><td><code>NEXT_PUBLIC_PADDLE_CLIENT_TOKEN</code></td><td>Paddle</td><td><span class="badge b-pub">PUBLIC</span></td><td>Opens checkout (Paddle.js)</td></tr>
+        <tr><td><code>NEXT_PUBLIC_PADDLE_PRICE_*</code> (×6)</td><td>Paddle</td><td><span class="badge b-pub">PUBLIC</span></td><td>Solo/Studio/Agency × monthly/annual price IDs</td></tr>
+        <tr><td><code>PADDLE_API_KEY</code></td><td>Paddle</td><td><span class="badge b-sec">SECRET</span></td><td>Server API (customer portal)</td></tr>
+        <tr><td><code>PADDLE_WEBHOOK_SECRET</code></td><td>Paddle</td><td><span class="badge b-sec">SECRET</span></td><td>Verify webhook signatures</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ───────────────────────── TECH APPENDIX ───────────────────────── -->
+<section>
+  <div class="wrap">
+    <div class="s-head"><span class="s-num">06</span><h2 class="serif">For developers &amp; agents</h2></div>
+    <p class="s-desc">The technical foundation — what it's built on, how it's laid out, and the non-obvious rules that keep it working.</p>
+
+    <div class="cols2">
+      <div>
+        <h3 style="font-family:Georgia,serif;font-weight:400;font-size:19px;margin:0 0 8px">Stack glossary</h3>
+        <div class="glossary">
+          <div><b>Next.js 16</b> <span class="g-mute">— React framework (App Router, Turbopack). Pages + API in one codebase; runs on Vercel.</span></div>
+          <div><b>React 19</b> <span class="g-mute">— UI library.</span></div>
+          <div><b>TypeScript 5</b> <span class="g-mute">— typed JavaScript; <code>tsc --noEmit</code> gates builds.</span></div>
+          <div><b>Tailwind CSS v4</b> <span class="g-mute">— utility styling; tokens + dark mode in <code>app/globals.css</code>.</span></div>
+          <div><b>Drizzle ORM</b> <span class="g-mute">— typed SQL for Postgres; schema in <code>db/schema.ts</code>.</span></div>
+          <div><b>NextAuth v5</b> <span class="g-mute">— auth (JWT sessions); Google + email/password.</span></div>
+          <div><b>Radix UI</b> <span class="g-mute">— accessible primitives (dialog, popover, select…).</span></div>
+          <div><b>lucide-react</b> <span class="g-mute">— icons. <b>sonner</b> — toasts.</span></div>
+          <div><b>bcryptjs</b> <span class="g-mute">— password hashing.</span></div>
+          <div><b>@paddle/paddle-js + node-sdk</b> <span class="g-mute">— checkout + webhook verification.</span></div>
+          <div><b>@vercel/blob</b> <span class="g-mute">— file storage client + server.</span></div>
+          <div><b>Resend</b> <span class="g-mute">— email API SDK.</span></div>
+        </div>
+      </div>
+      <div>
+        <h3 style="font-family:Georgia,serif;font-weight:400;font-size:19px;margin:0 0 8px">Repository layout</h3>
+        <div class="glossary" style="columns:1">
+          <div><b>app/(marketing)</b> <span class="g-mute">— public landing, pricing, contact, legal.</span></div>
+          <div><b>app/(auth)</b> <span class="g-mute">— login.</span></div>
+          <div><b>app/(onboard)</b> <span class="g-mute">— first-workspace setup.</span></div>
+          <div><b>app/(workspace)</b> <span class="g-mute">— the main app (register grid, folders, items).</span></div>
+          <div><b>app/(settings)</b> <span class="g-mute">— account, password, plan &amp; billing.</span></div>
+          <div><b>app/(admin)</b> <span class="g-mute">— platform admin.</span></div>
+          <div><b>app/share/[token]</b> <span class="g-mute">— public client view. <b>app/l/[code]</b> — short links.</span></div>
+          <div><b>app/api/*</b> <span class="g-mute">— serverless route handlers.</span></div>
+          <div><b>components/</b> <span class="g-mute">— UI (workspace, billing, marketing, share, ui kit).</span></div>
+          <div><b>lib/</b> <span class="g-mute">— auth, email, billing, utils. <b>db/</b> — schema + scripts.</span></div>
+          <div><b>docs/</b> <span class="g-mute">— PRODUCT, TECHNICAL, PADDLE, this file.</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="note">
+      <b>Rules that aren't obvious (read before changing things):</b>
+      <ul style="margin:8px 0 0; padding-left:20px; font-size:13px">
+        <li>Database changes ship with <code>npm run db:push</code>, <b>not</b> migrations — there are no migration files; <code>db:migrate</code> would try to recreate existing tables.</li>
+        <li><b>ayuvam.com (apex)</b> is canonical; <code>www</code> must redirect to it, or login/RSC navigation breaks with CORS errors.</li>
+        <li>Paddle <b>Sandbox and Production are separate accounts</b> — separate tokens, price IDs, and webhook secrets. Never mix (e.g. a <code>live_</code> token with <code>env=sandbox</code> → 403 checkout).</li>
+        <li><code>NEXT_PUBLIC_*</code> values are compiled into the browser at <b>build time</b> — changing them in Vercel requires a redeploy.</li>
+        <li>Plan limits: workspace creation is enforced server-side; other limits (members, storage) are shown but not yet hard-blocked.</li>
+        <li><code>AGENTS.md</code>: this Next.js may differ from training data — check <code>node_modules/next/dist/docs/</code> before writing framework code.</li>
+      </ul>
+    </div>
+
+    <div class="note" style="background:#f3f6f3;border-color:#cfe0d4;border-left-color:#3f6b52">
+      <b style="color:#3f6b52">Run it locally:</b> <code>npm install</code> → create <code>.env.local</code> (see §05) → <code>npm run dev</code> → open <code>localhost:3000</code>. Deploy by pushing to <code>main</code> (Vercel builds &amp; ships automatically).
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    Ayuvam — system architecture reference · generated for the owner &amp; future contributors.<br>
+    Companion docs: <code>docs/TECHNICAL.md</code> (deeper internals) · <code>docs/PRODUCT.md</code> (what &amp; why) · <code>docs/PADDLE.md</code> (billing setup).
+  </div>
+</footer>
+
+</body>
+</html>
