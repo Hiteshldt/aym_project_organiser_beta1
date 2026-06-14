@@ -13,6 +13,7 @@ import {
   X,
 } from "lucide-react";
 import { FOLDER_COLORS, formatDate, prettyUrl, cn } from "@/lib/utils";
+import FilePreview from "@/components/FilePreview";
 import {
   type StatusOption,
   DEFAULT_STATUS_OPTIONS,
@@ -387,10 +388,15 @@ function RegisterTable({
                           ) : null}
                           {item.fileName &&
                             (fileHref ? (
-                              <a href={fileHref} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[11px] text-mute hover:text-ink font-mono-ui truncate max-w-[150px]">
+                              <FilePreview
+                                url={fileHref}
+                                name={item.fileName}
+                                title={`Preview ${item.fileName}`}
+                                className="inline-flex items-center gap-1 text-[11px] text-mute hover:text-ink font-mono-ui truncate max-w-[150px] cursor-pointer"
+                              >
                                 <FileText className="h-2.5 w-2.5 shrink-0 text-warning" />
                                 <span className="truncate">{item.fileName}</span>
-                              </a>
+                              </FilePreview>
                             ) : (
                               <span className="inline-flex items-center gap-1 text-[11px] text-mute font-mono-ui truncate max-w-[150px]">
                                 <FileText className="h-2.5 w-2.5 shrink-0 text-warning" />

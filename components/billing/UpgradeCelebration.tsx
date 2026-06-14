@@ -31,20 +31,19 @@ export default function UpgradeCelebration() {
 
     // Pull the freshly-written subscription (webhook may land a beat later).
     const refresh = setTimeout(() => router.refresh(), 1500);
-    const hide = setTimeout(() => setShow(false), 4200);
-    return () => {
-      clearTimeout(refresh);
-      clearTimeout(hide);
-    };
+    return () => clearTimeout(refresh);
   }, [router]);
+
+  function dismiss() {
+    setShow(false);
+    router.refresh();
+  }
 
   if (!show) return null;
 
   return (
-    <div
-      className="fixed inset-0 z-[60] flex items-center justify-center bg-paper/40 backdrop-blur-[2px] upgrade-cele-fade"
-      onClick={() => setShow(false)}
-    >
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-paper/40 backdrop-blur-[2px] upgrade-cele-fade">
+      {/* Click-catcher: closing only via the button, not a stray click. */}
       {/* Confetti */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         {CONFETTI.map((i) => (
@@ -91,7 +90,7 @@ export default function UpgradeCelebration() {
           Thanks for backing Ayuvam — your new plan is live.
         </p>
         <button
-          onClick={() => setShow(false)}
+          onClick={dismiss}
           className="btn-accent mt-6 inline-flex rounded-full px-6 py-2.5 text-sm font-medium"
         >
           Let&rsquo;s go

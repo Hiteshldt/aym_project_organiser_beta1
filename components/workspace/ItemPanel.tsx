@@ -30,6 +30,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { formatDate, formatDateTime, formatBytes, toDatetimeLocal, cn } from "@/lib/utils";
 import { buildShortLinkUrl } from "@/lib/shortcode";
+import FilePreview from "@/components/FilePreview";
 import {
   type StatusOption,
   REGISTER_COLORS,
@@ -396,19 +397,24 @@ export default function ItemPanel({
 
               {item.fileName && (
                 <Field label="File">
-                  <a
-                    href={fileHref ?? undefined}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={cn(
-                      "rounded-lg border border-line bg-paper p-2.5 flex items-center gap-2 text-sm",
-                      fileHref && "hover:border-line-strong transition-colors"
-                    )}
-                  >
-                    <FileText className="h-4 w-4 text-warning shrink-0" />
-                    <span className="truncate text-ink">{item.fileName}</span>
-                    {item.fileSize ? <span className="text-mute-soft text-xs ml-auto">{formatBytes(item.fileSize)}</span> : null}
-                  </a>
+                  {fileHref ? (
+                    <FilePreview
+                      url={fileHref}
+                      name={item.fileName}
+                      title={`Preview ${item.fileName}`}
+                      className="w-full rounded-lg border border-line bg-paper p-2.5 flex items-center gap-2 text-sm hover:border-line-strong transition-colors cursor-pointer text-left"
+                    >
+                      <FileText className="h-4 w-4 text-warning shrink-0" />
+                      <span className="truncate text-ink">{item.fileName}</span>
+                      {item.fileSize ? <span className="text-mute-soft text-xs ml-auto">{formatBytes(item.fileSize)}</span> : null}
+                    </FilePreview>
+                  ) : (
+                    <div className="rounded-lg border border-line bg-paper p-2.5 flex items-center gap-2 text-sm">
+                      <FileText className="h-4 w-4 text-warning shrink-0" />
+                      <span className="truncate text-ink">{item.fileName}</span>
+                      {item.fileSize ? <span className="text-mute-soft text-xs ml-auto">{formatBytes(item.fileSize)}</span> : null}
+                    </div>
+                  )}
                 </Field>
               )}
 

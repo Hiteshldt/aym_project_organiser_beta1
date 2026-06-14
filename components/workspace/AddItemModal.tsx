@@ -6,6 +6,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,6 +19,7 @@ import {
   AlertTriangle,
   Upload,
 } from "lucide-react";
+import { upload } from "@vercel/blob/client";
 import { MAX_FILE_SIZE, formatDateTime, toDatetimeLocal, cn } from "@/lib/utils";
 import {
   type StatusOption,
@@ -75,6 +77,7 @@ export default function AddItemModal({
   const [checkingDup, setCheckingDup] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   function reset() {
@@ -213,22 +216,26 @@ export default function AddItemModal({
 
       if (file) {
         setUploading(true);
-        const fd = new FormData();
-        fd.append("file", file);
-        const uploadRes = await fetch("/api/workspace/upload", { method: "POST", body: fd });
-        setUploading(false);
-        if (!uploadRes.ok) {
-          const data = await uploadRes.json();
-          setError(data.error || "Upload failed");
+        try {
+          // Upload straight from the browser to Vercel Blob (token minted by
+          // our route) — no 4.5MB serverless cap.
+          const blob = await upload(
+            `ayuvam/${Date.now()}-${file.name}`,
+            file,
+            { access: "public", handleUploadUrl: "/api/workspace/upload" }
+          );
+          type = "file";
+          fileUrl = blob.url;
+          fileKey = blob.pathname;
+          fileName = file.name;
+          fileSize = file.size;
+        } catch (err) {
+          setUploading(false);
           setSaving(false);
+          setError(err instanceof Error ? err.message : "Upload failed");
           return;
         }
-        const uploaded = await uploadRes.json();
-        type = "file";
-        fileUrl = uploaded.url;
-        fileKey = uploaded.key;
-        fileName = uploaded.name;
-        fileSize = uploaded.size;
+        setUploading(false);
       }
 
       const res = await fetch("/api/workspace/items", {
@@ -273,8 +280,7 @@ export default function AddItemModal({
     }
   }
 
-  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const f = e.target.files?.[0];
+  function acceptFile(f: File | undefined | null) {
     if (!f) return;
     if (f.size > MAX_FILE_SIZE) {
       setError("File exceeds 20MB limit.");
@@ -285,11 +291,24 @@ export default function AddItemModal({
     setError("");
   }
 
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    acceptFile(e.target.files?.[0]);
+  }
+
+  function handleDrop(e: React.DragEvent) {
+    e.preventDefault();
+    setDragOver(false);
+    acceptFile(e.dataTransfer.files?.[0]);
+  }
+
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle>Add to {folderName || "folder"}</DialogTitle>
+          <DialogDescription className="sr-only">
+            Add a deliverable — a title, with an optional link or file.
+          </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="px-6 pb-6 space-y-4 max-h-[70vh] overflow-y-auto">
@@ -359,10 +378,20 @@ export default function AddItemModal({
             ) : (
               <div
                 onClick={() => fileRef.current?.click()}
-                className="border border-dashed border-line rounded-lg p-4 text-center cursor-pointer hover:border-accent hover:bg-accent-soft/30 transition-all"
+                onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+                onDragLeave={() => setDragOver(false)}
+                onDrop={handleDrop}
+                className={cn(
+                  "border border-dashed rounded-lg p-4 text-center cursor-pointer transition-all",
+                  dragOver
+                    ? "border-accent bg-accent-soft/50 scale-[1.01]"
+                    : "border-line hover:border-accent hover:bg-accent-soft/30"
+                )}
               >
-                <Upload className="h-5 w-5 text-mute-soft mx-auto mb-1.5" />
-                <p className="text-xs text-mute">Click to attach a file</p>
+                <Upload className={cn("h-5 w-5 mx-auto mb-1.5", dragOver ? "text-accent" : "text-mute-soft")} />
+                <p className="text-xs text-mute">
+                  {dragOver ? "Drop to attach" : "Click to attach, or drag a file here"}
+                </p>
               </div>
             )}
             <input ref={fileRef} type="file" className="hidden" onChange={handleFileChange} />

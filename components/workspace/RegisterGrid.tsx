@@ -33,6 +33,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { formatDate, prettyUrl, FOLDER_COLORS, cn } from "@/lib/utils";
+import FilePreview from "@/components/FilePreview";
 import { buildShortLinkUrl } from "@/lib/shortcode";
 import {
   type RegisterColor,
@@ -529,15 +530,15 @@ export default function RegisterGrid({
                               ) : null}
                               {item.fileName &&
                                 (fileHref ? (
-                                  <a
-                                    href={fileHref}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-1 text-[11px] text-mute hover:text-ink font-mono-ui truncate max-w-[140px]"
+                                  <FilePreview
+                                    url={fileHref}
+                                    name={item.fileName}
+                                    title={item.fileName}
+                                    className="inline-flex items-center gap-1 text-[11px] text-mute hover:text-ink font-mono-ui truncate max-w-[140px] cursor-pointer"
                                   >
                                     <FileText className="h-2.5 w-2.5 shrink-0 text-warning" />
                                     <span className="truncate">{item.fileName}</span>
-                                  </a>
+                                  </FilePreview>
                                 ) : (
                                   <span className="inline-flex items-center gap-1 text-[11px] text-mute font-mono-ui truncate max-w-[140px]">
                                     <FileText className="h-2.5 w-2.5 shrink-0 text-warning" />
@@ -557,12 +558,23 @@ export default function RegisterGrid({
                           ) : !item.fileName ? (
                             <span className="text-mute-soft">—</span>
                           ) : null}
-                          {item.fileName && (
-                            <span className="inline-flex items-center gap-1 text-[11px] text-mute font-mono-ui truncate max-w-[150px]">
-                              <FileText className="h-2.5 w-2.5 shrink-0 text-warning" />
-                              <span className="truncate">{item.fileName}</span>
-                            </span>
-                          )}
+                          {item.fileName &&
+                            (fileHref ? (
+                              <FilePreview
+                                url={fileHref}
+                                name={item.fileName}
+                                title={item.fileName}
+                                className="inline-flex items-center gap-1 text-[11px] text-mute hover:text-ink font-mono-ui truncate max-w-[150px] cursor-pointer"
+                              >
+                                <FileText className="h-2.5 w-2.5 shrink-0 text-warning" />
+                                <span className="truncate">{item.fileName}</span>
+                              </FilePreview>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 text-[11px] text-mute font-mono-ui truncate max-w-[150px]">
+                                <FileText className="h-2.5 w-2.5 shrink-0 text-warning" />
+                                <span className="truncate">{item.fileName}</span>
+                              </span>
+                            ))}
                         </span>
                       )}
                     </td>
