@@ -6,6 +6,7 @@ import { signOut } from "next-auth/react";
 import { ArrowLeft, Loader2, Check, LogOut } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import BillingPanel, { type BillingProps } from "@/components/billing/BillingPanel";
+import { ThemeController, ThemeToggle } from "@/components/theme";
 
 type User = {
   id: string;
@@ -34,10 +35,11 @@ export default function SettingsShell({
   }, []);
 
   return (
+   <ThemeController>
     <div className="min-h-screen bg-grain text-ink">
       {/* Top bar */}
       <header className="border-b border-line bg-paper-elevated/60 nav-blur">
-        <div className="mx-auto max-w-3xl px-6 h-14 flex items-center justify-between">
+        <div className="mx-auto max-w-2xl px-6 h-14 flex items-center justify-between">
           <Link
             href={backHref}
             className="inline-flex items-center gap-1.5 text-sm text-mute hover:text-ink transition-colors"
@@ -45,22 +47,25 @@ export default function SettingsShell({
             <ArrowLeft className="h-3.5 w-3.5" />
             Back to workspace
           </Link>
-          <Link
-            href="/"
-            className="font-display-italic text-xl text-ink leading-none"
-          >
-            Ayuvam
-          </Link>
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <Link
+              href="/"
+              className="font-display-italic text-xl text-ink leading-none"
+            >
+              Ayuvam
+            </Link>
+          </div>
         </div>
       </header>
 
-      <main className="mx-auto max-w-2xl px-6 py-12 md:py-16 space-y-10">
+      <main className="mx-auto max-w-2xl px-6 py-10 md:py-12 space-y-6">
         {/* Page header */}
         <header>
           <p className="font-mono-ui text-[11px] uppercase tracking-[0.2em] text-mute">
             Account
           </p>
-          <h1 className="mt-2 font-display text-4xl md:text-5xl text-ink leading-[1.05] tracking-[-0.02em]">
+          <h1 className="mt-1.5 font-display text-3xl md:text-4xl text-ink leading-[1.05] tracking-[-0.02em]">
             Settings
           </h1>
         </header>
@@ -95,6 +100,7 @@ export default function SettingsShell({
         </p>
       </main>
     </div>
+   </ThemeController>
   );
 }
 

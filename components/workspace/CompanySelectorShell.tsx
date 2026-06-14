@@ -14,6 +14,7 @@ import {
   X,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { ThemeController, ThemeToggle } from "@/components/theme";
 
 type Company = { id: string; name: string; slug: string; role: string };
 
@@ -57,6 +58,7 @@ export default function CompanySelectorShell({
   }
 
   return (
+   <ThemeController>
     <div className="min-h-screen bg-grain flex flex-col">
       <header className="border-b border-line bg-paper-elevated/60 nav-blur px-6 py-4 flex items-center justify-between">
         <Link
@@ -65,8 +67,9 @@ export default function CompanySelectorShell({
         >
           Ayuvam
         </Link>
-        <div className="flex items-center gap-3">
-          <span className="text-xs text-mute-soft">{user.name}</span>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-mute-soft mr-1">{user.name}</span>
+          <ThemeToggle />
           <Button
             variant="ghost"
             size="icon-sm"
@@ -183,5 +186,6 @@ export default function CompanySelectorShell({
         </div>
       </main>
     </div>
+   </ThemeController>
   );
 }
