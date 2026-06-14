@@ -73,7 +73,7 @@ export default function RootLayout({
         <script
           dangerouslySetInnerHTML={{
             __html:
-              "(function(){try{var t=localStorage.getItem('ayuvam-theme');var p=location.pathname;if(t==='dark'&&(p.indexOf('/workspace')===0||p.indexOf('/share')===0||p.indexOf('/settings')===0)){document.documentElement.classList.add('dark');}}catch(e){}})();",
+              "(function(){try{var t=localStorage.getItem('ayuvam-theme');var p=location.pathname;if(t==='dark'&&(p.indexOf('/workspace')===0||p.indexOf('/share')===0||p.indexOf('/settings')===0||p.indexOf('/admin')===0)){document.documentElement.classList.add('dark');}}catch(e){}})();",
           }}
         />
       </head>

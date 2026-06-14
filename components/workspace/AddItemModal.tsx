@@ -232,7 +232,14 @@ export default function AddItemModal({
         } catch (err) {
           setUploading(false);
           setSaving(false);
-          setError(err instanceof Error ? err.message : "Upload failed");
+          const raw = err instanceof Error ? err.message : "Upload failed";
+          // The Blob client throws a generic "client token" error when storage
+          // isn't configured — translate it into something actionable.
+          setError(
+            /client token/i.test(raw)
+              ? "File storage isn't set up yet. Please try again shortly, or contact support if it keeps happening."
+              : raw
+          );
           return;
         }
         setUploading(false);

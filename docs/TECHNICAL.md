@@ -99,7 +99,7 @@ files-organiser/
 │   ├── marketing/           Hero, Bento, Pricing, FAQ, ...
 │   ├── workspace/           FolderTree, AllItemsTable, ItemCard, ...
 │   ├── share/               ShareView (client-facing)
-│   ├── admin/               AdminShell, UsersTab, CompaniesTab
+│   ├── admin/               AdminShell + OverviewTab, UsersTab, SubscriptionsTab, CompaniesTab
 │   └── onboard/             OnboardWizard
 │
 ├── db/
@@ -332,6 +332,7 @@ Three layers of enforcement, all server-side:
 | Route access | `middleware.ts` checks session, public paths, share tokens |
 | API access | Every API route calls `getCompanyAccess(userId, slug)` — single JOIN query for membership + role |
 | Mutation access | Manager-only ops check `access.role !== "manager"` → 403 |
+| Admin access | `/admin` page + every `/api/admin/*` route require `session.user.role === "admin"`. The role lives in the JWT, so it refreshes on next sign-in after a change. |
 | Client view | `/share/[token]` is server-rendered, no editing UI exists at all |
 
 The "no edit controls on the client view" isn't a UI choice — there's literally no way for a non-authenticated visitor to mutate anything because none of the mutation routes are reachable without a session.
@@ -350,8 +351,12 @@ The "no edit controls on the client view" isn't a UI choice — there's literall
 | `RESEND_API_KEY` | Email | For share invites |
 | `RESEND_FROM_EMAIL` | Sender address | Default: `hello@ayuvam.com` |
 | `RESEND_FROM_NAME` | Sender name | Default: `Ayuvam` |
-| `BLOB_READ_WRITE_TOKEN` | Vercel Blob | For file uploads |
-| `PADDLE_*` (future) | Payments | When billing ships |
+| `BLOB_READ_WRITE_TOKEN` | Vercel Blob | **Required for file uploads.** Copy from Vercel → Storage → your Blob store. If empty, uploads fail with a 400 ("Failed to retrieve the client token"). |
+| `PADDLE_API_KEY` | Paddle (server) | For billing — webhook + portal |
+| `PADDLE_WEBHOOK_SECRET` | Paddle | Verifies incoming webhooks |
+| `NEXT_PUBLIC_PADDLE_ENV` | Paddle (client) | `sandbox` or `production` |
+| `NEXT_PUBLIC_PADDLE_CLIENT_TOKEN` | Paddle (client) | Opens checkout |
+| `NEXT_PUBLIC_PADDLE_PRICE_*` | Paddle (client) | Price IDs per tier/cycle |
 
 ---
 

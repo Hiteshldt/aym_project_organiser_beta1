@@ -4,8 +4,20 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Trash2, Loader2, Users, ChevronDown, ChevronUp } from "lucide-react";
 import { formatDate } from "@/lib/utils";
@@ -26,7 +38,10 @@ export default function CompaniesTab() {
   const [companyName, setCompanyName] = useState("");
   const [expanded, setExpanded] = useState<string | null>(null);
   const [members, setMembers] = useState<Record<string, Member[]>>({});
-  const [addMember, setAddMember] = useState<{ userId: string; role: string }>({ userId: "", role: "reader" });
+  const [addMember, setAddMember] = useState<{ userId: string; role: string }>({
+    userId: "",
+    role: "reader",
+  });
 
   async function load() {
     const [c, u] = await Promise.all([
@@ -38,7 +53,9 @@ export default function CompaniesTab() {
     setLoading(false);
   }
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+  }, []);
 
   async function loadMembers(companyId: string) {
     const res = await fetch(`/api/admin/members?companyId=${companyId}`);
@@ -63,20 +80,20 @@ export default function CompaniesTab() {
   async function handleDeleteCompany(id: string) {
     const target = companies.find((c) => c.id === id);
     const ok = await confirm({
-      title: "Delete this company?",
+      title: "Delete this workspace?",
       body: target
         ? `${target.name} and all its folders, items, and members will be permanently deleted.`
         : "All folders, items, and members will be permanently deleted.",
-      confirmLabel: "Delete company",
+      confirmLabel: "Delete workspace",
       danger: true,
     });
     if (!ok) return;
     const res = await fetch(`/api/admin/companies?id=${id}`, { method: "DELETE" });
     if (res.ok) {
-      toast.success("Company deleted.");
+      toast.success("Workspace deleted.");
       load();
     } else {
-      toast.error("Could not delete company.");
+      toast.error("Could not delete workspace.");
     }
   }
 
@@ -108,29 +125,31 @@ export default function CompaniesTab() {
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <p className="text-xs text-[#888]">{companies.length} compan{companies.length !== 1 ? "ies" : "y"}</p>
+        <p className="text-xs text-mute-soft">
+          {companies.length} workspace{companies.length !== 1 ? "s" : ""}
+        </p>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
             <Button size="sm" variant="accent">
-              <Plus className="h-3.5 w-3.5" /> New company
+              <Plus className="h-3.5 w-3.5" /> New workspace
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Create company</DialogTitle>
+              <DialogTitle>Create workspace</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleCreateCompany} className="px-6 pb-6 space-y-4">
               <div className="space-y-1.5">
-                <Label>Company name</Label>
+                <Label>Workspace name</Label>
                 <Input
-                  placeholder="Google"
+                  placeholder="Spotify"
                   value={companyName}
                   onChange={(e) => setCompanyName(e.target.value)}
                   required
                 />
               </div>
               <Button type="submit" variant="accent" className="w-full" disabled={saving}>
-                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Create company"}
+                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Create workspace"}
               </Button>
             </form>
           </DialogContent>
@@ -139,47 +158,65 @@ export default function CompaniesTab() {
 
       {loading ? (
         <div className="flex justify-center py-12">
-          <Loader2 className="h-5 w-5 animate-spin text-[#ccc]" />
+          <Loader2 className="h-5 w-5 animate-spin text-mute-soft" />
         </div>
       ) : (
         <div className="space-y-3">
           {companies.map((c) => (
-            <div key={c.id} className="border border-[#ebebeb] rounded-xl bg-white overflow-hidden">
+            <div key={c.id} className="border border-line rounded-2xl bg-paper-elevated overflow-hidden">
               <div className="flex items-center justify-between px-4 py-3">
                 <div>
-                  <p className="text-sm font-medium text-[#111]">{c.name}</p>
-                  <p className="text-xs text-[#bbb] mt-0.5">/{c.slug} · {formatDate(c.createdAt)}</p>
+                  <p className="text-sm font-medium text-ink">{c.name}</p>
+                  <p className="text-xs text-mute-soft mt-0.5 font-mono-ui">
+                    /{c.slug} · {formatDate(c.createdAt)}
+                  </p>
                 </div>
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => toggleExpanded(c.id)}
-                    className="flex items-center gap-1 text-xs text-[#888] hover:text-[#111] transition-colors"
+                    className="flex items-center gap-1 text-xs text-mute hover:text-ink transition-colors"
                   >
                     <Users className="h-3.5 w-3.5" />
                     Members
-                    {expanded === c.id ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                    {expanded === c.id ? (
+                      <ChevronUp className="h-3 w-3" />
+                    ) : (
+                      <ChevronDown className="h-3 w-3" />
+                    )}
                   </button>
-                  <Button variant="ghost" size="icon-sm" onClick={() => handleDeleteCompany(c.id)}>
-                    <Trash2 className="h-3.5 w-3.5 text-[#bbb] hover:text-rose-500" />
-                  </Button>
+                  <button
+                    onClick={() => handleDeleteCompany(c.id)}
+                    className="text-mute-soft hover:text-danger transition-colors p-1"
+                    title="Delete workspace"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
                 </div>
               </div>
 
               {expanded === c.id && (
-                <div className="border-t border-[#f0f0f0] px-4 py-4 bg-[#fafafa]">
+                <div className="border-t border-line px-4 py-4 bg-paper/50">
                   {/* Add member */}
                   <div className="flex gap-2 mb-3">
-                    <Select value={addMember.userId} onValueChange={(v) => setAddMember({ ...addMember, userId: v })}>
+                    <Select
+                      value={addMember.userId}
+                      onValueChange={(v) => setAddMember({ ...addMember, userId: v })}
+                    >
                       <SelectTrigger className="flex-1 h-8 text-xs">
                         <SelectValue placeholder="Select user…" />
                       </SelectTrigger>
                       <SelectContent>
                         {users.map((u) => (
-                          <SelectItem key={u.id} value={u.id}>{u.name} ({u.email})</SelectItem>
+                          <SelectItem key={u.id} value={u.id}>
+                            {u.name} ({u.email})
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
-                    <Select value={addMember.role} onValueChange={(v) => setAddMember({ ...addMember, role: v })}>
+                    <Select
+                      value={addMember.role}
+                      onValueChange={(v) => setAddMember({ ...addMember, role: v })}
+                    >
                       <SelectTrigger className="w-28 h-8 text-xs">
                         <SelectValue />
                       </SelectTrigger>
@@ -188,26 +225,38 @@ export default function CompaniesTab() {
                         <SelectItem value="reader">Reader</SelectItem>
                       </SelectContent>
                     </Select>
-                    <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => handleAddMember(c.id)}>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-8 text-xs"
+                      onClick={() => handleAddMember(c.id)}
+                    >
                       Add
                     </Button>
                   </div>
 
                   {/* Member list */}
                   {members[c.id]?.length === 0 && (
-                    <p className="text-xs text-[#bbb] py-2">No members yet.</p>
+                    <p className="text-xs text-mute-soft py-2">No members yet.</p>
                   )}
                   {(members[c.id] || []).map((m) => (
-                    <div key={m.id} className="flex items-center justify-between py-2 border-b border-[#f0f0f0] last:border-0">
+                    <div
+                      key={m.id}
+                      className="flex items-center justify-between py-2 border-b border-line/60 last:border-0"
+                    >
                       <div>
-                        <p className="text-xs font-medium text-[#111]">{m.userName}</p>
-                        <p className="text-xs text-[#bbb]">{m.userEmail}</p>
+                        <p className="text-xs font-medium text-ink">{m.userName}</p>
+                        <p className="text-xs text-mute-soft font-mono-ui">{m.userEmail}</p>
                       </div>
                       <div className="flex items-center gap-2">
                         <Badge variant={m.role === "manager" ? "amber" : "default"}>{m.role}</Badge>
-                        <Button variant="ghost" size="icon-sm" onClick={() => handleRemoveMember(m.id, c.id)}>
-                          <Trash2 className="h-3 w-3 text-[#bbb] hover:text-rose-500" />
-                        </Button>
+                        <button
+                          onClick={() => handleRemoveMember(m.id, c.id)}
+                          className="text-mute-soft hover:text-danger transition-colors p-1"
+                          title="Remove member"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </button>
                       </div>
                     </div>
                   ))}
@@ -216,7 +265,7 @@ export default function CompaniesTab() {
             </div>
           ))}
           {companies.length === 0 && (
-            <div className="text-center py-12 text-sm text-[#bbb]">No companies yet.</div>
+            <div className="text-center py-12 text-sm text-mute-soft">No workspaces yet.</div>
           )}
         </div>
       )}

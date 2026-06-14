@@ -44,7 +44,10 @@ RESEND_FROM_NAME=Ayuvam
 GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
 
-# Vercel Blob — optional, for file uploads
+# Vercel Blob — REQUIRED for file uploads (links-only works without it)
+# Get it: Vercel dashboard → Storage → your Blob store → ".env.local" tab,
+# or run `vercel env pull`. If this is blank, uploads fail with a 400 and the
+# browser shows "Vercel Blob: Failed to retrieve the client token".
 BLOB_READ_WRITE_TOKEN=
 ```
 

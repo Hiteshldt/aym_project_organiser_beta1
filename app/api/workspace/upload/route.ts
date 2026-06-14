@@ -16,6 +16,18 @@ export async function POST(req: Request): Promise<NextResponse> {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  // Without a Blob store token we can't mint a client upload token. Fail with a
+  // clear message rather than the opaque "Failed to retrieve the client token".
+  if (!process.env.BLOB_READ_WRITE_TOKEN) {
+    return NextResponse.json(
+      {
+        error:
+          "File storage isn't configured. BLOB_READ_WRITE_TOKEN is missing — add it from your Vercel Blob store.",
+      },
+      { status: 500 }
+    );
+  }
+
   const body = (await req.json()) as HandleUploadBody;
 
   try {
