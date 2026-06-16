@@ -17,6 +17,8 @@ export type BillingCycle = "monthly" | "annual";
 export type Entitlements = {
   /** -1 means unlimited. */
   maxWorkspaces: number;
+  /** Max items per workspace. -1 = unlimited. (Free is sold as "25 items".) */
+  maxItems: number;
   maxMembersPerWorkspace: number;
   storageMb: number;
   whiteLabel: boolean;
@@ -35,6 +37,7 @@ export const PLANS: Record<
     blurb: "One client workspace to try it out.",
     entitlements: {
       maxWorkspaces: 1,
+      maxItems: 25,
       maxMembersPerWorkspace: 1,
       storageMb: 100,
       whiteLabel: false,
@@ -46,6 +49,7 @@ export const PLANS: Record<
     blurb: "For independent freelancers.",
     entitlements: {
       maxWorkspaces: 5,
+      maxItems: -1,
       maxMembersPerWorkspace: 3,
       storageMb: 2048,
       whiteLabel: false,
@@ -57,6 +61,7 @@ export const PLANS: Record<
     blurb: "For studios with a handful of clients.",
     entitlements: {
       maxWorkspaces: -1,
+      maxItems: -1,
       maxMembersPerWorkspace: 10,
       storageMb: 10240,
       whiteLabel: false,
@@ -68,6 +73,7 @@ export const PLANS: Record<
     blurb: "For growing agencies.",
     entitlements: {
       maxWorkspaces: -1,
+      maxItems: -1,
       maxMembersPerWorkspace: -1,
       storageMb: 51200,
       whiteLabel: true,

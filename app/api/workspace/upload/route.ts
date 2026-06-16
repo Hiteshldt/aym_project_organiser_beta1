@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth";
 import { handleUpload, type HandleUploadBody } from "@vercel/blob/client";
 import { NextResponse } from "next/server";
 import { MAX_FILE_SIZE } from "@/lib/utils";
+import { checkStorageHeadroom } from "@/lib/billing/storage";
 
 /**
  * Client-direct upload token endpoint. The browser uploads straight to Vercel
@@ -34,7 +35,26 @@ export async function POST(req: Request): Promise<NextResponse> {
     const result = await handleUpload({
       body,
       request: req,
-      onBeforeGenerateToken: async () => ({
+      onBeforeGenerateToken: async (_pathname, clientPayload) => {
+        // Backstop the storage quota server-side (the client preflights too, but
+        // a crafted client could skip that). Throwing here aborts the upload.
+        if (clientPayload) {
+          try {
+            const { slug, size } = JSON.parse(clientPayload) as {
+              slug?: string;
+              size?: number;
+            };
+            if (slug && typeof size === "number") {
+              const check = await checkStorageHeadroom(session.user.id, slug, size);
+              if (!check.ok) throw new Error(check.error);
+            }
+          } catch (err) {
+            // Re-throw quota errors; ignore malformed payloads (size is still
+            // capped by maximumSizeInBytes below).
+            if (err instanceof Error && /storage/i.test(err.message)) throw err;
+          }
+        }
+        return {
         // Allow the common deliverable formats target users actually share.
         allowedContentTypes: [
           "image/*",
@@ -53,7 +73,8 @@ export async function POST(req: Request): Promise<NextResponse> {
         ],
         maximumSizeInBytes: MAX_FILE_SIZE,
         tokenPayload: JSON.stringify({ userId: session.user.id }),
-      }),
+        };
+      },
       // Fires server-side after the blob lands. We read the result client-side
       // directly, so nothing to persist here.
       onUploadCompleted: async () => {},

@@ -1,11 +1,12 @@
 import { auth } from "@/lib/auth";
 import { db } from "@/db";
 import { items, itemHistory, folders, companyMembers, companies, users } from "@/db/schema";
-import { eq, and, desc, asc, sql } from "drizzle-orm";
+import { eq, and, desc, asc, sql, count } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { generateShortCode } from "@/lib/shortcode";
 import { normalizeUrl } from "@/lib/utils";
 import { deleteBlobs } from "@/lib/blob";
+import { getEntitlements } from "@/lib/billing/paddle-server";
 
 async function getCompanyAccess(userId: string, slug: string) {
   const result = await db
@@ -13,6 +14,7 @@ async function getCompanyAccess(userId: string, slug: string) {
       id: companies.id,
       name: companies.name,
       slug: companies.slug,
+      createdBy: companies.createdBy,
       role: companyMembers.role,
     })
     .from(companies)
@@ -25,7 +27,13 @@ async function getCompanyAccess(userId: string, slug: string) {
 
   if (!result[0]) return null;
   return {
-    company: { id: result[0].id, name: result[0].name, slug: result[0].slug },
+    company: {
+      id: result[0].id,
+      name: result[0].name,
+      slug: result[0].slug,
+      // The workspace owner whose plan governs this workspace's limits.
+      ownerId: result[0].createdBy,
+    },
     role: result[0].role,
   };
 }
@@ -92,6 +100,24 @@ export async function POST(req: NextRequest) {
   const access = await getCompanyAccess(session.user.id, slug);
   if (!access) return NextResponse.json({ error: "Not a member" }, { status: 403 });
   if (access.role !== "manager") return NextResponse.json({ error: "Managers only" }, { status: 403 });
+
+  // Plan limit: cap items per workspace by the OWNER's plan (-1 = unlimited).
+  const { maxItems } = await getEntitlements(access.company.ownerId);
+  if (maxItems !== -1) {
+    const [{ n }] = await db
+      .select({ n: count() })
+      .from(items)
+      .where(eq(items.companyId, access.company.id));
+    if (n >= maxItems) {
+      return NextResponse.json(
+        {
+          error: `Your plan includes ${maxItems} items per workspace. Upgrade for unlimited items.`,
+          code: "PLAN_LIMIT",
+        },
+        { status: 403 }
+      );
+    }
+  }
 
   // Duplicate check — skipped when the user explicitly chose "save as new anyway".
   // We compare normalized URLs so the same resource opened with different

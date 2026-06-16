@@ -18,7 +18,7 @@ const FAQS = [
   },
   {
     q: "Is my data secure?",
-    a: "Workspaces are fully isolated — clients only see their own. Files are stored on Vercel Blob with signed URLs. Database is hosted on Neon (Postgres) with TLS in transit and at-rest encryption. We never share or sell data.",
+    a: "Workspaces are fully isolated — clients only see their own, and a share link can be revoked any time. Files are stored on Vercel Blob and served over HTTPS via long, unguessable URLs. The database is hosted on Neon (Postgres) with TLS in transit and encryption at rest. We never share or sell your data.",
   },
   {
     q: "What's the file size limit?",

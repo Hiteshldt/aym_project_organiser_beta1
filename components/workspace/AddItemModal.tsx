@@ -216,13 +216,31 @@ export default function AddItemModal({
 
       if (file) {
         setUploading(true);
+        // Preflight the plan's storage quota first — a clear message, and we
+        // never upload (and orphan) a blob that would be over the limit.
+        const check = await fetch("/api/workspace/upload/check", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ slug, size: file.size }),
+        });
+        if (!check.ok) {
+          const data = await check.json().catch(() => ({}));
+          setUploading(false);
+          setSaving(false);
+          setError(data.error || "This file can't be uploaded on your plan.");
+          return;
+        }
         try {
           // Upload straight from the browser to Vercel Blob (token minted by
           // our route) — no 4.5MB serverless cap.
           const blob = await upload(
             `ayuvam/${Date.now()}-${file.name}`,
             file,
-            { access: "public", handleUploadUrl: "/api/workspace/upload" }
+            {
+              access: "public",
+              handleUploadUrl: "/api/workspace/upload",
+              clientPayload: JSON.stringify({ slug, size: file.size }),
+            }
           );
           type = "file";
           fileUrl = blob.url;
@@ -275,7 +293,9 @@ export default function AddItemModal({
         return;
       }
       if (!res.ok) {
-        setError("Failed to save item.");
+        const data = await res.json().catch(() => ({}));
+        // Plan-limit rejections carry a helpful upgrade message — surface it.
+        setError(data.error || "Failed to save item.");
         setSaving(false);
         return;
       }

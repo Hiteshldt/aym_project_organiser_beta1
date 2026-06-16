@@ -22,7 +22,7 @@ const instrumentSerif = Instrument_Serif({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://ayuvam.app"),
+  metadataBase: new URL("https://ayuvam.com"),
   title: {
     default: "Ayuvam — Make the work look as good as it is.",
     template: "%s · Ayuvam",

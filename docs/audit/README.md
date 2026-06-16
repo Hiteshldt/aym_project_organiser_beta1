@@ -31,21 +31,24 @@ triage and implement deliberately afterwards.
 
 ## 🔴 Consolidated P1s (must fix for a clean v1)
 
-1. **Plan limits not enforced** — only workspace count is checked; items (25),
-   storage (100MB+), and members are unenforced → revenue leak + Blob cost.
-   *(09/9.1, 07/7.2)*
-2. **Preview deploys use the production DB + storage** — any branch/PR deploy
-   reads/writes real data and can fire real side effects. *(06/6.1)*
-3. **No backup / recovery posture** — hard cascade deletes, no soft-delete;
-   confirm Neon PITR before paying customers. *(08/8.1)*
-4. **Landing goes blank without JS** — `[data-reveal]{opacity:0}` revealed only
-   by client JS; no fallback. *(01/1.1)*
+1. ✅ **FIXED — Plan limits not enforced.** Item cap (Free = 25/workspace) now
+   enforced on item create; storage cap now enforced via an upload preflight +
+   server backstop (`lib/billing/storage.ts`). Member cap is admin-only to add,
+   so not a user-facing leak — left for later. *(09/9.1, 07/7.2)*
+2. ⏳ **Preview deploys use the production DB + storage** — infra, needs your
+   action (Neon branch + Preview-scoped env). See "Owner action items" below.
+   *(06/6.1)*
+3. ⏳ **No backup / recovery posture** — confirm Neon PITR (infra); optional
+   soft-delete is a code change for a later batch. *(08/8.1)*
+4. ✅ **FIXED — Landing blank without JS.** Added a `<noscript>` fallback that
+   forces reveal; RevealProvider already had a JS-side failsafe. *(01/1.1)*
 
 ## 🟠 Top P2s
-- Wrong `metadataBase` domain (ayuvam.app → ayuvam.com). *(01/2.1)*
-- Inaccurate "signed URLs" claim; files are public-by-URL. *(01/2.2, 07/7.1)*
+- ✅ **FIXED** — `metadataBase` now `ayuvam.com`. *(01/2.1)*
+- ✅ **FIXED** — "signed URLs" FAQ claim reworded to the accurate public-URL
+  posture. *(01/2.2, 07/7.1)*
 - No type scale (70+ one-off font sizes); items table desktop-only on mobile;
-  settings page wastes width. *(02)*
+  settings page wastes width. *(02)* — UI polish batch, next.
 - No rate limiting on contact + login. *(03/3.1)*
 - Search trgm index lives outside `schema.ts`; `db:push` may not create it.
   *(03/3.2, 08/8.2)*
@@ -53,6 +56,13 @@ triage and implement deliberately afterwards.
   claims are real. *(09/9.2, 9.3)*
 - No email verification on password signup. *(05/5.1)*
 - Move schema changes off `db:push` to migrations. *(08/8.2)*
+
+## 🔧 Owner action items (infra — I can't do these from code)
+- **P1.2** Create a Neon branch for the **Preview** environment and set
+  `DATABASE_URL` (+ a separate Blob store and Paddle *sandbox* keys) on Preview
+  only, so PR/branch deploys stop touching production data.
+- **P1.3** Confirm Neon plan has point-in-time recovery / backups enabled before
+  onboarding paying customers.
 
 ## How to use this
 1. Read each report, mark which findings you want fixed.
