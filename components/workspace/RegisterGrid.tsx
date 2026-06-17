@@ -447,7 +447,7 @@ export default function RegisterGrid({
                     )}
 
                     {/* # / open */}
-                    <td className={cn(CELL, "text-[11px] text-mute-soft font-mono-ui")}>
+                    <td className={cn(CELL, "text-xs text-mute-soft font-mono-ui")}>
                       <button
                         onClick={() => setOpenItemId(item.id)}
                         title="Open details"
@@ -476,7 +476,7 @@ export default function RegisterGrid({
                     </td>
 
                     {/* Description */}
-                    <td className={cn(CELL, "hidden md:table-cell text-[13px] text-mute max-w-[240px]")}>
+                    <td className={cn(CELL, "hidden md:table-cell text-xs text-mute max-w-[240px]")}>
                       <InlineText
                         value={item.description}
                         editable={isManager}
@@ -487,7 +487,7 @@ export default function RegisterGrid({
                     </td>
 
                     {/* Note */}
-                    <td className={cn(CELL, "hidden lg:table-cell text-[13px] text-mute max-w-[280px]")}>
+                    <td className={cn(CELL, "hidden lg:table-cell text-xs text-mute max-w-[280px]")}>
                       <InlineText
                         value={item.notes}
                         editable={isManager}

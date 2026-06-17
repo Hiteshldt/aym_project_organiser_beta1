@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { signOut } from "next-auth/react";
-import { ArrowLeft, Loader2, Check, LogOut } from "lucide-react";
+import { ArrowLeft, Loader2, Check, LogOut, User as UserIcon, CreditCard, ShieldCheck } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import BillingPanel, { type BillingProps } from "@/components/billing/BillingPanel";
 import { ThemeController, ThemeToggle } from "@/components/theme";
@@ -34,12 +34,14 @@ export default function SettingsShell({
     } catch {}
   }, []);
 
+  const [tab, setTab] = useState<SettingsTab>("account");
+
   return (
    <ThemeController>
     <div className="min-h-screen bg-grain text-ink">
       {/* Top bar */}
       <header className="border-b border-line bg-paper-elevated/60 nav-blur">
-        <div className="mx-auto max-w-2xl px-6 h-14 flex items-center justify-between">
+        <div className="mx-auto max-w-3xl px-6 h-14 flex items-center justify-between">
           <Link
             href={backHref}
             className="inline-flex items-center gap-1.5 text-sm text-mute hover:text-ink transition-colors"
@@ -59,48 +61,85 @@ export default function SettingsShell({
         </div>
       </header>
 
-      <main className="mx-auto max-w-2xl px-6 py-10 md:py-12 space-y-6">
+      <main className="mx-auto max-w-3xl px-6 py-10 md:py-12">
         {/* Page header */}
         <header>
           <p className="font-mono-ui text-[11px] uppercase tracking-[0.2em] text-mute">
-            Account
+            {user.email}
           </p>
           <h1 className="mt-1.5 font-display text-3xl md:text-4xl text-ink leading-[1.05] tracking-[-0.02em]">
             Settings
           </h1>
         </header>
 
-        {/* Identity card */}
-        <ProfileCard user={user} />
+        {/* Tabs */}
+        <div className="mt-7 flex gap-1 border-b border-line">
+          {TABS.map((t) => {
+            const Icon = t.icon;
+            const active = tab === t.id;
+            return (
+              <button
+                key={t.id}
+                onClick={() => setTab(t.id)}
+                className={`flex items-center gap-1.5 px-3.5 pb-3 text-sm transition-colors ${
+                  active
+                    ? "text-ink border-b-2 border-accent font-medium -mb-px"
+                    : "text-mute hover:text-ink"
+                }`}
+              >
+                <Icon className="h-3.5 w-3.5" />
+                {t.label}
+              </button>
+            );
+          })}
+        </div>
 
-        {/* Plan & billing */}
-        <BillingPanel {...billing} />
+        <div className="mt-7">
+          {tab === "account" && (
+            <div className="space-y-5">
+              <div className="grid md:grid-cols-2 gap-5 items-start">
+                <ProfileCard user={user} />
+                <SessionCard email={user.email} />
+              </div>
+              <p className="text-xs text-mute-soft font-mono-ui">
+                Account created {formatDate(user.createdAt)} · role: {user.role}
+              </p>
+            </div>
+          )}
 
-        {/* Password card */}
-        <PasswordCard hasPassword={user.hasPassword} />
+          {tab === "billing" && <BillingPanel {...billing} />}
 
-        {/* Session card */}
-        <section className="rounded-2xl border border-line bg-paper-elevated p-6">
-          <h2 className="font-display text-xl text-ink">Session</h2>
-          <p className="text-sm text-mute mt-1">
-            Signed in as <span className="text-ink font-medium">{user.email}</span>
-          </p>
-          <button
-            onClick={() => signOut({ callbackUrl: "/login" })}
-            className="mt-4 inline-flex items-center gap-2 text-sm text-danger hover:text-accent-hover transition-colors"
-          >
-            <LogOut className="h-3.5 w-3.5" />
-            Sign out of all devices
-          </button>
-        </section>
-
-        {/* Account meta */}
-        <p className="text-xs text-mute-soft font-mono-ui">
-          Account created {formatDate(user.createdAt)} · role: {user.role}
-        </p>
+          {tab === "security" && <PasswordCard hasPassword={user.hasPassword} />}
+        </div>
       </main>
     </div>
    </ThemeController>
+  );
+}
+
+type SettingsTab = "account" | "billing" | "security";
+
+const TABS: { id: SettingsTab; label: string; icon: typeof UserIcon }[] = [
+  { id: "account", label: "Account", icon: UserIcon },
+  { id: "billing", label: "Billing", icon: CreditCard },
+  { id: "security", label: "Security", icon: ShieldCheck },
+];
+
+function SessionCard({ email }: { email: string }) {
+  return (
+    <section className="rounded-2xl border border-line bg-paper-elevated p-6">
+      <h2 className="font-display text-xl text-ink">Session</h2>
+      <p className="text-sm text-mute mt-1">
+        Signed in as <span className="text-ink font-medium">{email}</span>
+      </p>
+      <button
+        onClick={() => signOut({ callbackUrl: "/login" })}
+        className="mt-4 inline-flex items-center gap-2 text-sm text-danger hover:text-accent-hover transition-colors"
+      >
+        <LogOut className="h-3.5 w-3.5" />
+        Sign out of all devices
+      </button>
+    </section>
   );
 }
 
