@@ -369,7 +369,8 @@ export default function RegisterGrid({
         </div>
       )}
 
-      <div className="border border-line rounded-xl overflow-auto bg-paper-elevated min-h-0">
+      {/* Desktop: the full spreadsheet. Hidden on mobile (see card list below). */}
+      <div className="hidden md:block border border-line rounded-xl overflow-auto bg-paper-elevated min-h-0">
         <table className="w-full min-w-[720px] text-sm border-collapse">
           <thead className="sticky top-0 z-10">
             <tr className="border-b border-line">
@@ -534,13 +535,13 @@ export default function RegisterGrid({
                                     url={fileHref}
                                     name={item.fileName}
                                     title={item.fileName}
-                                    className="inline-flex items-center gap-1 text-[11px] text-mute hover:text-ink font-mono-ui truncate max-w-[140px] cursor-pointer"
+                                    className="inline-flex items-center gap-1 text-xs text-mute hover:text-ink font-mono-ui truncate max-w-[140px] cursor-pointer"
                                   >
                                     <FileText className="h-2.5 w-2.5 shrink-0 text-warning" />
                                     <span className="truncate">{item.fileName}</span>
                                   </FilePreview>
                                 ) : (
-                                  <span className="inline-flex items-center gap-1 text-[11px] text-mute font-mono-ui truncate max-w-[140px]">
+                                  <span className="inline-flex items-center gap-1 text-xs text-mute font-mono-ui truncate max-w-[140px]">
                                     <FileText className="h-2.5 w-2.5 shrink-0 text-warning" />
                                     <span className="truncate">{item.fileName}</span>
                                   </span>
@@ -564,13 +565,13 @@ export default function RegisterGrid({
                                 url={fileHref}
                                 name={item.fileName}
                                 title={item.fileName}
-                                className="inline-flex items-center gap-1 text-[11px] text-mute hover:text-ink font-mono-ui truncate max-w-[150px] cursor-pointer"
+                                className="inline-flex items-center gap-1 text-xs text-mute hover:text-ink font-mono-ui truncate max-w-[150px] cursor-pointer"
                               >
                                 <FileText className="h-2.5 w-2.5 shrink-0 text-warning" />
                                 <span className="truncate">{item.fileName}</span>
                               </FilePreview>
                             ) : (
-                              <span className="inline-flex items-center gap-1 text-[11px] text-mute font-mono-ui truncate max-w-[150px]">
+                              <span className="inline-flex items-center gap-1 text-xs text-mute font-mono-ui truncate max-w-[150px]">
                                 <FileText className="h-2.5 w-2.5 shrink-0 text-warning" />
                                 <span className="truncate">{item.fileName}</span>
                               </span>
@@ -675,15 +676,97 @@ export default function RegisterGrid({
         </table>
       </div>
 
+      {/* Mobile: stacked cards instead of a wide horizontal-scroll table.
+          Tapping a card opens the full detail panel (where everything edits). */}
+      <div className="md:hidden flex-1 min-h-0 overflow-y-auto space-y-2 pb-1">
+        {loading ? (
+          [0, 1, 2].map((i) => (
+            <div key={i} className="rounded-xl border border-line bg-paper-elevated p-3.5">
+              <div className="h-4 w-1/2 rounded app-shimmer" />
+              <div className="mt-2 h-3 w-3/4 rounded app-shimmer" />
+            </div>
+          ))
+        ) : (
+          (groups ?? [{ id: "all", name: "", color: "slate", rows: items }]).map((group) => (
+            <Fragment key={group.id}>
+              {groups && (
+                <div className="flex items-center gap-2 pt-2 px-0.5">
+                  <span
+                    className={cn(
+                      "h-2 w-2 rounded-full shrink-0",
+                      (FOLDER_COLORS[group.color as keyof typeof FOLDER_COLORS] ?? FOLDER_COLORS.slate).dot
+                    )}
+                  />
+                  <span className="text-xs font-semibold text-ink">{group.name}</span>
+                  <span className="font-mono-ui text-[10px] text-mute-soft">{group.rows.length}</span>
+                </div>
+              )}
+              {group.rows.map((item) => {
+                const status = findStatus(statusOptions, item.status);
+                const tint = isRegisterColor(item.rowColor) ? ROW_TINT[item.rowColor] : "";
+                const isLegacyFile = item.type === "file" && !item.fileUrl && !!item.url;
+                const linkHref = isLegacyFile ? null : item.url;
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => setOpenItemId(item.id)}
+                    className={cn(
+                      "w-full text-left rounded-xl border border-line bg-paper-elevated p-3.5 transition-colors active:bg-paper",
+                      tint,
+                      item.isPinned && !tint && "bg-accent-soft/30"
+                    )}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                        <span className={cn("shrink-0", item.type === "link" ? "text-accent" : "text-warning")}>
+                          {item.type === "link" ? <Link2 className="h-3.5 w-3.5" /> : <FileText className="h-3.5 w-3.5" />}
+                        </span>
+                        <span className="font-medium text-ink text-sm truncate">{item.title}</span>
+                        {item.isPinned && <Pin className="shrink-0 h-2.5 w-2.5 text-accent" fill="currentColor" />}
+                      </div>
+                      {status && (
+                        <span className={cn("shrink-0 inline-flex rounded-full px-2 py-0.5 text-[11px] font-medium", STATUS_CHIP[status.color])}>
+                          {status.label}
+                        </span>
+                      )}
+                    </div>
+
+                    {item.description && (
+                      <p className="mt-1.5 text-xs text-mute line-clamp-2">{item.description}</p>
+                    )}
+
+                    <div className="mt-2 flex items-center gap-3 text-xs text-mute-soft font-mono-ui">
+                      <span className="shrink-0">{formatDate(item.itemDate)}</span>
+                      {linkHref ? (
+                        <span className="inline-flex items-center gap-1 min-w-0">
+                          <Link2 className="h-2.5 w-2.5 shrink-0" />
+                          <span className="truncate">{prettyUrl(linkHref)}</span>
+                        </span>
+                      ) : item.fileName ? (
+                        <span className="inline-flex items-center gap-1 min-w-0 text-warning">
+                          <FileText className="h-2.5 w-2.5 shrink-0" />
+                          <span className="truncate text-mute-soft">{item.fileName}</span>
+                        </span>
+                      ) : null}
+                    </div>
+                  </button>
+                );
+              })}
+            </Fragment>
+          ))
+        )}
+      </div>
+
       {!loading && items.length > 0 && (
-        <div className="flex items-center justify-between mt-2">
+        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 mt-2">
           {isManager && folder && canAdd && (
             <button onClick={onAddItem} className="inline-flex items-center gap-1 text-xs text-accent hover:text-accent-hover">
               <Plus className="h-3.5 w-3.5" /> Add with details…
             </button>
           )}
           <p className="text-xs text-mute-soft ml-auto">
-            {items.length} row{items.length !== 1 ? "s" : ""} · double-click a cell to edit
+            {items.length} row{items.length !== 1 ? "s" : ""}
+            <span className="hidden md:inline"> · double-click a cell to edit</span>
           </p>
         </div>
       )}
