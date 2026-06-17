@@ -47,8 +47,10 @@ triage and implement deliberately afterwards.
 - ✅ **FIXED** — `metadataBase` now `ayuvam.com`. *(01/2.1)*
 - ✅ **FIXED** — "signed URLs" FAQ claim reworded to the accurate public-URL
   posture. *(01/2.2, 07/7.1)*
-- No type scale (70+ one-off font sizes); items table desktop-only on mobile;
-  settings page wastes width. *(02)* — UI polish batch, next.
+- ✅ **FIXED** — Settings rebuilt as Account/Billing/Security tabs; register
+  row font sizes normalised to a consistent scale; items table now renders as
+  stacked cards on mobile (was a 720px horizontal-scroll). Verified via
+  headless screenshots at 390/500/760/1280. *(02)*
 - No rate limiting on contact + login. *(03/3.1)*
 - Search trgm index lives outside `schema.ts`; `db:push` may not create it.
   *(03/3.2, 08/8.2)*
