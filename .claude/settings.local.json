@@ -97,7 +97,8 @@
       "Bash(grep -rn \"zpreview\" app/ middleware.ts components/)",
       "Bash(git commit -q -m 'audit: mark UI polish \\(settings tabs, type scale, mobile cards\\) done *)",
       "Bash(echo \"TSC EXIT: $?\")",
-      "Bash(git commit -q -m 'Item-limit ladder: free 50, solo 150, studio 500, agency unlimited *)"
+      "Bash(git commit -q -m 'Item-limit ladder: free 50, solo 150, studio 500, agency unlimited *)",
+      "Bash(git commit -q -m 'Item limits: free 50 total, paid tiers unlimited *)"
     ],
     "additionalDirectories": [
       "/Users/hiteshgupta/Vs Code/hitesh/files-organiser/app/api/auth"

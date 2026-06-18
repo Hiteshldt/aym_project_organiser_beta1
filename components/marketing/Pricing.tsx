@@ -37,7 +37,7 @@ const PLANS: Plan[] = [
     annual: 90,
     features: [
       "5 client workspaces",
-      "150 items per workspace",
+      "Unlimited items",
       "3 team members",
       "2GB storage",
       "Magic link client access",
@@ -53,7 +53,7 @@ const PLANS: Plan[] = [
     accent: true,
     features: [
       "Unlimited workspaces",
-      "500 items per workspace",
+      "Unlimited items",
       "10 team members",
       "10GB storage",
       "Tags, search, history",
@@ -68,7 +68,6 @@ const PLANS: Plan[] = [
     annual: 490,
     features: [
       "Everything in Studio",
-      "Unlimited items",
       "Unlimited team members",
       "50GB storage",
       "Custom subdomain",

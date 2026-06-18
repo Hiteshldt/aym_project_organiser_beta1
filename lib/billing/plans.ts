@@ -49,7 +49,7 @@ export const PLANS: Record<
     blurb: "For independent freelancers.",
     entitlements: {
       maxWorkspaces: 5,
-      maxItems: 150,
+      maxItems: -1,
       maxMembersPerWorkspace: 3,
       storageMb: 2048,
       whiteLabel: false,
@@ -61,7 +61,7 @@ export const PLANS: Record<
     blurb: "For studios with a handful of clients.",
     entitlements: {
       maxWorkspaces: -1,
-      maxItems: 500,
+      maxItems: -1,
       maxMembersPerWorkspace: 10,
       storageMb: 10240,
       whiteLabel: false,
@@ -113,7 +113,7 @@ export const PLAN_DISPLAY: Record<PlanTier, PlanDisplay> = {
     annual: 90,
     features: [
       "5 client workspaces",
-      "150 items per workspace",
+      "Unlimited items",
       "3 team members",
       "2GB storage",
       "Magic-link client access",
@@ -127,7 +127,7 @@ export const PLAN_DISPLAY: Record<PlanTier, PlanDisplay> = {
     annual: 190,
     features: [
       "Unlimited workspaces",
-      "500 items per workspace",
+      "Unlimited items",
       "10 team members",
       "10GB storage",
       "Tags, search, history",
@@ -142,7 +142,6 @@ export const PLAN_DISPLAY: Record<PlanTier, PlanDisplay> = {
     annual: 490,
     features: [
       "Everything in Studio",
-      "Unlimited items",
       "Unlimited team members",
       "50GB storage",
       "Custom subdomain",
