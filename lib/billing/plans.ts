@@ -17,7 +17,7 @@ export type BillingCycle = "monthly" | "annual";
 export type Entitlements = {
   /** -1 means unlimited. */
   maxWorkspaces: number;
-  /** Max items per workspace. -1 = unlimited. (Free is sold as "25 items".) */
+  /** Max items per workspace. -1 = unlimited. */
   maxItems: number;
   maxMembersPerWorkspace: number;
   storageMb: number;
@@ -37,7 +37,7 @@ export const PLANS: Record<
     blurb: "One client workspace to try it out.",
     entitlements: {
       maxWorkspaces: 1,
-      maxItems: 25,
+      maxItems: 50,
       maxMembersPerWorkspace: 1,
       storageMb: 100,
       whiteLabel: false,
@@ -49,7 +49,7 @@ export const PLANS: Record<
     blurb: "For independent freelancers.",
     entitlements: {
       maxWorkspaces: 5,
-      maxItems: -1,
+      maxItems: 150,
       maxMembersPerWorkspace: 3,
       storageMb: 2048,
       whiteLabel: false,
@@ -61,7 +61,7 @@ export const PLANS: Record<
     blurb: "For studios with a handful of clients.",
     entitlements: {
       maxWorkspaces: -1,
-      maxItems: -1,
+      maxItems: 500,
       maxMembersPerWorkspace: 10,
       storageMb: 10240,
       whiteLabel: false,
@@ -103,7 +103,7 @@ export const PLAN_DISPLAY: Record<PlanTier, PlanDisplay> = {
     tagline: "One client, to try it out.",
     monthly: 0,
     annual: 0,
-    features: ["1 client workspace", "25 items", "1 team member", "100MB storage"],
+    features: ["1 client workspace", "50 items", "1 team member", "100MB storage"],
     selfServe: false,
   },
   solo: {
@@ -113,7 +113,7 @@ export const PLAN_DISPLAY: Record<PlanTier, PlanDisplay> = {
     annual: 90,
     features: [
       "5 client workspaces",
-      "Unlimited items",
+      "150 items per workspace",
       "3 team members",
       "2GB storage",
       "Magic-link client access",
@@ -127,6 +127,7 @@ export const PLAN_DISPLAY: Record<PlanTier, PlanDisplay> = {
     annual: 190,
     features: [
       "Unlimited workspaces",
+      "500 items per workspace",
       "10 team members",
       "10GB storage",
       "Tags, search, history",
@@ -141,6 +142,7 @@ export const PLAN_DISPLAY: Record<PlanTier, PlanDisplay> = {
     annual: 490,
     features: [
       "Everything in Studio",
+      "Unlimited items",
       "Unlimited team members",
       "50GB storage",
       "Custom subdomain",
