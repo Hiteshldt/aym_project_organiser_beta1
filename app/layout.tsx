@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
@@ -52,9 +52,21 @@ export const metadata: Metadata = {
     description:
       "A clean, organized space to share client work — proposals, decks, files, and links.",
   },
-  icons: {
-    icon: "/favicon.ico",
+  // Installed-app metadata (Add to Dock / Install). The web manifest, icon, and
+  // apple-icon are auto-wired from app/manifest.ts, app/icon.tsx, app/apple-icon.tsx.
+  applicationName: "Ayuvam",
+  appleWebApp: {
+    capable: true,
+    title: "Ayuvam",
+    statusBarStyle: "default",
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#fbfaf7" },
+    { media: "(prefers-color-scheme: dark)", color: "#131317" },
+  ],
 };
 
 export default function RootLayout({

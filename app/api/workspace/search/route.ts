@@ -179,6 +179,7 @@ export async function GET(req: NextRequest) {
     type: items.type,
     url: items.url,
     fileKey: items.fileKey,
+    fileUrl: items.fileUrl,
     fileName: items.fileName,
     fileSize: items.fileSize,
     folderId: items.folderId,

@@ -18,6 +18,7 @@ import RegisterGrid, { type RegisterItem } from "./RegisterGrid";
 import FolderOverview from "./FolderOverview";
 import WelcomeSetup from "./WelcomeSetup";
 import SearchResults from "./SearchResults";
+import CommandPalette from "./CommandPalette";
 import AddItemModal from "./AddItemModal";
 import CreateFolderModal from "./CreateFolderModal";
 import ShareWithClientModal from "./ShareWithClientModal";
@@ -191,10 +192,17 @@ export default function WorkspaceShell({
     [company.slug]
   );
 
-  // "/" focuses search from anywhere (unless already typing somewhere).
+  // ⌘K / Ctrl+K opens the command palette from anywhere; "/" focuses the inline
+  // search bar (unless you're already typing in a field).
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const [paletteOpen, setPaletteOpen] = useState(false);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setPaletteOpen((o) => !o);
+        return;
+      }
       if (e.key !== "/" || e.metaKey || e.ctrlKey || e.altKey) return;
       const t = e.target as HTMLElement;
       if (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable) return;
@@ -472,7 +480,7 @@ export default function WorkspaceShell({
               <input
                 ref={searchInputRef}
                 type="text"
-                placeholder="Search by title, tag, or note…  ( / )"
+                placeholder="Search by title, tag, or note…"
                 value={searchQuery}
                 onChange={handleSearch}
                 onKeyDown={(e) => {
@@ -481,14 +489,23 @@ export default function WorkspaceShell({
                     (e.target as HTMLInputElement).blur();
                   }
                 }}
-                className="w-full pl-9 pr-8 py-2.5 text-sm bg-transparent outline-none text-ink placeholder:text-mute-soft rounded-xl"
+                className="w-full pl-9 pr-16 py-2.5 text-sm bg-transparent outline-none text-ink placeholder:text-mute-soft rounded-xl"
               />
-              {isSearching && (
+              {isSearching ? (
                 <button
                   onClick={clearSearch}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-mute-soft hover:text-mute"
                 >
                   <X className="h-3.5 w-3.5" />
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setPaletteOpen(true)}
+                  title="Open command palette"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-md border border-line bg-paper px-1.5 py-0.5 font-mono-ui text-[10px] text-mute-soft hover:text-mute hover:border-line-strong transition-colors"
+                >
+                  ⌘K
                 </button>
               )}
             </div>
@@ -977,6 +994,16 @@ export default function WorkspaceShell({
           reason={upgradeReason}
         />
         <UpgradeCelebration />
+
+        <CommandPalette
+          slug={company.slug}
+          open={paletteOpen}
+          onOpenChange={setPaletteOpen}
+          onViewAll={(q) => {
+            setSearchQuery(q);
+            setIsSearching(q.length > 0);
+          }}
+        />
       </div>
     </ThemeController>
   );
