@@ -19,6 +19,7 @@ import FolderOverview from "./FolderOverview";
 import WelcomeSetup from "./WelcomeSetup";
 import SearchResults from "./SearchResults";
 import CommandPalette from "./CommandPalette";
+import InstallAppButton from "./InstallAppButton";
 import AddItemModal from "./AddItemModal";
 import CreateFolderModal from "./CreateFolderModal";
 import ShareWithClientModal from "./ShareWithClientModal";
@@ -513,6 +514,7 @@ export default function WorkspaceShell({
 
           {/* Right side */}
           <div className="flex items-center gap-1.5 shrink-0">
+            <InstallAppButton />
             <ThemeToggle />
             {isManager && (
               <Button
