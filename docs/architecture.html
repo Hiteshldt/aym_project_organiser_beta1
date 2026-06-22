@@ -218,7 +218,7 @@
         <div class="nd">Builds on every push, hosts <b>ayuvam.com</b>. Runs the Next.js app: pages (SSR), serverless API routes, and edge middleware.</div>
         <div class="layer">
           <div class="lh">Next.js app</div>
-          <div class="li"><span>Marketing site</span><span>Workspace app</span><span>Client share view</span></div>
+          <div class="li"><span>Marketing site</span><span>Workspace app</span><span>Client share view</span><span>Admin dashboard</span><span>⌘K palette</span><span>Installable PWA</span></div>
         </div>
         <div class="layer">
           <div class="lh">API routes (serverless)</div>
@@ -555,6 +555,7 @@
           <div><b>app/(settings)</b> <span class="g-mute">— account, password, plan &amp; billing.</span></div>
           <div><b>app/(admin)</b> <span class="g-mute">— admin dashboard (role=admin only): overview metrics &amp; MRR, users, subscriptions/churn, workspaces. See docs/ADMIN.md.</span></div>
           <div><b>app/share/[token]</b> <span class="g-mute">— public client view. <b>app/l/[code]</b> — short links.</span></div>
+          <div><b>app/manifest.ts · icon.tsx · apple-icon.tsx</b> <span class="g-mute">— PWA web manifest + generated app icons (installable to Dock / taskbar / Start search).</span></div>
           <div><b>app/api/*</b> <span class="g-mute">— serverless route handlers.</span></div>
           <div><b>components/</b> <span class="g-mute">— UI (workspace, billing, marketing, share, ui kit).</span></div>
           <div><b>lib/</b> <span class="g-mute">— auth, email, billing, utils. <b>db/</b> — schema + scripts.</span></div>
@@ -570,7 +571,7 @@
         <li><b>ayuvam.com (apex)</b> is canonical; <code>www</code> must redirect to it, or login/RSC navigation breaks with CORS errors.</li>
         <li>Paddle <b>Sandbox and Production are separate accounts</b> — separate tokens, price IDs, and webhook secrets. Never mix (e.g. a <code>live_</code> token with <code>env=sandbox</code> → 403 checkout).</li>
         <li><code>NEXT_PUBLIC_*</code> values are compiled into the browser at <b>build time</b> — changing them in Vercel requires a redeploy.</li>
-        <li>Plan limits: workspace creation is enforced server-side; other limits (members, storage) are shown but not yet hard-blocked.</li>
+        <li>Plan limits: <b>workspace count, item count (Free = 50/workspace), and storage are enforced server-side</b> against the workspace <em>owner's</em> plan (<code>companies.createdBy</code>) — so a free-owned workspace caps everyone in it. Member cap is not yet hard-blocked (adding members is admin-only). Entitlements live in <code>lib/billing/plans.ts</code>.</li>
         <li><code>AGENTS.md</code>: this Next.js may differ from training data — check <code>node_modules/next/dist/docs/</code> before writing framework code.</li>
       </ul>
     </div>

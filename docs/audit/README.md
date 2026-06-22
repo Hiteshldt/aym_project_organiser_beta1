@@ -31,10 +31,12 @@ triage and implement deliberately afterwards.
 
 ## 🔴 Consolidated P1s (must fix for a clean v1)
 
-1. ✅ **FIXED — Plan limits not enforced.** Item cap (Free = 25/workspace) now
-   enforced on item create; storage cap now enforced via an upload preflight +
-   server backstop (`lib/billing/storage.ts`). Member cap is admin-only to add,
-   so not a user-facing leak — left for later. *(09/9.1, 07/7.2)*
+1. ✅ **FIXED — Plan limits not enforced.** Item cap (Free = 50/workspace; paid
+   tiers unlimited) enforced on item create; storage cap enforced via an upload
+   preflight + server backstop (`lib/billing/storage.ts`); workspace count
+   enforced on create. All resolve against the workspace **owner's** plan. Member
+   cap is admin-only to add, so not a user-facing leak — left for later.
+   *(09/9.1, 07/7.2)*
 2. ⏳ **Preview deploys use the production DB + storage** — infra, needs your
    action (Neon branch + Preview-scoped env). See "Owner action items" below.
    *(06/6.1)*
@@ -51,13 +53,20 @@ triage and implement deliberately afterwards.
   row font sizes normalised to a consistent scale; items table now renders as
   stacked cards on mobile (was a 720px horizontal-scroll). Verified via
   headless screenshots at 390/500/760/1280. *(02)*
-- No rate limiting on contact + login. *(03/3.1)*
-- Search trgm index lives outside `schema.ts`; `db:push` may not create it.
-  *(03/3.2, 08/8.2)*
-- Sandbox→production Paddle switch needs a verified runbook; confirm "trial"
-  claims are real. *(09/9.2, 9.3)*
-- No email verification on password signup. *(05/5.1)*
-- Move schema changes off `db:push` to migrations. *(08/8.2)*
+- ✅ **SHIPPED** — ⌘K/Ctrl+K command palette (live search, keyboard nav, open
+  link/file) and installable PWA (web manifest + generated app icons + an
+  in-app "Install app" button). Verified via headless screenshots. *(02)*
+- ✅ **DOCUMENTED** — Sandbox→production Paddle switch now has a verified
+  step-by-step runbook in `docs/PADDLE.md`. *(09/9.2)*
+- ⚠️ **Still open — confirm "trial" claims are real** before marketing them
+  (pricing/CTAs say "Start trial"; verify Paddle prices have trial periods, or
+  reword). *(09/9.3)*
+- ⚠️ **Still open — no rate limiting on contact + login.** Worth adding before
+  public exposure (login brute-force, contact spam). *(03/3.1)*
+- ⚠️ **Still open — no email verification on password signup.** *(05/5.1)*
+- 🟡 Search trgm index lives outside `schema.ts`; `db:push` may not create it
+  (there's a runtime fallback, so search still works). *(03/3.2, 08/8.2)*
+- 🟡 Move schema changes off `db:push` to migrations. *(08/8.2)*
 
 ## 🔧 Owner action items (infra — I can't do these from code)
 - **P1.2** Create a Neon branch for the **Preview** environment and set

@@ -109,8 +109,15 @@ and Paddle's test cards before flipping to `production`.
 
 ## Entitlements (what each tier grants)
 
-Defined in `lib/billing/plans.ts` → `PLANS`. To enforce a limit somewhere, call
-`getEntitlements(userId)` (server) and check before allowing the action — e.g.
-gate "create workspace" on `maxWorkspaces`. Enforcement is intentionally **not**
-wired into existing flows yet, so no one gets locked out unexpectedly; add it
-deliberately per feature.
+Defined in `lib/billing/plans.ts` → `PLANS`. Enforcement is **live** for:
+
+- **Workspace count** (`maxWorkspaces`) — checked on workspace create.
+- **Item count** (`maxItems`, Free = 50/workspace) — checked on item create.
+- **Storage** (`storageMb`) — upload preflight + a server backstop in
+  `lib/billing/storage.ts`.
+
+All limits resolve against the **workspace owner's** plan
+(`companies.createdBy`), not the acting member — so a Free-owned workspace caps
+everyone in it. The **member cap** is not yet hard-blocked (adding members is
+admin-only). To add a new limit, call `getEntitlements(ownerId)` server-side and
+check before allowing the action.

@@ -137,13 +137,16 @@ Paddle needs four URLs live before they activate the account:
 
 All four exist in this repo under [app/(marketing)](../app/(marketing)). After deploying to production, submit your application from the Paddle dashboard. Review takes 24–48 hours.
 
-### 5.2 After verification (next session)
+### 5.2 After verification
 
-Once Paddle is verified:
+The billing integration is **already built** (checkout, webhook, customer
+portal, billing panel in Settings, and live plan-limit enforcement). Switching
+on real payments is just configuration — follow **[PADDLE.md](PADDLE.md)**:
 
-1. Create products in Paddle dashboard: Solo ($9 / $90), Studio ($19 / $190), Agency ($49 / $490)
-2. Tell the dev assistant "Paddle is verified" with the price IDs
-3. Integration will add: `/api/billing/checkout`, `/api/billing/webhook`, plan limits in the API, billing page in settings
+1. Create products in the Paddle dashboard: Solo ($9 / $90), Studio ($19 / $190), Agency ($49 / $490)
+2. Create the production client token + API key + webhook (dest: `https://ayuvam.com/api/webhooks/paddle`, all `subscription.*` events)
+3. Set the `NEXT_PUBLIC_PADDLE_*` + `PADDLE_API_KEY` + `PADDLE_WEBHOOK_SECRET` env vars in Vercel, with `NEXT_PUBLIC_PADDLE_ENV=production`, then **redeploy** (the `NEXT_PUBLIC_*` ones bake in at build time)
+4. Run one live test checkout end-to-end before announcing
 
 ### Why Paddle and not Stripe
 
