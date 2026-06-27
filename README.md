@@ -16,11 +16,15 @@ All docs live in [`docs/`](docs/). Start here:
 
 | Doc | What it is |
 |---|---|
+| **[CHANGELOG.md](docs/CHANGELOG.md)** | What changed and where the project stands — start here |
+| **[index.html](docs/index.html)** | Visual system architecture (open in a browser) |
 | **[PRODUCT.md](docs/PRODUCT.md)** | What Ayuvam is, who it's for, features, how it's used |
 | **[TECHNICAL.md](docs/TECHNICAL.md)** | Stack, architecture, data model, key flows |
 | **[ROADMAP.md](docs/ROADMAP.md)** | Current status, what's next, future plans |
 | **[BRAND.md](docs/BRAND.md)** | Colors, typography, voice — the visual identity |
 | **[LAUNCH.md](docs/LAUNCH.md)** | Operational setup — Google OAuth, Resend, Vercel, Paddle |
+| **[PADDLE.md](docs/PADDLE.md)** | Billing setup — products, prices, webhook, go-live |
+| **[ADMIN.md](docs/ADMIN.md)** | Admin dashboard — metrics, users, subscriptions |
 | **[DEV-SETUP.md](docs/DEV-SETUP.md)** | Run Ayuvam locally in 5 minutes |
 
 ---
