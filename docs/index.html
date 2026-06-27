@@ -465,9 +465,10 @@
     <div class="flows">
 
       <div class="flow"><h4>🔐 Sign in</h4><ol>
-        <li>User clicks <b>Continue with Google</b> (or email + password).</li>
+        <li>User clicks <b>Continue with Google</b> — the only self-serve signup (email + password is sign-in only, for accounts created out-of-band).</li>
         <li>Google verifies → redirects to <code>/api/auth/callback/google</code>.</li>
         <li>NextAuth finds/creates the <b>users</b> row, issues a JWT cookie.</li>
+        <li>Login is <b>rate-limited per IP</b> (10/min) before any DB/bcrypt work.</li>
         <li>Middleware now lets them into <code>/workspace</code>.</li>
       </ol></div>
 
@@ -516,6 +517,7 @@
         <tr><td><code>NEXT_PUBLIC_PADDLE_PRICE_*</code> (×6)</td><td>Paddle</td><td><span class="badge b-pub">PUBLIC</span></td><td>Solo/Studio/Agency × monthly/annual price IDs</td></tr>
         <tr><td><code>PADDLE_API_KEY</code></td><td>Paddle</td><td><span class="badge b-sec">SECRET</span></td><td>Server API (customer portal)</td></tr>
         <tr><td><code>PADDLE_WEBHOOK_SECRET</code></td><td>Paddle</td><td><span class="badge b-sec">SECRET</span></td><td>Verify webhook signatures</td></tr>
+        <tr><td><code>UPSTASH_REDIS_REST_URL</code> / <code>…TOKEN</code></td><td>Upstash <i>(optional)</i></td><td><span class="badge b-sec">SECRET</span></td><td>Durable rate-limit store. Unset → in-memory fallback (see <code>lib/rate-limit.ts</code>)</td></tr>
       </tbody>
     </table>
   </div>
@@ -550,7 +552,7 @@
         <div class="glossary" style="columns:1">
           <div><b>app/(marketing)</b> <span class="g-mute">— public landing, pricing, contact, legal.</span></div>
           <div><b>app/(auth)</b> <span class="g-mute">— login.</span></div>
-          <div><b>app/(onboard)</b> <span class="g-mute">— first-workspace setup.</span></div>
+          <div><b>app/(onboard)</b> <span class="g-mute">— first-workspace setup: a two-step wizard (name the workspace → pick starter folders, bulk-created).</span></div>
           <div><b>app/(workspace)</b> <span class="g-mute">— the main app (register grid, folders, items).</span></div>
           <div><b>app/(settings)</b> <span class="g-mute">— account, password, plan &amp; billing.</span></div>
           <div><b>app/(admin)</b> <span class="g-mute">— admin dashboard (role=admin only): overview metrics &amp; MRR, users, subscriptions/churn, workspaces. See docs/ADMIN.md.</span></div>
@@ -558,7 +560,7 @@
           <div><b>app/manifest.ts · icon.tsx · apple-icon.tsx</b> <span class="g-mute">— PWA web manifest + generated app icons (installable to Dock / taskbar / Start search).</span></div>
           <div><b>app/api/*</b> <span class="g-mute">— serverless route handlers.</span></div>
           <div><b>components/</b> <span class="g-mute">— UI (workspace, billing, marketing, share, ui kit).</span></div>
-          <div><b>lib/</b> <span class="g-mute">— auth, email, billing, utils. <b>db/</b> — schema + scripts.</span></div>
+          <div><b>lib/</b> <span class="g-mute">— auth, email, billing, rate-limit, utils. <b>db/</b> — schema + scripts.</span></div>
           <div><b>docs/</b> <span class="g-mute">— PRODUCT, TECHNICAL, PADDLE, this file.</span></div>
         </div>
       </div>
@@ -572,6 +574,7 @@
         <li>Paddle <b>Sandbox and Production are separate accounts</b> — separate tokens, price IDs, and webhook secrets. Never mix (e.g. a <code>live_</code> token with <code>env=sandbox</code> → 403 checkout).</li>
         <li><code>NEXT_PUBLIC_*</code> values are compiled into the browser at <b>build time</b> — changing them in Vercel requires a redeploy.</li>
         <li>Plan limits: <b>workspace count, item count (Free = 50/workspace), and storage are enforced server-side</b> against the workspace <em>owner's</em> plan (<code>companies.createdBy</code>) — so a free-owned workspace caps everyone in it. Member cap is not yet hard-blocked (adding members is admin-only). Entitlements live in <code>lib/billing/plans.ts</code>.</li>
+        <li><b>Rate limiting</b> (<code>lib/rate-limit.ts</code>) auto-selects its store: Upstash Redis when both <code>UPSTASH_*</code> vars are set, else in-memory. On serverless, in-memory is per-instance (weak) — set Upstash for production. It <b>fails open to memory</b> if Upstash is unreachable, so logins never lock up.</li>
         <li><code>AGENTS.md</code>: this Next.js may differ from training data — check <code>node_modules/next/dist/docs/</code> before writing framework code.</li>
       </ul>
     </div>

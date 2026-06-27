@@ -1,10 +1,17 @@
-import NextAuth from "next-auth";
+import NextAuth, { CredentialsSignin } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 import { db } from "@/db";
 import { users } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
+import { rateLimit, clientIp } from "@/lib/rate-limit";
+
+/** Thrown when an IP makes too many login attempts. The `code` surfaces to the
+ *  client as `res.code` so we can show a distinct message. */
+class TooManyAttemptsError extends CredentialsSignin {
+  code = "rate_limited";
+}
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   secret: process.env.AUTH_SECRET,
@@ -79,7 +86,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
       },
-      async authorize(credentials) {
+      async authorize(credentials, request) {
+        // Throttle by IP before touching the DB or hashing — stops brute-force.
+        const rl = await rateLimit(`login:${clientIp(request)}`, {
+          limit: 10,
+          windowMs: 60_000,
+        });
+        if (!rl.ok) throw new TooManyAttemptsError();
+
         if (!credentials?.email || !credentials?.password) return null;
         const user = await db
           .select()

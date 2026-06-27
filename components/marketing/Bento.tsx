@@ -37,32 +37,47 @@ export default function Bento() {
             never see the other 19. You never re-explain where anything lives.
           </TileBody>
 
-          {/* Visual: stack of workspace cards */}
-          <div className="mt-auto pt-6 grid grid-cols-3 gap-2">
-            {["Google", "Apple", "Spotify"].map((name, i) => (
-              <div
-                key={name}
-                className={`rounded-lg border p-3 ${
-                  i === 1
-                    ? "bg-accent-soft border-accent/30 -translate-y-1"
-                    : "bg-paper-elevated border-line"
-                } transition-transform`}
-              >
-                <div className="flex items-center gap-1.5">
-                  <span
-                    className={`h-1.5 w-1.5 rounded-full ${
-                      i === 1 ? "bg-accent" : "bg-mute-soft"
-                    }`}
-                  />
-                  <span className="text-[12px] font-medium text-ink truncate">
-                    {name}
-                  </span>
+          {/* Visual: stack of workspace cards, each holding its own items */}
+          <div className="my-auto pt-8 grid grid-cols-3 gap-3">
+            {["Google", "Apple", "Spotify"].map((name, i) => {
+              const active = i === 1;
+              return (
+                <div
+                  key={name}
+                  className={`rounded-xl border p-3 ${
+                    active
+                      ? "bg-accent-soft border-accent/30 -translate-y-1 shadow-soft"
+                      : "bg-paper-elevated border-line"
+                  } transition-transform`}
+                >
+                  <div className="flex items-center gap-1.5">
+                    <span
+                      className={`h-1.5 w-1.5 rounded-full ${
+                        active ? "bg-accent" : "bg-mute-soft"
+                      }`}
+                    />
+                    <span className="text-[12px] font-medium text-ink truncate">
+                      {name}
+                    </span>
+                  </div>
+                  <p className="text-[10px] font-mono-ui text-mute mt-1.5">
+                    {[12, 28, 7][i]} items
+                  </p>
+                  {/* faux item rows — the work that lives inside */}
+                  <div className="mt-3 space-y-1.5" aria-hidden>
+                    {[82, 64, 73].map((w, k) => (
+                      <div
+                        key={k}
+                        className={`h-1.5 rounded-full ${
+                          active ? "bg-accent/30" : "bg-line"
+                        }`}
+                        style={{ width: `${w}%` }}
+                      />
+                    ))}
+                  </div>
                 </div>
-                <p className="text-[10px] font-mono-ui text-mute mt-2">
-                  {[12, 28, 7][i]} items
-                </p>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </Tile>
 

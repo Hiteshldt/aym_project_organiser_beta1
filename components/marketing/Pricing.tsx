@@ -42,7 +42,7 @@ const PLANS: Plan[] = [
       "2GB storage",
       "Magic link client access",
     ],
-    cta: "Start Solo trial",
+    cta: "Start free",
   },
   {
     name: "Studio",
@@ -59,7 +59,7 @@ const PLANS: Plan[] = [
       "Tags, search, history",
       "Priority email support",
     ],
-    cta: "Start Studio trial",
+    cta: "Start free",
   },
   {
     name: "Agency",

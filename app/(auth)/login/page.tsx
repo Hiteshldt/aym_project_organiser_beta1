@@ -29,7 +29,11 @@ export default function LoginPage() {
     });
     setLoading(false);
     if (res?.error) {
-      setError("Invalid email or password.");
+      setError(
+        res.code === "rate_limited"
+          ? "Too many attempts. Please wait a minute and try again."
+          : "Invalid email or password."
+      );
     } else {
       router.push("/workspace");
     }

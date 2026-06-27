@@ -154,6 +154,28 @@ Paddle is a Merchant of Record — they handle tax/VAT/GST globally and pay you 
 
 ---
 
+## 5b. Rate limiting (optional hardening)
+
+Login and the contact form are rate-limited out of the box using an in-memory
+counter — zero setup, works immediately. On Vercel each serverless instance has
+its own memory, so for production-grade limiting (shared across instances) add a
+free **Upstash Redis** database:
+
+1. **https://upstash.com → Create Database** (Redis, pick a region near Vercel)
+2. Copy the **REST URL** and **REST token**
+3. Add to Vercel env vars (and `.env.local`):
+
+```env
+UPSTASH_REDIS_REST_URL=https://...upstash.io
+UPSTASH_REDIS_REST_TOKEN=...
+```
+
+The limiter auto-detects these and switches to Redis — no code change, no
+redeploy logic. If Upstash is ever unreachable it fails open to in-memory, so
+logins never lock up. (Limits: login 10/min/IP, contact 5/min/IP.)
+
+---
+
 ## 6. Sanity check — does the whole flow work?
 
 Run this in a fresh incognito window on the live site:

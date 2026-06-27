@@ -1,10 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sendContactMessage } from "@/lib/email";
+import { rateLimit, clientIp } from "@/lib/rate-limit";
 
 const VALID_TOPICS = new Set(["sales", "help", "feedback", "other"]);
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function POST(req: NextRequest) {
+  // Cap submissions per IP so the form can't be used to spam our inbox.
+  const ip = clientIp(req);
+  const rl = await rateLimit(`contact:${ip}`, { limit: 5, windowMs: 60_000 });
+  if (!rl.ok) {
+    return NextResponse.json(
+      { error: "Too many messages. Please wait a minute and try again." },
+      { status: 429, headers: { "Retry-After": String(Math.ceil(rl.resetMs / 1000)) } }
+    );
+  }
+
   let body: unknown;
   try {
     body = await req.json();

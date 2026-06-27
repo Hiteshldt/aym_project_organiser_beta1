@@ -58,12 +58,22 @@ triage and implement deliberately afterwards.
   in-app "Install app" button). Verified via headless screenshots. *(02)*
 - ✅ **DOCUMENTED** — Sandbox→production Paddle switch now has a verified
   step-by-step runbook in `docs/PADDLE.md`. *(09/9.2)*
-- ⚠️ **Still open — confirm "trial" claims are real** before marketing them
-  (pricing/CTAs say "Start trial"; verify Paddle prices have trial periods, or
-  reword). *(09/9.3)*
-- ⚠️ **Still open — no rate limiting on contact + login.** Worth adding before
-  public exposure (login brute-force, contact spam). *(03/3.1)*
-- ⚠️ **Still open — no email verification on password signup.** *(05/5.1)*
+- ✅ **FIXED — "trial" claims removed.** No trial period is configured and
+  every pricing CTA just routes to `/login` → Free plan, so "Start Solo/Studio
+  trial" was a false promise. Reworded both to "Start free" (Agency stays "Talk
+  to us"). *(09/9.3)*
+- ✅ **FIXED — rate limiting on contact + login.** Pluggable limiter
+  (`lib/rate-limit.ts`): in-memory by default, auto-upgrades to durable Upstash
+  Redis when `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN` are set (no
+  code change, no SDK dep). Login throttled 10/min per IP (throws a coded error
+  → "Too many attempts"); contact throttled 5/min per IP (429 + Retry-After).
+  *(03/3.1)*
+- ✅ **RESOLVED (by architecture) — email verification.** The only self-serve
+  signup is Continue-with-Google, whose emails are already verified. The
+  Credentials provider only *signs in* existing users with a `passwordHash`;
+  there is no public password-registration route, so there's nothing to verify
+  in the funnel. (If a public password signup is ever added, add verification
+  then.) *(05/5.1)*
 - 🟡 Search trgm index lives outside `schema.ts`; `db:push` may not create it
   (there's a runtime fallback, so search still works). *(03/3.2, 08/8.2)*
 - 🟡 Move schema changes off `db:push` to migrations. *(08/8.2)*
