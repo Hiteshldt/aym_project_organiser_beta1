@@ -21,6 +21,14 @@ entries first. Update this file whenever something meaningful ships.
 **To take real payments:** set `NEXT_PUBLIC_PADDLE_ENV=production` + production
 tokens/prices in Vercel (sandbox stays for local). See `PADDLE.md`.
 
+### Next up (post-launch)
+- [ ] **Verify the welcome email** — run one subscription end-to-end and confirm
+  the email arrives (watch Vercel logs for `[paddle] welcome email sent`).
+- [ ] **Live sanity check** — the 10-step flow in `LAUNCH.md §6` on production.
+- [ ] **Neon safety** (before scaling paid users) — confirm PITR/backups; add a
+  Preview branch so PR deploys stop hitting prod data.
+- [ ] *(optional)* Upstash for durable rate limiting; trigram search index.
+
 ### Deferred / known-minor (none block launch)
 - **Trigram search index** not persisted in the DB — search works via a runtime
   fallback; a `gin_trgm` index would make it faster at scale.
