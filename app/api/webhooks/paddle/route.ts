@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getPaddle } from "@/lib/billing/paddle-server";
 import { db } from "@/db";
-import { subscriptions } from "@/db/schema";
+import { subscriptions, users } from "@/db/schema";
 import { eq } from "drizzle-orm";
-import { tierForPriceId, type PlanTier } from "@/lib/billing/plans";
+import { tierForPriceId, PLANS, type PlanTier } from "@/lib/billing/plans";
+import { sendWelcomeEmail } from "@/lib/email";
 
 // Webhooks must run per-request (raw body + signature); never cache/prerender.
 export const dynamic = "force-dynamic";
@@ -63,9 +64,21 @@ export async function POST(req: NextRequest) {
       case "subscription.updated":
       case "subscription.resumed":
       case "subscription.paused":
-      case "subscription.canceled":
-        await upsertSubscription(event.data as unknown as SubLike);
+      case "subscription.canceled": {
+        const result = await upsertSubscription(event.data as unknown as SubLike);
+        // Send our own welcome email exactly once — the first time we record a
+        // paid, live subscription for this user. Best-effort: a failure here
+        // must never 500 the webhook (Paddle would retry → duplicate email).
+        if (
+          result.isNew &&
+          result.userId &&
+          result.planTier !== "free" &&
+          (result.status === "active" || result.status === "trialing")
+        ) {
+          await maybeSendWelcome(result.userId, result.planTier);
+        }
         break;
+      }
       default:
         // Acknowledge everything else (transaction.*, customer.*, …) so Paddle
         // doesn't retry; we only persist subscription state here.
@@ -80,7 +93,15 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({ ok: true });
 }
 
-async function upsertSubscription(sub: SubLike) {
+type UpsertResult = {
+  /** True only when this user had no subscription row before this event. */
+  isNew: boolean;
+  userId: string | null;
+  planTier: PlanTier;
+  status: SubStatus;
+};
+
+async function upsertSubscription(sub: SubLike): Promise<UpsertResult> {
   const userId =
     typeof sub.customData?.userId === "string"
       ? (sub.customData.userId as string)
@@ -108,14 +129,22 @@ async function upsertSubscription(sub: SubLike) {
   // Prefer the userId we stamped at checkout (customData). Fall back to the
   // Paddle subscription ID for events that arrive without it (e.g. updates).
   if (userId) {
+    // Was there already a row for this user? Drives the once-only welcome email.
+    const existing = await db
+      .select({ userId: subscriptions.userId })
+      .from(subscriptions)
+      .where(eq(subscriptions.userId, userId))
+      .limit(1);
+    const isNew = existing.length === 0;
+
     await db
       .insert(subscriptions)
       .values({ userId, ...values })
       .onConflictDoUpdate({ target: subscriptions.userId, set: values });
     console.log(
-      `[paddle] subscription ${sub.id} → user ${userId}: ${planTier}/${status}`
+      `[paddle] subscription ${sub.id} → user ${userId}: ${planTier}/${status}${isNew ? " (new)" : ""}`
     );
-    return;
+    return { isNew, userId, planTier, status };
   }
   console.warn(
     `[paddle] subscription ${sub.id} had no customData.userId; updating by sub id`
@@ -126,4 +155,33 @@ async function upsertSubscription(sub: SubLike) {
     .update(subscriptions)
     .set(values)
     .where(eq(subscriptions.paddleSubscriptionId, sub.id));
+  return { isNew: false, userId: null, planTier, status };
+}
+
+/** Look up the buyer and send the welcome email. Never throws. */
+async function maybeSendWelcome(userId: string, planTier: PlanTier) {
+  try {
+    const [u] = await db
+      .select({ email: users.email, name: users.name })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+    if (!u?.email) {
+      console.warn(`[paddle] welcome skipped — no email for user ${userId}`);
+      return;
+    }
+    const planName = PLANS[planTier]?.name ?? "Pro";
+    const res = await sendWelcomeEmail({
+      to: u.email,
+      name: u.name ?? "",
+      planName,
+    });
+    if (res.ok) {
+      console.log(`[paddle] welcome email sent to ${u.email} (${planName})`);
+    } else {
+      console.error(`[paddle] welcome email failed: ${res.error}`);
+    }
+  } catch (e) {
+    console.error("[paddle] welcome email error:", e);
+  }
 }

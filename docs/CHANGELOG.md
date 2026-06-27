@@ -34,6 +34,17 @@ tokens/prices in Vercel (sandbox stays for local). See `PADDLE.md`.
 
 ---
 
+## 2026-06-27 — Welcome email on subscription
+
+- Added a branded **welcome email** (Resend), sent automatically the first time
+  a user's paid subscription activates. Fired from the Paddle webhook
+  (`sendWelcomeEmail` in `lib/email.ts`); looks up the buyer's name/email,
+  sends once (gated on first-seen subscription row), and is best-effort so it
+  never fails the webhook. Paddle's own receipt is unchanged — this is our
+  separate thank-you + "where to go next".
+
+---
+
 ## 2026-06-27 — Pre-launch hardening, onboarding, docs
 
 **Hardening**

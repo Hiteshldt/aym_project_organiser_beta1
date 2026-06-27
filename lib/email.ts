@@ -21,6 +21,10 @@ function getFromAddress(): string {
   return `${name} <${email}>`;
 }
 
+function getAppUrl(): string {
+  return (process.env.NEXTAUTH_URL ?? "https://ayuvam.com").replace(/\/$/, "");
+}
+
 type SendResult = { ok: true; id: string } | { ok: false; error: string };
 
 /* ────────────────────────────────────────────────────────────────
@@ -107,6 +111,146 @@ export async function sendContactMessage(opts: {
     const msg = e instanceof Error ? e.message : "Unknown email error";
     return { ok: false, error: msg };
   }
+}
+
+/* ────────────────────────────────────────────────────────────────
+   Welcome email — sent once when a paid subscription first activates
+   (fired from the Paddle webhook). Paddle sends its own receipt; this
+   is our own thank-you + "here's where to go next".
+   ──────────────────────────────────────────────────────────────── */
+
+export async function sendWelcomeEmail(opts: {
+  to: string;
+  name: string; // the buyer's name
+  planName: string; // "Solo" / "Studio" / "Agency"
+}): Promise<SendResult> {
+  const resend = getResend();
+  if (!resend) {
+    return { ok: false, error: "RESEND_API_KEY not configured" };
+  }
+
+  const subject = `Welcome to Ayuvam ${opts.planName}`;
+
+  try {
+    const result = await resend.emails.send({
+      from: getFromAddress(),
+      to: opts.to,
+      subject,
+      html: renderWelcomeHtml(opts),
+      text: renderWelcomeText(opts),
+    });
+
+    if (result.error) {
+      return { ok: false, error: result.error.message };
+    }
+    return { ok: true, id: result.data?.id ?? "" };
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : "Unknown email error";
+    return { ok: false, error: msg };
+  }
+}
+
+function renderWelcomeHtml(opts: {
+  name: string;
+  planName: string;
+}): string {
+  const firstName = opts.name.trim().split(" ")[0] || "there";
+  const appUrl = getAppUrl();
+  const billingUrl = `${appUrl}/settings`;
+
+  return `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Welcome to Ayuvam ${escapeHtml(opts.planName)}</title>
+  </head>
+  <body style="margin:0;padding:0;background:#fbfaf7;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#0f0f0f;-webkit-font-smoothing:antialiased;">
+    <div style="display:none;max-height:0;overflow:hidden;">
+      You're on Ayuvam ${escapeHtml(opts.planName)} — here's where to pick up.
+    </div>
+
+    <div style="max-width:560px;margin:0 auto;padding:48px 24px;">
+      <!-- Brand -->
+      <div style="margin-bottom:40px;">
+        <span style="font-family:Georgia,'Times New Roman',serif;font-style:italic;font-size:24px;color:#0f0f0f;">Ayuvam</span>
+      </div>
+
+      <!-- Card -->
+      <div style="background:#ffffff;border:1px solid #ecead9;border-radius:16px;padding:40px 32px;">
+        <p style="margin:0 0 8px;font-family:'SF Mono',Menlo,Consolas,monospace;font-size:11px;letter-spacing:1.4px;text-transform:uppercase;color:#c84b31;">
+          You're on ${escapeHtml(opts.planName)}
+        </p>
+
+        <h1 style="margin:0 0 16px;font-family:Georgia,'Times New Roman',serif;font-weight:400;font-size:32px;line-height:1.15;color:#0f0f0f;letter-spacing:-0.01em;">
+          Welcome, <span style="font-style:italic;">${escapeHtml(firstName)}.</span>
+        </h1>
+
+        <p style="margin:0 0 24px;font-size:15px;line-height:1.6;color:#5a5a57;">
+          Thank you for upgrading. Your ${escapeHtml(opts.planName)} plan is active — more workspaces, more room, and the full toolkit are unlocked on your account.
+        </p>
+
+        <!-- Next steps -->
+        <table style="width:100%;border-collapse:collapse;margin:0 0 28px;font-size:14px;line-height:1.5;color:#1a1613;">
+          <tr><td style="padding:5px 0;">• Spin up a workspace for each client</td></tr>
+          <tr><td style="padding:5px 0;">• Add folders, links, and files — drop in the real work</td></tr>
+          <tr><td style="padding:5px 0;">• Share a read-only link; your client just clicks to view</td></tr>
+        </table>
+
+        <!-- CTA -->
+        <a href="${escapeAttr(appUrl)}/workspace"
+           style="display:inline-block;background:#c84b31;color:#ffffff;text-decoration:none;font-weight:500;font-size:14px;padding:14px 24px;border-radius:999px;letter-spacing:0;">
+          Open Ayuvam &nbsp;→
+        </a>
+
+        <p style="margin:28px 0 0;font-size:13px;line-height:1.55;color:#7a7773;">
+          Manage your plan, payment method, and invoices anytime in
+          <a href="${escapeAttr(billingUrl)}" style="color:#c84b31;text-decoration:none;">Settings → Plan &amp; billing</a>.
+          A receipt for this payment comes separately from our payment provider.
+        </p>
+      </div>
+
+      <!-- Footer -->
+      <div style="margin-top:32px;padding:0 8px;">
+        <p style="margin:0 0 8px;font-size:13px;line-height:1.55;color:#7a7773;">
+          Questions or anything not working? Just reply — a real person reads it.
+        </p>
+      </div>
+
+      <div style="margin-top:24px;padding-top:24px;border-top:1px solid #ecead9;text-align:center;">
+        <p style="margin:0;font-size:11px;color:#b8b5af;">
+          Powered by <span style="font-family:Georgia,'Times New Roman',serif;font-style:italic;color:#7a7773;">Ayuvam</span>
+        </p>
+      </div>
+    </div>
+  </body>
+</html>`;
+}
+
+function renderWelcomeText(opts: { name: string; planName: string }): string {
+  const firstName = opts.name.trim().split(" ")[0] || "there";
+  const appUrl = getAppUrl();
+  return [
+    `Welcome to Ayuvam ${opts.planName}`,
+    "",
+    `Hi ${firstName},`,
+    "",
+    `Thank you for upgrading. Your ${opts.planName} plan is active — more workspaces, more room, and the full toolkit are unlocked on your account.`,
+    "",
+    "Where to start:",
+    "• Spin up a workspace for each client",
+    "• Add folders, links, and files — drop in the real work",
+    "• Share a read-only link; your client just clicks to view",
+    "",
+    `Open Ayuvam: ${appUrl}/workspace`,
+    "",
+    `Manage your plan, payment method, and invoices anytime in Settings → Plan & billing: ${appUrl}/settings`,
+    "A receipt for this payment comes separately from our payment provider.",
+    "",
+    "Questions or anything not working? Just reply — a real person reads it.",
+    "",
+    "— Powered by Ayuvam",
+  ].join("\n");
 }
 
 function renderContactHtml(opts: {
