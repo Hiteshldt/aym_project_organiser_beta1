@@ -123,7 +123,16 @@
       "Bash(curl -s -o /dev/null -w \"marketing/: %{http_code}\\\\n\" http://localhost:3000/)",
       "Bash(curl -s -o /dev/null -w \"pricing: %{http_code}\\\\n\" http://localhost:3000/pricing)",
       "Bash(curl -s -o /dev/null -w \"onboard \\(expect 200 w/ login redirect or 307\\): %{http_code}\\\\n\" http://localhost:3000/onboard)",
-      "Bash(curl -s -o /dev/null -w \"login: %{http_code}\\\\n\" http://localhost:3000/login)"
+      "Bash(curl -s -o /dev/null -w \"login: %{http_code}\\\\n\" http://localhost:3000/login)",
+      "Bash(node --env-file=.env.local -e ' *)",
+      "Bash(grep -vE \"node_modules|\\\\.next|\\\\.git$\")",
+      "Bash(grep -iE \"\\\\.\\(bak|tmp|old|orig|log\\)$|test|scratch|temp|copy|untitled|drizzle\")",
+      "Bash(node -e \"console.log\\(JSON.stringify\\(require\\('./package.json'\\).scripts,null,2\\)\\)\")",
+      "Bash(git commit --quiet -m 'docs: add CHANGELOG, remove completed audit, refresh index/README *)",
+      "Bash(git fetch *)",
+      "Bash(git commit --quiet -m 'docs: log post-launch next-up checklist in CHANGELOG *)",
+      "Bash(grep -iE 'error|warn|hydrat|unhandled|failed|cannot' __TRACKED_VAR__/dev.log)",
+      "Bash(node -e \"console.log\\('matter-js', require\\('matter-js/package.json'\\).version\\)\")"
     ],
     "additionalDirectories": [
       "/Users/hiteshgupta/Vs Code/hitesh/files-organiser/app/api/auth"

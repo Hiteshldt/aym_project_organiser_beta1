@@ -2,7 +2,7 @@ export default function HowItWorks() {
   return (
     <section
       id="how"
-      className="bg-paper-dim border-y border-line scroll-mt-20"
+      className="border-b border-line scroll-mt-20"
     >
       <div className="mx-auto max-w-6xl px-6 py-16 md:py-24">
       <header data-reveal className="max-w-2xl">

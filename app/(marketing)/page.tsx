@@ -11,8 +11,8 @@ export default function HomePage() {
     <>
       <Hero />
       <BeforeAfter />
-      <Bento />
       <HowItWorks />
+      <Bento />
       <Pricing />
       <FAQ />
       <FinalCTA />

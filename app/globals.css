@@ -369,6 +369,39 @@ html { scroll-behavior: smooth; }
     radial-gradient(40% 40% at 85% 8%, rgba(224, 144, 90, 0.1) 0%, rgba(224, 144, 90, 0) 55%);
 }
 
+/* Faint dot-grid behind the hero — adds paper depth without noise. It's
+   masked to fade out toward the centre/bottom so it never fights the text. */
+.hero-grid {
+  background-image: radial-gradient(currentColor 1px, transparent 1px);
+  background-size: 22px 22px;
+  color: rgba(26, 22, 19, 0.05);
+  -webkit-mask-image: radial-gradient(80% 60% at 50% 0%, #000 0%, transparent 75%);
+  mask-image: radial-gradient(80% 60% at 50% 0%, #000 0%, transparent 75%);
+}
+
+/* Blinking caret for the hero mockup's quick-add ghost row. */
+.hero-caret {
+  display: inline-block;
+  width: 1.5px;
+  height: 0.95em;
+  margin-left: 1px;
+  vertical-align: text-bottom;
+  background: var(--accent);
+  animation: hero-caret-blink 1.05s steps(1) infinite;
+}
+@keyframes hero-caret-blink {
+  0%, 50% { opacity: 1; }
+  50.01%, 100% { opacity: 0; }
+}
+
+/* Gentle downward nudge for "see how it works" cue arrows. */
+.animate-bounce-soft { animation: bounce-soft 1.8s ease-in-out infinite; }
+@keyframes bounce-soft {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(3px); }
+}
+
+
 /* ── Editorial accent underline ─────────────────────────────────── */
 /* A hand-inked SVG stroke that draws itself under display words.
    The path uses pathLength="1" so dash math is resolution-independent;
@@ -452,6 +485,8 @@ html { scroll-behavior: smooth; }
   .frame-shine::before { animation: none; }
   .float-slow { animation: none; }
   .text-ember { animation: none; }
+  .hero-caret { animation: none; opacity: 1; }
+  .animate-bounce-soft { animation: none; }
   .reveal { animation-duration: 0.01ms; animation-delay: 0s; }
   .card-lift:hover { transform: none; }
   [data-reveal],
