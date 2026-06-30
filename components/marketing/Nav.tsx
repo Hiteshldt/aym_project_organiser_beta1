@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { ArrowUpRight } from "lucide-react";
+import MobileMenu from "@/components/marketing/MobileMenu";
 
 export default async function Nav() {
   const session = await auth();
@@ -67,6 +68,7 @@ export default async function Nav() {
               </Link>
             </>
           )}
+          <MobileMenu isLoggedIn={isLoggedIn} />
         </div>
       </nav>
 

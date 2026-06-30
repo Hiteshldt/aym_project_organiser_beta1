@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Fragment } from "react";
 import Link from "next/link";
 import { ArrowUpRight, Check, Minus } from "lucide-react";
 import Pricing from "@/components/marketing/Pricing";
@@ -15,7 +16,7 @@ const COMPARISON = [
     section: "Workspaces & content",
     rows: [
       { label: "Client workspaces", free: "1", solo: "5", studio: "Unlimited", agency: "Unlimited" },
-      { label: "Items per workspace", free: "25 total", solo: "Unlimited", studio: "Unlimited", agency: "Unlimited" },
+      { label: "Items per workspace", free: "50 total", solo: "Unlimited", studio: "Unlimited", agency: "Unlimited" },
       { label: "Folders per workspace", free: "Unlimited", solo: "Unlimited", studio: "Unlimited", agency: "Unlimited" },
       { label: "File storage", free: "100 MB", solo: "2 GB", studio: "10 GB", agency: "50 GB" },
       { label: "File upload size limit", free: "20 MB", solo: "20 MB", studio: "20 MB", agency: "20 MB" },
@@ -116,11 +117,8 @@ export default function PricingPage() {
             </thead>
             <tbody>
               {COMPARISON.map((section) => (
-                <>
-                  <tr
-                    key={section.section}
-                    className="border-b border-line/60 bg-paper/40"
-                  >
+                <Fragment key={section.section}>
+                  <tr className="border-b border-line/60 bg-paper/40">
                     <td
                       colSpan={5}
                       className="py-2.5 px-5 font-mono-ui text-[10px] uppercase tracking-[0.15em] text-mute"
@@ -140,7 +138,7 @@ export default function PricingPage() {
                       <Cell value={row.agency} />
                     </tr>
                   ))}
-                </>
+                </Fragment>
               ))}
             </tbody>
           </table>

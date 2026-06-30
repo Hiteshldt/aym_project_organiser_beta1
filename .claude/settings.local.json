@@ -132,7 +132,17 @@
       "Bash(git fetch *)",
       "Bash(git commit --quiet -m 'docs: log post-launch next-up checklist in CHANGELOG *)",
       "Bash(grep -iE 'error|warn|hydrat|unhandled|failed|cannot' __TRACKED_VAR__/dev.log)",
-      "Bash(node -e \"console.log\\('matter-js', require\\('matter-js/package.json'\\).version\\)\")"
+      "Bash(node -e \"console.log\\('matter-js', require\\('matter-js/package.json'\\).version\\)\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:3000/contact)",
+      "Bash(curl -s -D - http://localhost:3000/manifest.webmanifest -o /tmp/mani.out -w \"\")",
+      "Bash(curl -s -o /dev/null -w \"status: %{http_code}  type: %{content_type}\\\\n\" http://localhost:3000/manifest.webmanifest)",
+      "Bash(curl -s http://localhost:3000/manifest.webmanifest)",
+      "Bash(curl -s -o /dev/null -w \"/icon: %{http_code} %{content_type}\\\\n\" http://localhost:3000/icon)",
+      "Bash(curl -s -o /dev/null -w \"/apple-icon: %{http_code} %{content_type}\\\\n\" http://localhost:3000/apple-icon)",
+      "Bash(echo \"--- tsc exit: $? ---\")",
+      "Bash(node -e \"require\\('ws'\\); console.log\\('ws ok'\\)\")",
+      "Bash(node *)",
+      "Bash(pkill -f \"chrome-shot-profile\")"
     ],
     "additionalDirectories": [
       "/Users/hiteshgupta/Vs Code/hitesh/files-organiser/app/api/auth"

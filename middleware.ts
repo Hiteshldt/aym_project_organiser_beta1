@@ -21,6 +21,17 @@ export default auth((req) => {
 
   if (isApiAuth) return NextResponse.next();
 
+  // Installable-app assets (web manifest + generated icons) must be public —
+  // otherwise they redirect to /login and the browser sees HTML, not JSON/PNG
+  // ("Manifest: Line 1, column 1, Syntax error").
+  if (
+    pathname === "/manifest.webmanifest" ||
+    pathname === "/icon" ||
+    pathname === "/apple-icon"
+  ) {
+    return NextResponse.next();
+  }
+
   // Public share links — anyone with the token can view, no login.
   if (pathname.startsWith("/share/")) return NextResponse.next();
   if (pathname.startsWith("/api/share/")) return NextResponse.next();
